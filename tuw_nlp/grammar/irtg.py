@@ -1,0 +1,3 @@
+
+class IRTGGrammar():
+    pass

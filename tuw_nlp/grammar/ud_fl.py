@@ -17,7 +17,7 @@ class UD_FL(IRTGGrammar):
     }
     lexicon = CFLLexicon()
 
-    def transform_input(self, input_sen):
+    def preprocess_input(self, input_sen):
         self.input_graph = sen_to_graph(input_sen)
         return graph_to_isi(self.input_graph)
 

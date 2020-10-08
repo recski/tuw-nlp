@@ -1,5 +1,6 @@
 import datetime
 import os
+import random
 
 from tuw_nlp.common.utils import ensure_dir
 from tuw_nlp.grammar.alto import get_rule_string, run_alto
@@ -11,23 +12,24 @@ class IRTGGrammar():
         self.tmpdir = os.getenv("TUWNLP_TMPDIR", "tmp")
         ensure_dir(self.tmpdir)
 
-    def transform_input(self, input_obj):
+    def preprocess_input(self, input_obj, **kwargs):
         return input_obj
 
-    def transform_output(self, output_obj):
+    def postprocess_output(self, output_obj, **kwargs):
         return output_obj
 
-    def parse(self, input_obj, input_int, output_int, output_codec):
+    def parse(self, input_obj, input_int, output_int, output_codec, **kwargs):
         if input_int not in self.interpretations:
             raise ValueError(f"unknown interpretation: {input_int}")
-        transformed_input = self.transform_input(input_obj)
+        transformed_input = self.preprocess_input(input_obj, **kwargs)
         output = self.run(
             transformed_input, input_int, output_int, output_codec)
-        return self.transform_output(output)
+        return self.postprocess_output(output, **kwargs)
 
     def gen_file_names(self):
-        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        path = os.path.join(self.tmpdir, timestamp)
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        rand_id = random.randrange(100000, 999999)
+        path = os.path.join(self.tmpdir, f"{timestamp}_{rand_id}")
         ensure_dir(path)
         return tuple(os.path.join(path, fn) for fn in (
             "input.txt", "grammar.irtg", "output.txt"))
@@ -56,16 +58,18 @@ class IRTGGrammar():
             for line in self.gen_grammar_header():
                 f.write(f"{line}\n")
             f.write('\n')
-            term_rule_strings = []
-            for irtg_rule, interpretations, rule_type in self.gen_rules():
-                rule_string = get_rule_string(irtg_rule, interpretations)
-                if rule_type == 'terminal':
-                    term_rule_strings.append(rule_string)
-                    continue
+            for rule_string in self.gen_rule_strings():
                 f.write(f"{rule_string}\n")
 
-            for rule_string in term_rule_strings:
-                f.write(f"{rule_string}\n")
+    def gen_rule_strings(self):
+        term_rule_strings = []
+        for irtg_rule, interpretations, rule_type in self.gen_rules():
+            rule_string = get_rule_string(irtg_rule, interpretations)
+            if rule_type == 'terminal':
+                term_rule_strings.append(rule_string)
+                continue
+            yield rule_string
+        yield from term_rule_strings
 
     def create_alto_files(self, transformed_input, input_int):
         input_fn, grammar_fn, output_fn = self.gen_file_names()

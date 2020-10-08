@@ -1,3 +1,4 @@
+from tuw_nlp.grammar.lexicon import CFLLexicon
 from tuw_nlp.grammar.irtg import IRTGGrammar
 from tuw_nlp.graph.utils import (
     get_root_id,
@@ -14,10 +15,11 @@ class UD_FL(IRTGGrammar):
         'ud': 'de.up.ling.irtg.algebra.TreeWithAritiesAlgebra',
         'fl': 'de.up.ling.irtg.algebra.graph.GraphAlgebra'
     }
+    lexicon = CFLLexicon()
 
     def transform_input(self, input_sen):
         self.input_graph = sen_to_graph(input_sen)
-        self.transformed_input = graph_to_isi(self.input_graph)
+        return graph_to_isi(self.input_graph)
 
     def gen_terminal_rules(self, lemma, pos):
         fss = self.lexicon.get_terminal_rules(lemma, pos)
@@ -30,12 +32,12 @@ class UD_FL(IRTGGrammar):
                 'nonterminal')
 
     def gen_rules_rec(self, graph, i):
-        node = graph[i]
+        node = graph.nodes[i]
         lemma = preprocess_node_alto(preprocess_lemma(node['lemma']))
         pos = node['upos']
         yield from self.gen_terminal_rules(lemma, pos)
         for j, edge in graph[i].items():
-            cnode = graph[j]
+            cnode = graph.nodes[j]
             deprel = preprocess_edge_alto(edge['deprel'])
             cpos = cnode['upos']
 
@@ -56,7 +58,7 @@ class UD_FL(IRTGGrammar):
 
             yield from self.gen_rules_rec(graph, j)
 
-    def gen_rules(self, input_sen):
+    def gen_rules(self):
         graph = self.input_graph
         root_id = get_root_id(graph)
         root_pos = graph.nodes[root_id]['upos']
@@ -66,4 +68,4 @@ class UD_FL(IRTGGrammar):
                 "fl": "?1"},
             "start")
 
-        yield from self.get_rules_rec(graph, root_id)
+        yield from self.gen_rules_rec(graph, root_id)

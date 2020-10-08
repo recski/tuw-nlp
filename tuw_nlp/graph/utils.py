@@ -8,6 +8,9 @@ from tuw_nlp.text.patterns.misc import (
     MISC_REPLACEMENTS
 )
 
+dummy_isi_graph = '(dummy_0 / dummy_0)'
+dummy_tree = 'dummy(dummy)'
+
 
 def preprocess_edge_alto(edge):
     return edge.replace(':', '_').upper()
@@ -39,7 +42,6 @@ def sen_to_graph(sen):
 
 def graph_to_isi_rec(graph, i):
     node = graph.nodes[i]
-    print(node)
     lemma = preprocess_node_alto(preprocess_lemma(node['lemma']))
     pos = node['upos']
     isi = f"{pos}("

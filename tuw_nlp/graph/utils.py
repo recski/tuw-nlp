@@ -40,7 +40,22 @@ def sen_to_graph(sen):
     return G
 
 
-def graph_to_isi_rec(graph, i):
+def graph_to_isi_graph_rec(graph, i, convert_to_int=False):
+    node = graph.nodes[i]
+    lemma = preprocess_node_alto(preprocess_lemma(node['lemma']))
+    pos = node['upos']
+    isi = f"({lemma}_{i} / {lemma}"
+    for j, edge in graph[i].items():
+        deprel = preprocess_edge_alto(edge['deprel'])
+        isi += f' :{deprel} '
+        isi += graph_to_isi_graph_rec(graph, j, convert_to_int)
+
+    isi += ")"
+
+    return isi
+
+
+def graph_to_isi_tree_rec(graph, i, convert_to_int=False):
     node = graph.nodes[i]
     lemma = preprocess_node_alto(preprocess_lemma(node['lemma']))
     pos = node['upos']
@@ -48,10 +63,11 @@ def graph_to_isi_rec(graph, i):
     for j, edge in graph[i].items():
         deprel = preprocess_edge_alto(edge['deprel'])
         isi += f"_{deprel}("
-        isi += graph_to_isi_rec(graph, j)
+        isi += graph_to_isi_tree_rec(graph, j, convert_to_int)
         isi += f"), {pos}("
 
-    isi += f"{lemma})" + ")"*len(graph[i])
+    lemma_int = f"{lemma}_{i}"
+    isi += f"{lemma if not convert_to_int else lemma_int})" + ")"*len(graph[i])
 
     return isi
 
@@ -60,7 +76,10 @@ def get_root_id(graph):
     return list(graph[0].keys())[0]
 
 
-def graph_to_isi(graph):
+def graph_to_isi(graph, convert_to_int=False, algebra="tree"):
     root_id = get_root_id(graph)
-    isi = graph_to_isi_rec(graph, root_id)
-    return f"ROOT({isi})"
+    if algebra == "tree":
+        isi = graph_to_isi_tree_rec(graph, root_id, convert_to_int)
+    elif algebra == "graph":
+        isi = graph_to_isi_graph_rec(graph, root_id, convert_to_int)
+    return f"ROOT({isi})" if algebra == "tree" else isi

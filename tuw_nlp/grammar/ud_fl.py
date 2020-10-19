@@ -19,7 +19,7 @@ class UD_Fourlang(IRTGGrammar):
 
     def preprocess_input(self, input_sen):
         self.input_graph = sen_to_graph(input_sen)
-        return graph_to_isi(self.input_graph)
+        return graph_to_isi(self.input_graph, convert_to_int=True, algebra="graph")
 
     def gen_terminal_rules(self, lemma, pos, ind):
         fss = self.lexicon.get_terminal_rules(lemma, pos, ind)
@@ -45,7 +45,7 @@ class UD_Fourlang(IRTGGrammar):
             binary_fss = self.lexicon.get_dependency_rules(pos, deprel, cpos)
             for k, binary_fs in enumerate(binary_fss):
                 yield (
-                    f"{pos} -> {pos}_{deprel}_{cpos}_{k}(_{deprel}, {pos})",
+                    f"{pos} -> {pos}_{deprel}_{cpos}_{k}({pos}, {cpos})",
                     {
                         'ud': f'{binary_fs[0]}',
                         'fourlang': f'{binary_fs[1]}'},
@@ -76,7 +76,7 @@ class UD_Fourlang(IRTGGrammar):
         root_pos = graph.nodes[root_id]['upos']
         yield (
             f"S! -> ROOT({root_pos})", {
-                "ud": "ROOT_1(?1)",
+                "ud": "?1",
                 "fourlang": "f_root(f_relation(?1))"},
             "start")
 

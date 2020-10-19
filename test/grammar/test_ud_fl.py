@@ -2,7 +2,6 @@ import stanza
 from tuw_nlp.text.segmentation import CustomStanzaPipeline
 from tuw_nlp.grammar.ud_fl import UD_FL, UD_Fourlang
 
-en_nlp = stanza.Pipeline('en')
 
 def test_ud_fl():
     text = 'Dachgeschosse sind nicht zulässig.'
@@ -18,7 +17,7 @@ def test_ud_fourlang_en():
     nlp = stanza.Pipeline('en')
     sen = nlp(text).sentences[0]
     fl = ud_fl.parse(sen, 'ud', 'fourlang', 'amr-sgraph-src')
-    assert fl == "(u_1<root> / PER  :1 (u_3 / Dachgeschosse))"
+    assert fl == "(u_19 / I  :1 (u_14 / have  :2 (u_16 / dog)  :0 u_19))"
 
 
 if __name__ == "__main__":

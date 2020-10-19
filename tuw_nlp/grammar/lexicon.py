@@ -270,7 +270,7 @@ class DefaultLexicon():
         return [self.bin_fnc.get((pos, dep, cpos))]
 
     def get_default_terminal(self, word, i):
-        return f'"({i}<root> / {word})"', f'"({word}<root> / {word})"'
+        return f'"({word}_{i}<root> / {word})"', f'"({word}<root> / {word})"'
 
     def get_relation_terminal(self, word):
         return f'"({word}<relation> / {word})"', f'"({word}<relation> / {word})"'

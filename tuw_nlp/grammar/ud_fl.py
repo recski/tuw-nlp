@@ -25,7 +25,7 @@ class UD_Fourlang(IRTGGrammar):
         fss = self.lexicon.get_terminal_rules(lemma, pos, ind)
         for i, fs in enumerate(fss):
             yield (
-                f"{pos} -> {lemma}_{pos}_{i}",
+                f"{pos} -> {lemma}_{pos}_{ind}",
                 {
                     'ud': fs[0],
                     'fourlang': fs[1]},
@@ -45,7 +45,7 @@ class UD_Fourlang(IRTGGrammar):
             binary_fss = self.lexicon.get_dependency_rules(pos, deprel, cpos)
             for k, binary_fs in enumerate(binary_fss):
                 yield (
-                    f"{pos} -> {pos}_{deprel}_{cpos}_{k}({pos}, {cpos})",
+                    f"{pos} -> {pos}_{deprel}_{cpos}_{k}({pos}, {cpos}) [0.1]",
                     {
                         'ud': f'{binary_fs[0]}',
                         'fourlang': f'{binary_fs[1]}'},

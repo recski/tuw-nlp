@@ -278,29 +278,30 @@ class DefaultLexicon():
     def handle_conj(self, parent_pos, parent_dep, current_pos, children_pos, i):
         coordination = (
             f"{parent_pos} -> coordination_{i}(SUBGRAPHNODE, COORD)",
-            {f'[ud] f_dep1(merge(merge(?1,"(r<root> :{parent_dep} (d1<dep1>))"), r_dep1(?2)))',
-             f'[fourlang] r_coord_root(merge(?1, ?2))'},
+            {'ud': f'f_dep1(merge(merge(?1,"(r<root> :{parent_dep} (d1<dep1>))"), r_dep1(?2)))',
+             'fourlang': f'r_coord_root(merge(?1, ?2))'},
             "nonterminal"
         )
 
         handle_coord = (
             f"COORD -> handle_coord_{i}(COORD, {children_pos})",
-            f'[ud] f_dep1(merge(merge(?1,"(r<root> :CONJ (d1<dep1>))"), r_dep1(?2)))',
-            f'[fourlang] f_dep1(merge(merge(?1,"(r<coord> :2 (d1<dep1>))"), r_dep1(?2)))',
-            ""
+            {
+                'ud': f'f_dep1(merge(merge(?1,"(r<root> :CONJ (d1<dep1>))"), r_dep1(?2)))',
+                'fourlang': f'f_dep1(merge(merge(?1,"(r<coord> :2 (d1<dep1>))"), r_dep1(?2)))'},
+            "nonterminal"
         )
 
         coord_to_pos = (
             f"COORD -> coord_to_{current_pos}{i}({current_pos})",
-            {f'[ud] ?1',
-             f'[fourlang] f_dep1(merge("(r<coord> :2 (d1<dep1>))", r_dep1(?1)))'},
+            {'ud': f'?1',
+             'fourlang': f'f_dep1(merge("(r<coord> :2 (d1<dep1>))", r_dep1(?1)))'},
             "nonterminal"
         )
 
         subgraph_node = (
             f"SUBGRAPHNODE -> subgraph_to_node{i}({parent_pos})",
-            {f"[ud] ?1",
-             f'[fourlang] r_coord(?1)'},
+            {'ud': f'?1',
+             'fourlang': f'r_coord(?1)'},
             "nonterminal"
         )
 
@@ -309,8 +310,8 @@ class DefaultLexicon():
     def handle_acl_relcl(self, parent_pos, current_pos, children_pos, i):
         acl_relcl = (
             f"{parent_pos} -> handle_acl_relcl{i}({parent_pos}, {current_pos}, {children_pos})",
-            {f'[ud] f_dep2(merge(merge(?1,"(r<root> :ACL_RELCL (d2<dep2>))"), r_dep2(f_dep1(merge(merge(?2,"(r<root> :NSUBJ (d1<dep1>))"), r_dep1(?3))))))',
-             f'[fourlang] f_dep1(merge(merge(?1,"(r<root> :0 (d1<dep1>))"), r_dep1(?2)))'},
+            {'ud': f'f_dep2(merge(merge(?1,"(r<root> :ACL_RELCL (d2<dep2>))"), r_dep2(f_dep1(merge(merge(?2,"(r<root> :NSUBJ (d1<dep1>))"), r_dep1(?3))))))',
+             'fourlang': f'f_dep1(merge(merge(?1,"(r<root> :0 (d1<dep1>))"), r_dep1(?2)))'},
             "nonterminal"
         )
 
@@ -319,8 +320,8 @@ class DefaultLexicon():
     def handle_obl_case(self, parent_pos, current_pos, children_pos, i):
         obl_case = (
             f"{parent_pos} -> handle_obl_case{i}({parent_pos}, {current_pos}, {children_pos})",
-            {f'[ud] f_dep2(merge(merge(?1,"(r<root> :OBL (d2<dep2>))"), r_dep2(f_dep1(merge(merge(?2,"(r<root> :CASE (d1<dep1>))"), r_dep1(?3))))))',
-             f'[fourlang] f_dep2(f_dep1(merge(merge(merge(?1,"(d1<dep1> :1 (r<root>) :2 (d2<dep2>))"), r_dep1(?3)), r_dep2(?2))))'},
+            {'ud': f'f_dep2(merge(merge(?1,"(r<root> :OBL (d2<dep2>))"), r_dep2(f_dep1(merge(merge(?2,"(r<root> :CASE (d1<dep1>))"), r_dep1(?3))))))',
+             'fourlang': f'f_dep2(f_dep1(merge(merge(merge(?1,"(d1<dep1> :1 (r<root>) :2 (d2<dep2>))"), r_dep1(?3)), r_dep2(?2))))'},
             "nonterminal"
         )
 

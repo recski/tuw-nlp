@@ -1,6 +1,8 @@
 from itertools import chain
 
 import networkx as nx
+import penman as pn
+import networkx as nx
 
 from tuw_nlp.text.patterns.misc import (
     CHAR_REPLACEMENTS,
@@ -11,6 +13,32 @@ from tuw_nlp.text.patterns.misc import (
 dummy_isi_graph = '(dummy_0 / dummy_0)'
 dummy_tree = 'dummy(dummy)'
 
+
+def read_alto_output(raw_dl):
+    id_to_word = {}
+    
+    g = pn.decode(raw_dl)
+
+    G = nx.MultiDiGraph()    
+    root = None
+
+    for i, trip in enumerate(g.triples):
+        if i == 0:
+            ind = trip[0].split("_")[1]
+            root = f"{trip[1]}_{ind}"
+        if trip[1] == ":instance":
+            id_to_word[trip[0]] = trip[2]
+
+    for trip in g.triples:
+        if trip[1] != ":instance":
+            node1_unique = trip[0].split("_")[1]
+            node2_unique = trip[2].split("_")[1]
+            dep1 = f"{id_to_word[trip[0]]}_{node1_unique}"
+            dep2 = f"{id_to_word[trip[2]]}_{node2_unique}"
+            edge = trip[1].split(":")[1]
+            G.add_edge(dep1, dep2, color=int(edge))
+
+    return G
 
 def preprocess_edge_alto(edge):
     return edge.replace(':', '_').upper()

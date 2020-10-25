@@ -25,7 +25,7 @@ def read_alto_output(raw_dl):
     for i, trip in enumerate(g.triples):
         if i == 0:
             ind = trip[0].split("_")[1]
-            root = f"{trip[1]}_{ind}"
+            root = f"{trip[2]}_{ind}"
         if trip[1] == ":instance":
             id_to_word[trip[0]] = trip[2]
 
@@ -38,7 +38,7 @@ def read_alto_output(raw_dl):
             edge = trip[1].split(":")[1]
             G.add_edge(dep1, dep2, color=int(edge))
 
-    return G
+    return G, root
 
 def preprocess_edge_alto(edge):
     return edge.replace(':', '_').upper()

@@ -267,7 +267,7 @@ class DefaultLexicon():
                                      ] = r_default_binary_rule(dep)
 
     def get_dependency_rules(self, pos, dep, cpos):
-        return [self.bin_fnc.get((pos, dep, cpos))]
+        return [self.bin_fnc.get((pos, dep, cpos))] or [self.default_binary_rule] 
 
     def get_default_terminal(self, word, i):
         return f'"({word}_{i}<root> / {word})"', f'"({word}<root> / {word})"'

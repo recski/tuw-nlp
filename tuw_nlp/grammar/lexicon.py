@@ -221,7 +221,6 @@ class CFLLexicon(IRTGRuleLexicon):
 
 class DefaultLexicon():
     def __init__(self):
-        self.default_binary_rule = "?1"
         self.bin_fnc = {}
         self.relation_terms = set()
 
@@ -267,7 +266,8 @@ class DefaultLexicon():
                                      ] = r_default_binary_rule(dep)
 
     def get_dependency_rules(self, pos, dep, cpos):
-        return [self.bin_fnc.get((pos, dep, cpos))] or [self.default_binary_rule] 
+        rule = self.bin_fnc.get((pos, dep, cpos)) or self.get_default_binary_rule(dep)
+        return [rule]
 
     def get_default_terminal(self, word, i):
         return f'"({word}_{i}<root> / {word})"', f'"({word}<root> / {word})"'
@@ -348,3 +348,6 @@ class DefaultLexicon():
         terminal_fss = self.get_default_terminal(word, i)
 
         return [terminal_fss]
+
+    def get_default_binary_rule(self, dep):
+        return f'f_dep1(merge(merge(?1,"(r<root> :{dep} (d1<dep1>))"), r_dep1(?2)))', f'?1'

@@ -16,10 +16,10 @@ dummy_tree = 'dummy(dummy)'
 
 def read_alto_output(raw_dl):
     id_to_word = {}
-    
+
     g = pn.decode(raw_dl)
 
-    G = nx.MultiDiGraph()    
+    G = nx.MultiDiGraph()
     root = None
 
     for i, trip in enumerate(g.triples):
@@ -38,7 +38,11 @@ def read_alto_output(raw_dl):
             edge = trip[1].split(":")[1]
             G.add_edge(dep1, dep2, color=int(edge))
 
+    if len(G.nodes()) == 0:
+        G.add_node(root)
+
     return G, root
+
 
 def preprocess_edge_alto(edge):
     return edge.replace(':', '_').upper()

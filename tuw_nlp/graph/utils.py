@@ -1,6 +1,8 @@
 from itertools import chain
 
 import networkx as nx
+import penman as pn
+import networkx as nx
 
 from tuw_nlp.text.patterns.misc import (
     CHAR_REPLACEMENTS,
@@ -10,6 +12,36 @@ from tuw_nlp.text.patterns.misc import (
 
 dummy_isi_graph = '(dummy_0 / dummy_0)'
 dummy_tree = 'dummy(dummy)'
+
+
+def read_alto_output(raw_dl):
+    id_to_word = {}
+
+    g = pn.decode(raw_dl)
+
+    G = nx.MultiDiGraph()
+    root = None
+
+    for i, trip in enumerate(g.triples):
+        if i == 0:
+            ind = trip[0].split("_")[1]
+            root = f"{trip[2]}_{ind}"
+        if trip[1] == ":instance":
+            id_to_word[trip[0]] = trip[2]
+
+    for trip in g.triples:
+        if trip[1] != ":instance":
+            node1_unique = trip[0].split("_")[1]
+            node2_unique = trip[2].split("_")[1]
+            dep1 = f"{id_to_word[trip[0]]}_{node1_unique}"
+            dep2 = f"{id_to_word[trip[2]]}_{node2_unique}"
+            edge = trip[1].split(":")[1]
+            G.add_edge(dep1, dep2, color=int(edge))
+
+    if len(G.nodes()) == 0:
+        G.add_node(root)
+
+    return G, root
 
 
 def preprocess_edge_alto(edge):
@@ -40,7 +72,22 @@ def sen_to_graph(sen):
     return G
 
 
-def graph_to_isi_rec(graph, i):
+def graph_to_isi_graph_rec(graph, i, convert_to_int=False):
+    node = graph.nodes[i]
+    lemma = preprocess_node_alto(preprocess_lemma(node['lemma']))
+    pos = node['upos']
+    isi = f"({lemma}_{i} / {lemma}"
+    for j, edge in graph[i].items():
+        deprel = preprocess_edge_alto(edge['deprel'])
+        isi += f' :{deprel} '
+        isi += graph_to_isi_graph_rec(graph, j, convert_to_int)
+
+    isi += ")"
+
+    return isi
+
+
+def graph_to_isi_tree_rec(graph, i, convert_to_int=False):
     node = graph.nodes[i]
     lemma = preprocess_node_alto(preprocess_lemma(node['lemma']))
     pos = node['upos']
@@ -48,10 +95,11 @@ def graph_to_isi_rec(graph, i):
     for j, edge in graph[i].items():
         deprel = preprocess_edge_alto(edge['deprel'])
         isi += f"_{deprel}("
-        isi += graph_to_isi_rec(graph, j)
+        isi += graph_to_isi_tree_rec(graph, j, convert_to_int)
         isi += f"), {pos}("
 
-    isi += f"{lemma})" + ")"*len(graph[i])
+    lemma_int = f"{lemma}_{i}"
+    isi += f"{lemma if not convert_to_int else lemma_int})" + ")"*len(graph[i])
 
     return isi
 
@@ -60,7 +108,10 @@ def get_root_id(graph):
     return list(graph[0].keys())[0]
 
 
-def graph_to_isi(graph):
+def graph_to_isi(graph, convert_to_int=False, algebra="tree"):
     root_id = get_root_id(graph)
-    isi = graph_to_isi_rec(graph, root_id)
-    return f"ROOT({isi})"
+    if algebra == "tree":
+        isi = graph_to_isi_tree_rec(graph, root_id, convert_to_int)
+    elif algebra == "graph":
+        isi = graph_to_isi_graph_rec(graph, root_id, convert_to_int)
+    return f"ROOT({isi})" if algebra == "tree" else isi

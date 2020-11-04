@@ -5,7 +5,8 @@ import subprocess
 ALTO_JAR = os.getenv(
     'ALTO_JAR',
     # '/home/recski/tools/alto/build/libs/alto-2.3.7-SNAPSHOT-all.jar')
-    '/home/recski/tools/alto-2.3-SNAPSHOT-jar-with-dependencies.jar')
+    #'/home/recski/tools/alto-2.3-SNAPSHOT-jar-with-dependencies.jar')
+    '/home/adaamko/projects/wikt2def/fourlang/grammars/alto-2.3.6-SNAPSHOT-all.jar')
 
 
 def get_alto_command(

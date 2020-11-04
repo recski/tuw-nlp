@@ -9,7 +9,9 @@ setup(
     author_email='gabor.recski@tuwien.ac.at,adam.kovacs@tuwien.ac.at',
     license='MIT',
     install_requires=[
-        'stanza'
+        'stanza',
+	'networkx',
+	'penman'
     ],
     packages=find_packages(),
     zip_safe=False)

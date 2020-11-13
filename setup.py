@@ -9,9 +9,10 @@ setup(
     author_email='gabor.recski@tuwien.ac.at,adam.kovacs@tuwien.ac.at',
     license='MIT',
     install_requires=[
-        'stanza',
-	'networkx',
-	'penman'
+        'dict-recursive-update',
+        'networkx',
+        'penman',
+        'stanza'
     ],
     packages=find_packages(),
     zip_safe=False)

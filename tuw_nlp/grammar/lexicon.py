@@ -164,6 +164,8 @@ class CFLLexicon(IRTGRuleLexicon):
             # Errichtung ist untersagt
             ("ADJ", "NSUBJ", "NOUN"): [r('1')],
             ("VERB", "NSUBJ_PASS", "NOUN"): [r("2")],
+            # ...wird bestimmt, dass...
+            ("VERB", "CSUBJ_PASS", "VERB"): [r("2")],
             ("VERB", "OBJ", "NOUN"): [r("2")],
             ("VERB", "NSUBJ", "NOUN"): [r("1")],
             ("VERB", "NSUBJ", "PRON"): [r("1")],

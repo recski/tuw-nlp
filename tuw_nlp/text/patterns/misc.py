@@ -11,6 +11,7 @@ CHAR_REPLACEMENTS = {
     "ä": 'ae',
     "Ä": 'Ae',
     "ß": "ss",
+    "ō": "oe",  # encountered in plandok (OCR err?)
 }
 
 PUNCT_REPLACEMENTS = {
@@ -18,11 +19,16 @@ PUNCT_REPLACEMENTS = {
     "/": "SLASH",
     "_": "UNDERSCORE",
     "-": "HYPHEN",
+    "–": "ENDASH",
     "(": "LRB",
     ")": "RRB",
+    "<": "LT",
+    ">": "GT",
     ".": "PERIOD",
     ",": "COMMA",
     ":": "COLON",
+    "!": "EXCL",
+    "?": "QUE",
     ";": "SEMICOLON",
     "%": "PERCENTAGE",
     "°": "XDEGREE",
@@ -30,9 +36,12 @@ PUNCT_REPLACEMENTS = {
     "§§": "PARAGRAPHS",
     "„": "QUOTE",
     "“": "QUOTE",
+    '”': "QUOTE",
     "'": "QUOTE",
     '"': "QUOTE",
-    '²': "SQUARE"
+    '²': "SQUARE",
+    '³': "CUBE",
+    "\uf0b7": "INVALID"
     }
 
 MISC_REPLACEMENTS = {

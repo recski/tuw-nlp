@@ -52,7 +52,7 @@ class UD_Fourlang(IRTGGrammar):
                     'nonterminal')
 
             if parent:
-                subgraphs = self.lexicon.handle_subgraphs(lemma, pos, clemma, cpos, deprel, parent, i)
+                subgraphs = self.lexicon.handle_subgraphs(lemma, pos, clemma, cpos, deprel, parent, i, j)
 
                 if subgraphs:
                     yield from subgraphs

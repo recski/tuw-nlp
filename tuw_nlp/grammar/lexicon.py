@@ -307,15 +307,21 @@ class DefaultLexicon():
 
         return [coordination, handle_coord, coord_to_pos, subgraph_node]
 
-    def handle_acl_relcl(self, parent_pos, current_pos, children_pos, i):
+    def handle_acl_relcl(self, parent_pos, current_pos, children_pos, i, j):
         acl_relcl = (
-            f"{parent_pos} -> handle_acl_relcl{i}({parent_pos}, {current_pos}, {children_pos})",
+            f"{parent_pos} -> handle_acl_relcl{i}_{j}({parent_pos}, {current_pos}, {children_pos})",
             {'ud': f'f_dep2(merge(merge(?1,"(r<root> :ACL_RELCL (d2<dep2>))"), r_dep2(f_dep1(merge(merge(?2,"(r<root> :NSUBJ (d1<dep1>))"), r_dep1(?3))))))',
              'fourlang': f'f_dep1(merge(merge(?1,"(r<root> :0 (d1<dep1>))"), r_dep1(?2)))'},
             "nonterminal"
         )
 
-        return [acl_relcl]
+        acl_relcl2 = (
+            f"{parent_pos} -> handle_acl_relcl{i}_{j}_pass({parent_pos}, {current_pos}, {children_pos})",
+            {'ud': f'f_dep2(merge(merge(?1,"(r<root> :ACL_RELCL (d2<dep2>))"), r_dep2(f_dep1(merge(merge(?2,"(r<root> :NSUBJ_PASS (d1<dep1>))"), r_dep1(?3))))))',
+             'fourlang': f'f_dep1(merge(merge(?1,"(r<root> :0 (d1<dep1>))"), r_dep1(?2)))'},
+            "nonterminal"
+        )
+        return [acl_relcl, acl_relcl2]
 
     def handle_obl_case(self, parent_pos, current_pos, children_pos, i):
         obl_case = (
@@ -327,7 +333,7 @@ class DefaultLexicon():
 
         return [obl_case]
 
-    def handle_subgraphs(self, lemma, pos, clemma, cpos, dep, parent, i):
+    def handle_subgraphs(self, lemma, pos, clemma, cpos, dep, parent, i, j):
         parent_dep = parent[2]
         parent_pos = parent[1]
 
@@ -337,7 +343,7 @@ class DefaultLexicon():
             return self.handle_conj(parent_pos, parent_dep, pos, cpos, i)
 
         if parent_dep == "ACL_RELCL":
-            return self.handle_acl_relcl(parent_pos, pos, cpos, i)
+            return self.handle_acl_relcl(parent_pos, pos, cpos, i, j)
 
         if parent_dep == "OBL":
             return self.handle_obl_case(parent_pos, pos, cpos, i)

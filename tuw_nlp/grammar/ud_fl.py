@@ -37,7 +37,7 @@ class UD_Fourlang(IRTGGrammar):
         pos = node['upos']
         yield from self.gen_terminal_rules(lemma, pos, i)
         for j, edge in graph[i].items():
-            cnode = graph.nodes[j] 
+            cnode = graph.nodes[j]
             clemma = preprocess_node_alto(graph.nodes[j]['lemma'])
             deprel = preprocess_edge_alto(edge['deprel'])
             cpos = cnode['upos']
@@ -81,6 +81,7 @@ class UD_Fourlang(IRTGGrammar):
             "start")
 
         yield from self.gen_rules_rec(graph, root_id)
+
 
 class UD_FL(IRTGGrammar):
     interpretations = {

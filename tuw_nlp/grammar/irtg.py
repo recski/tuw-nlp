@@ -1,16 +1,86 @@
 import datetime
+import json
+import logging
 import os
 import random
+from collections import defaultdict
+
+from dict_recursive_update import recursive_update
 
 from tuw_nlp.common.utils import ensure_dir
 from tuw_nlp.grammar.alto import get_rule_string, run_alto
 from tuw_nlp.grammar.utils import get_dummy_input
 
 
+class IRTGCache():
+    @staticmethod
+    def load(fn):
+        with open(fn) as f:
+            cache = json.load(f)
+        ints = sorted(cache.keys())
+        logging.warning(f'loaded cache from {fn} with interpretations: {ints}')
+        obj = IRTGCache(ints, fn)
+        obj.cache.update(cache)
+        return obj
+
+    def update_file(self, fn):
+        old = IRTGCache.load(fn)
+        assert old.interpretations == self.interpretations
+        recursive_update(old.cache, self.cache)
+        with open(fn, 'w') as f:
+            json.dump(old.cache, f)
+        logging.warning(f'updated cache in {fn}')
+
+    def __init__(self, interpretations, fn, new=False):
+        self.fn = fn
+        self.interpretations = interpretations
+        self.cache = {i: {} for i in interpretations}
+        if new:
+            with open(fn, 'w') as f:
+                json.dump(self.cache, f)
+
+    def get(
+            self, input_obj, input_int,
+            output_int, output_codec, create_path=False):
+
+        if input_obj not in self.cache[input_int]:
+            if create_path:
+                self.cache[input_int][input_obj] = defaultdict(
+                    lambda: defaultdict(dict))
+        else:
+            return self.cache[input_int][input_obj][output_int].get(
+                output_codec)
+
+        return None
+
+    def add(self, input_obj, input_int, output_int, output_codec, output_obj):
+
+        assert self.get(
+            input_obj, input_int, output_int, output_codec,
+            create_path=True) is None
+
+        self.cache[input_int][input_obj][output_int][output_codec] = output_obj
+
+
 class IRTGGrammar():
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.tmpdir = os.getenv("TUWNLP_TMPDIR", "tmp")
         ensure_dir(self.tmpdir)
+        self.load_cache(**kwargs)
+
+    def load_cache(self, **kwargs):
+        cache_path = kwargs.get('cache_dir') or 'cache'
+        cache_fn = kwargs.get('cache_fn') or f'{self.__class__.__name__}.json'
+        ensure_dir(cache_path)
+        fn = os.path.join(cache_path, cache_fn)
+        if not os.path.exists(fn):
+            logging.warning(f'setting up new cache file: {fn}')
+            self.cache = IRTGCache(
+                sorted(self.interpretations.keys()), fn, new=True)
+        else:
+            logging.warning(f'loading cache from file: {fn}')
+            self.cache = IRTGCache.load(fn)
+        self.cache_fn = fn
 
     def preprocess_input(self, input_obj, **kwargs):
         return input_obj
@@ -18,13 +88,30 @@ class IRTGGrammar():
     def postprocess_output(self, output_obj, **kwargs):
         return output_obj
 
-    def parse(self, input_obj, input_int, output_int, output_codec, **kwargs):
+    def _parse(self, input_obj, input_int, output_int, output_codec, **kwargs):
+        output = self.run(
+            input_obj, input_int, output_int, output_codec)
+        return self.postprocess_output(output, **kwargs)
+
+    def parse(self, orig_input, input_int, output_int, output_codec, **kwargs):
         if input_int not in self.interpretations:
             raise ValueError(f"unknown interpretation: {input_int}")
-        transformed_input = self.preprocess_input(input_obj, **kwargs)
-        output = self.run(
-            transformed_input, input_int, output_int, output_codec)
-        return self.postprocess_output(output, **kwargs)
+        if output_int not in self.interpretations:
+            raise ValueError(f"unknown interpretation: {output_int}")
+
+        input_obj = self.preprocess_input(orig_input, **kwargs)
+
+        cached = self.cache.get(
+            input_obj, input_int, output_int, output_codec)
+
+        if cached is None:
+            output_obj = self._parse(
+                input_obj, input_int, output_int, output_codec, **kwargs)
+            self.cache.add(
+                input_obj, input_int, output_int, output_codec, output_obj)
+            self.cache.update_file(self.cache_fn)
+            return output_obj
+        return cached
 
     def gen_file_names(self):
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")

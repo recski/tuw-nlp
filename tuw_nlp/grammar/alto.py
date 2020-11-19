@@ -2,11 +2,8 @@ import logging
 import os
 import subprocess
 
-ALTO_JAR = os.getenv(
-    'ALTO_JAR',
-    # '/home/recski/tools/alto/build/libs/alto-2.3.7-SNAPSHOT-all.jar')
-    #'/home/recski/tools/alto-2.3-SNAPSHOT-jar-with-dependencies.jar')
-    '/home/adaamko/projects/wikt2def/fourlang/grammars/alto-2.3.6-SNAPSHOT-all.jar')
+ALTO_JAR = os.getenv('ALTO_JAR')
+assert ALTO_JAR, 'ALTO_JAR environment variable not set'
 
 
 def get_alto_command(

@@ -1,38 +1,33 @@
 # tuw-nlp
 
+NLP utilities developed at TUW informatics
+
 ## Modules
 
 ### text 
 
-- from `brise-nlp/common/nlp`: everything
-- from `surface_realization/utils`: tsv, conll tools -> text.corpus
-
-### eval ?
-
-- from `brise-nlp/common/utils`: eval tools (to `xeval.py` ?)
-
-
-### grammar
-
-- from `brise_nlp/grammar`:
-    - from lexicon: "as is" (?)
-    - from uddl: integrate functions to `irtg.py`
-
-
-- from `brise-nlp/common/utils`: some graph tools
-- from `surface_realization`:
-    - from `utils`:
-        - `sanitize_...` (to alto module)
-        - `irtg/alto corpus writers/readers (to `irtg.py`)
-    - from `converter`: ?? (Adam, do we need anything?)
-    - from `surface_realization`: alto execution
-
+General text processing utilities, contains:
+- segmentation: stanza-based processors for word and sentence level segmentation
+- patterns: various patterns for text processing tasks 
 
 ### graph
+Tools for working with graphs, contains:
+- utils: misc utilities for working with graphs
 
-- from `surface_realization`:
-    - from `utils`:
-        - `get_rules` (generic graph function to get subgraphs)
-        - `get_isi_sgraph` (to sgraph writer method)
-- 
+### grammar
+Tools for generating and using grammars, contains:
+- alto: tools for interfacing with the [alto](https://github.com/coli-saar/alto) tool
+- irtg: class for representing Interpreted Regular Tree Grammars
+- lexicon: Rule lexica for building lexicalized grammars
+- ud_fl: grammar-based mapping of [Universal Dependencies](https://universaldependencies.org/) to [4lang]() semantic graphs.
+- utils: misc utilities for working with grammars
 
+## Contributing
+
+We welcome all contributions! Please fork this repository and create a branch for your modifications. We suggest getting in touch with us first, by opening an issue or by writing an email to Gabor Recski or Adam Kovacs at firstname.lastname@tuwien.ac.at
+
+## Citing
+
+## License 
+
+MIT license

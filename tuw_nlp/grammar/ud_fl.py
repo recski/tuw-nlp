@@ -77,7 +77,7 @@ class UD_Fourlang(IRTGGrammar):
         yield (
             f"S! -> ROOT({root_pos})", {
                 "ud": "?1",
-                "fourlang": "f_root(f_relation(?1))"},
+                "fourlang": "f_relation(?1)"},
             "start")
 
         yield from self.gen_rules_rec(graph, root_id)

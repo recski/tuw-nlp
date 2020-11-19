@@ -24,18 +24,20 @@ def read_alto_output(raw_dl):
     for i, trip in enumerate(g.triples):
         if i == 0:
             ind = trip[0].split("_")[1]
-            root = f"{trip[2]}_{ind}"
+            name = trip[2].split("<root>")[0]
+            root = f"{name}_{ind}"
         if trip[1] == ":instance":
             id_to_word[trip[0]] = trip[2]
 
     for trip in g.triples:
         if trip[1] != ":instance":
             node1_unique = trip[0].split("_")[1]
-            node2_unique = trip[2].split("_")[1]
+            node2_unique = trip[2].split("_")[1].strip("<root>")
             dep1 = f"{id_to_word[trip[0]]}_{node1_unique}"
             dep2 = f"{id_to_word[trip[2]]}_{node2_unique}"
             edge = trip[1].split(":")[1]
-            G.add_edge(dep1, dep2, color=int(edge))
+            if edge != "UNKNOWN":
+                G.add_edge(dep1, dep2, color=int(edge))
 
     if len(G.nodes()) == 0:
         G.add_node(root)
@@ -76,13 +78,14 @@ def sen_to_graph(sen):
 def get_node_attr(graph, i, convert_to_int, ud, preprocess):
     if ud:
         name = preprocess_lemma(graph.nodes[i]['lemma'])
-        node_id = f'{name}_{i}'
     else:
         name, id_and_src = i.split('_')
         node_id = f'u_{id_and_src}'
 
     if preprocess:
         name = preprocess_node_alto(name)
+    if ud:
+        node_id =  f'{name}_{i}'
 
     return node_id, name
 

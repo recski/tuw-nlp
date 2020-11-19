@@ -245,7 +245,7 @@ class DefaultLexicon():
             return f'f_dep1(merge(merge(?1,"(r<root> :{ud_edge} (d1<dep1>))"), r_dep1(?2)))', f'f_dep1(merge(merge(?1,"(r<root> :{fourlang_out} (d1<dep1> :{fourlang_in} (r<root>)))"), r_dep1(?2)))'
 
         def r_default_binary_rule(ud_edge):
-            return f'f_dep1(merge(merge(?1,"(r<root> :{ud_edge} (d1<dep1>))"), r_dep1(?2)))', f'?1'
+            return f'f_dep1(merge(merge(?1,"(r<root> :{ud_edge} (d1<dep1>))"), r_dep1(?2)))', f'f_dep1(merge(merge(?1,"(r<root> :UNKNOWN (d1<dep1>))"), r_dep1(?2)))'
 
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "sorted_train_edges_mapped"), "r+") as f:
             for line in f:
@@ -364,4 +364,4 @@ class DefaultLexicon():
         return [terminal_fss]
 
     def get_default_binary_rule(self, dep):
-        return f'f_dep1(merge(merge(?1,"(r<root> :{dep} (d1<dep1>))"), r_dep1(?2)))', f'?1'
+        return f'f_dep1(merge(merge(?1,"(r<root> :{dep} (d1<dep1>))"), r_dep1(?2)))', f'f_dep1(merge(merge(?1,"(r<root> :UNKNOWN (d1<dep1>))"), r_dep1(?2)))'

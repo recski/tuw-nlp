@@ -23,7 +23,7 @@ def read_alto_output(raw_dl):
 
     for i, trip in enumerate(g.triples):
         if i == 0:
-            ind = trip[0].split("_")[1]
+            ind = trip[0].split("_")[1].split("<root>")[0]
             name = trip[2].split("<root>")[0]
             root = f"{name}_{ind}"
         if trip[1] == ":instance":
@@ -31,8 +31,8 @@ def read_alto_output(raw_dl):
 
     for trip in g.triples:
         if trip[1] != ":instance":
-            node1_unique = trip[0].split("_")[1]
-            node2_unique = trip[2].split("_")[1].strip("<root>")
+            node1_unique = trip[0].split("_")[1].split("<root>")[0]
+            node2_unique = trip[2].split("_")[1].split("<root>")[0]
             dep1 = f"{id_to_word[trip[0]]}_{node1_unique}"
             dep2 = f"{id_to_word[trip[2]]}_{node2_unique}"
             edge = trip[1].split(":")[1]

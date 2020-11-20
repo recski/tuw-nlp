@@ -27,15 +27,17 @@ def read_alto_output(raw_dl):
             name = trip[2].split("<root>")[0]
             root = f"{name}_{ind}"
         if trip[1] == ":instance":
-            id_to_word[trip[0]] = trip[2]
+            id_to_word[trip[0].split("<root>")[0]] = trip[2]
 
     for trip in g.triples:
         if trip[1] != ":instance":
-            node1_unique = trip[0].split("_")[1].split("<root>")[0]
-            node2_unique = trip[2].split("_")[1].split("<root>")[0]
-            dep1 = f"{id_to_word[trip[0]]}_{node1_unique}"
-            dep2 = f"{id_to_word[trip[2]]}_{node2_unique}"
-            edge = trip[1].split(":")[1]
+            head = trip[0].split("<root>")[0]
+            dep = trip[2].split("<root>")[0]
+            node1_unique = head.split("_")[1]
+            node2_unique = dep.split("_")[1]
+            dep1 = f"{id_to_word[head]}_{node1_unique}"
+            dep2 = f"{id_to_word[dep]}_{node2_unique}"
+            edge = trip[1].split(":")[1].split("-")[0]
             if edge != "UNKNOWN":
                 G.add_edge(dep1, dep2, color=int(edge))
 

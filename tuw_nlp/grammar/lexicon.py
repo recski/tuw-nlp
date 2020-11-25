@@ -40,7 +40,7 @@ class IRTGRuleLexicon():
             # betragen duerfen, sample 13
             ("VERB", "AUX", "AUX"),
             # liegen -> Baulinie, sample 6
-            ("VERB", "OBL", "NOUN"),
+            # ("VERB", "OBL", "NOUN"),
         }
 
         self.mod_edges |= {
@@ -170,7 +170,15 @@ class CFLLexicon(IRTGRuleLexicon):
             ("VERB", "CCOMP", "VERB"): [r("2")],
             # ...so auszubilden, dass...
             ("VERB", "CCOMP", "ADJ"): [r("0")],  # TODO
+            # sind Vorkehrungen zu treffen, dass...moeglich
+            ("NOUN", "CCOMP", "ADJ"): [r("0")],  # TODO
+            # sind Vorkehrungen zu treffen, dass...bleiben
+            ("NOUN", "CCOMP", "VERB"): [r("0")],  # TODO
+            # vorhanden bleiben (correct parse? why not obj or obl?)
+            ("VERB", "XCOMP", "ADJ"): [r("2")],  # TODO
             ("VERB", "OBJ", "NOUN"): [r("2")],
+            # Fuer alle Flaechen ... zu treffen # TODO
+            ("VERB", "OBL", "NOUN"): [r("2")],
             ("VERB", "NSUBJ", "NOUN"): [r("1")],
             # ...Pflanzung möglich ist...
             ("VERB", "NSUBJ", "ADJ"): [r("1")],

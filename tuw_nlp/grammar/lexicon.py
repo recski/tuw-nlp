@@ -247,9 +247,9 @@ class DefaultLexicon():
             return f'f_dep1(merge(merge(?1,"(r<root> :{ud_edge} (d1<dep1>))"), r_dep1(?2)))', f'f_dep1(merge(merge(?1,"(d1<dep1> :{fourlang_edge} (r<root>))"), r_dep1(?2)))'
 
         def r_relation(ud_edge, relation):
-            return f'f_dep1(merge(merge(?1,"(r<root> :{ud_edge} (d1<dep1>))"), r_dep1(?2)))', f'f_dep1(merge(merge(?1,"({relation}<relation> / {relation} :1 (r<root>) :2 (d1<dep1>)))"), r_dep1(?2)))'
+            return f'f_dep1(merge(merge(?1,"(r<root> :{ud_edge} (d1<dep1>))"), r_dep1(?2)))', f'f_dep1(merge(merge(?1,"({relation}<relation> / {relation} :2 (r<root>) :1 (d1<dep1>)))"), r_dep1(?2)))'
 
-        def r_in_out(ud_edge, fourlang_out, fourlang_in):
+        def r_in_out(ud_edge, fourlang_in, fourlang_out):
             return f'f_dep1(merge(merge(?1,"(r<root> :{ud_edge} (d1<dep1>))"), r_dep1(?2)))', f'f_dep1(merge(merge(?1,"(r<root> :{fourlang_out} (d1<dep1> :{fourlang_in} (r<root>)))"), r_dep1(?2)))'
 
         def r_default_binary_rule(ud_edge):

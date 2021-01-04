@@ -72,6 +72,9 @@ def sen_to_graph(sen):
     """convert dependency-parsed stanza Sentence to nx.DiGraph"""
     G = nx.DiGraph()
     for word in sen.to_dict():
+        if isinstance(word['id'], tuple):
+            # token representing an mwe, e.g. "vom" ~ "von dem"
+            continue
         G.add_node(word['id'], **word)
         G.add_edge(word['head'], word['id'], deprel=word['deprel'])
     return G
@@ -87,7 +90,7 @@ def get_node_attr(graph, i, convert_to_int, ud, preprocess):
     if preprocess:
         name = preprocess_node_alto(name)
     if ud:
-        node_id =  f'{name}_{i}'
+        node_id = f'{name}_{i}'
 
     return node_id, name
 

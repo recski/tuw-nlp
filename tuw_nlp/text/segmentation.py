@@ -20,6 +20,10 @@ class SsplitFixer(Processor):
 
     def is_err(self, sen1, sen2):
         """determine if the split between sen1 and sen2 was an error"""
+
+        if sen1.text.endswith(':'):
+            return True, True
+
         for abbr in ABBREV:
             if sen1.text.endswith(f' {abbr}'):
                 return True, True
@@ -70,15 +74,14 @@ class CustomStanzaPipeline():
         self.tokenizer = stanza.Pipeline(
             lang='de', processors='tokenize,fix_ssplit')
         self.additional = stanza.Pipeline(
-            lang='de', processors=processors, tokenize_pretokenized=True)
+            lang='de', processors=processors, tokenize_no_ssplit=True)
 
     def ssplit(self, text):
         return [sen.text for sen in self.tokenizer(text).sentences]
 
     def process(self, text):
-        return self.additional([
-            [word.text for word in sen.words]
-            for sen in self.tokenizer(text).sentences])
+        sens = self.ssplit(text)
+        return self.additional("\n\n".join(sens))
 
     def __call__(self, text):
         return self.process(text)

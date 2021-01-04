@@ -80,7 +80,8 @@ class CustomStanzaPipeline():
         return [sen.text for sen in self.tokenizer(text).sentences]
 
     def process(self, text):
-        return self.additional("\n\n".join(self.ssplit(text)))
+        sens = self.ssplit(text)
+        return self.additional("\n\n".join(sens))
 
     def __call__(self, text):
         return self.process(text)

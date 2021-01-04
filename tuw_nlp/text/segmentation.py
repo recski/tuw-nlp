@@ -20,6 +20,10 @@ class SsplitFixer(Processor):
 
     def is_err(self, sen1, sen2):
         """determine if the split between sen1 and sen2 was an error"""
+
+        if sen1.text.endswith(':'):
+            return True, True
+
         for abbr in ABBREV:
             if sen1.text.endswith(f' {abbr}'):
                 return True, True

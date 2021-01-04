@@ -74,15 +74,13 @@ class CustomStanzaPipeline():
         self.tokenizer = stanza.Pipeline(
             lang='de', processors='tokenize,fix_ssplit')
         self.additional = stanza.Pipeline(
-            lang='de', processors=processors, tokenize_pretokenized=True)
+            lang='de', processors=processors, tokenize_no_ssplit=True)
 
     def ssplit(self, text):
         return [sen.text for sen in self.tokenizer(text).sentences]
 
     def process(self, text):
-        return self.additional([
-            [word.text for word in sen.words]
-            for sen in self.tokenizer(text).sentences])
+        return self.additional("\n\n".join(self.ssplit(text)))
 
     def __call__(self, text):
         return self.process(text)

@@ -72,7 +72,7 @@ def sen_to_graph(sen):
     """convert dependency-parsed stanza Sentence to nx.DiGraph"""
     G = nx.DiGraph()
     for word in sen.to_dict():
-        if isinstance(word['id'], tuple):
+        if isinstance(word['id'], (list, tuple)):
             # token representing an mwe, e.g. "vom" ~ "von dem"
             continue
         G.add_node(word['id'], **word)

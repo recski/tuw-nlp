@@ -14,6 +14,8 @@ class IRTGRuleLexicon():
     def get_mod_edges(self):
         self.mod_edges = {
             ("ADJ", "ADVMOD", "ADV"),
+            # tatsaechlich errichteten, 7774_18_1
+            ("ADJ", "ADVMOD", "ADJ"),
             # zulaessig -> bis, sample 6
             ("ADJ", "CASE", "ADP"),
             # bis -> Ausladung, sample 6
@@ -168,6 +170,9 @@ class CFLLexicon(IRTGRuleLexicon):
             ("VERB", "CSUBJ_PASS", "VERB"): [r("2")],
             # ...wird bestimmt, dass...
             ("VERB", "CCOMP", "VERB"): [r("2")],
+            # ...wird bestimmt: Die Errichtung...zulaesssig (8159_21_0)
+            # erroneously parsed as parataxis
+            ("VERB", "PARATAXIS", "ADJ"): [r("2")],
             # ...so auszubilden, dass...
             ("VERB", "CCOMP", "ADJ"): [r("0")],  # TODO
             # sind Vorkehrungen zu treffen, dass...moeglich

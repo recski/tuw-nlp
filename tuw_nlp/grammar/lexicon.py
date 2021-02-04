@@ -14,6 +14,8 @@ class IRTGRuleLexicon():
     def get_mod_edges(self):
         self.mod_edges = {
             ("ADJ", "ADVMOD", "ADV"),
+            # nicht hoeher, 7774_18_1
+            ("ADJ", "ADVMOD", "PART"),
             # tatsaechlich errichteten, 7774_18_1
             ("ADJ", "ADVMOD", "ADJ"),
             # zulaessig -> bis, sample 6

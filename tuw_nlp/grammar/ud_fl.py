@@ -19,7 +19,8 @@ class UD_Fourlang(IRTGGrammar):
 
     def preprocess_input(self, input_sen):
         self.input_graph = sen_to_graph(input_sen)
-        return graph_to_isi(self.input_graph, convert_to_int=True, algebra="graph")
+        return graph_to_isi(
+            self.input_graph, convert_to_int=True, algebra="graph")
 
     def gen_terminal_rules(self, lemma, pos, ind):
         fss = self.lexicon.get_terminal_rules(lemma, pos, ind)
@@ -52,21 +53,22 @@ class UD_Fourlang(IRTGGrammar):
                     'nonterminal')
 
             if parent:
-                subgraphs = self.lexicon.handle_subgraphs(lemma, pos, clemma, cpos, deprel, parent, i, j)
+                subgraphs = self.lexicon.handle_subgraphs(
+                    lemma, pos, clemma, cpos, deprel, parent, i, j)
 
                 if subgraphs:
                     yield from subgraphs
 
-
-            yield from self.gen_rules_rec(graph, j, parent=(lemma, pos, deprel))
+            yield from self.gen_rules_rec(
+                graph, j, parent=(lemma, pos, deprel))
 
         for i, relation in enumerate(self.lexicon.relation_terms):
             terminal_fss = self.lexicon.get_relation_terminal(relation)
 
             yield (
-                f"{relation} -> {relation}_{i}",
-                {'ud': f"{terminal_fss[0]}",
-                'fourlang': f"{terminal_fss[1]}"},
+                f"{relation} -> {relation}_{i}", {
+                    'ud': f"{terminal_fss[0]}",
+                    'fourlang': f"{terminal_fss[1]}"},
                 "nonterminal"
             )
 
@@ -117,13 +119,13 @@ class UD_FL(IRTGGrammar):
             binary_fss = self.lexicon.get_dependency_rules(pos, deprel, cpos)
             for k, binary_fs in enumerate(binary_fss):
                 yield (
-                    f"{pos} -> {pos}_{deprel}_{cpos}_{k}(_{deprel}, {pos})",
+                    f"{pos} -> {pos}_{deprel}_{cpos}_{k}({deprel}_{cpos}, {pos})",  # noqa
                     {
                         'ud': f"{pos}_2(?1, ?2)",
                         'fl': f'{binary_fs}'},
                     'nonterminal')
             yield (
-                f"_{deprel} -> _{deprel}_{cpos}({cpos})",
+                f"{deprel}_{cpos} -> _{deprel}_{cpos}({cpos})",
                 {
                     "ud": f"_{deprel}_1(?1)",
                     'fl': '?1'},

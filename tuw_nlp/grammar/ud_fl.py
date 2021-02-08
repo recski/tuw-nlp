@@ -104,13 +104,14 @@ class UD_FL(IRTGGrammar):
                     'fl': fs},
                 'nonterminal')
 
-    def gen_rules_rec(self, graph, i):
+    def gen_rules_rec(self, graph, i, parent=None):
         node = graph.nodes[i]
         lemma = preprocess_node_alto(preprocess_lemma(node['lemma']))
         pos = node['upos']
         yield from self.gen_terminal_rules(lemma, pos)
         for j, edge in graph[i].items():
             cnode = graph.nodes[j]
+            clemma = preprocess_node_alto(graph.nodes[j]['lemma'])
             deprel = preprocess_edge_alto(edge['deprel'])
             cpos = cnode['upos']
 
@@ -129,7 +130,13 @@ class UD_FL(IRTGGrammar):
                     'fl': '?1'},
                 'nonterminal')
 
-            yield from self.gen_rules_rec(graph, j)
+            if parent:
+                subgraphs = self.lexicon.handle_subgraphs(lemma, pos, clemma, cpos, deprel, parent, i, j)
+
+                if subgraphs:
+                    yield from subgraphs
+
+            yield from self.gen_rules_rec(graph, j, parent=(lemma, pos, deprel))
 
     def gen_rules(self):
         graph = self.input_graph

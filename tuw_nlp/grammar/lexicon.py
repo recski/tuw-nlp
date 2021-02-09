@@ -243,9 +243,9 @@ class CFLLexicon(IRTGRuleLexicon):
 
     def handle_obl_case(self, parent_pos, current_pos, children_pos, i, clemma):
         obl_case = (
-            f"{parent_pos} -> handle_obl_case{i}({parent_pos}, {current_pos}, {children_pos})",
-            {'ud': f'f_dep2(merge(merge(?1,"(r<root> :OBL (d2<dep2>))"), r_dep2(f_dep1(merge(merge(?2,"(r<root> :CASE (d1<dep1>))"), r_dep1(?3))))))',
-            'fl': f'f_dep2(f_dep1(merge(merge(merge(?1,"(d1<dep1> :1 (r<root>) :2 (d2<dep2>))"), r_dep1(?3)), r_dep2(?2))))'},
+            f"{parent_pos} -> HANDLE_OBL_CASE_{children_pos}_{i}({children_pos}, {current_pos}, {parent_pos})",
+            {'ud': f'{parent_pos}_2(_OBL_1({current_pos}_2(_CASE_1(?1), ?2)),?3)',
+            'fl': f'f_dep2(f_dep1(merge(merge(merge(?3,"(d1<dep1> :1 (r<root>) :2 (d2<dep2>))"), r_dep1(?1)), r_dep2(?2))))'},
             "nonterminal"
         )
 

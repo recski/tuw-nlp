@@ -120,7 +120,7 @@ class UD_FL(IRTGGrammar):
             binary_fss = self.lexicon.get_dependency_rules(pos, deprel, cpos)
             for k, binary_fs in enumerate(binary_fss):
                 yield (
-                    f"{pos} -> {pos}_{deprel}_{cpos}_{k}({deprel}_{cpos}, {pos})",  # noqa
+                    f"{pos} -> {pos}_{deprel}_{cpos}_{k}({deprel}_{cpos}, {pos}) [0.1]",  # noqa
                     {
                         'ud': f"{pos}_2(?1, ?2)",
                         'fl': f'{binary_fs}'},

@@ -95,25 +95,31 @@ def get_node_attr(graph, i, convert_to_int, ud, preprocess):
     return node_id, name
 
 
-def graph_to_isi_graph_rec(
-        graph, i, convert_to_int=False, ud=True, preprocess=True):
+def graph_to_isi_graph(
+        graph, root_node, convert_to_int=False, ud=True, preprocess=True):
+    nodes = {}
+    pn_edges, pn_nodes = [], []
+    for u, v, e in graph.edges(data=True):
+        for node in u, v:
+            if node not in nodes:
+                name, id_and_src = node.split('_')
+                if node == root_node and not node.endswith('<root>'):
+                    id_and_src += '<root>'
+                if preprocess:
+                    name = preprocess_node_alto(name)
+                pn_id = f'u_{id_and_src}'
+                nodes[node] = (pn_id, name)
+                pn_nodes.append((pn_id, ':instance', name))
 
-    node_id, node_name = get_node_attr(
-        graph, i, convert_to_int, ud, preprocess)
-    isi = f"({node_id} / {node_name}"
-    for j, edges in graph[i].items():
-        edge_name = edges['deprel'] if ud else edges['color']
-        edge_name = preprocess_edge_alto(edge_name)
-        # two spaces before edge name, because alto does it :)
-        isi += f'  :{edge_name} '
-        isi += graph_to_isi_graph_rec(graph, j, convert_to_int, ud, preprocess)
+        pn_edges.append((nodes[u][0], f':{e["color"]}', nodes[v][0]))
 
-    isi += ")"
+    G = pn.Graph(pn_nodes + pn_edges)
 
-    return isi
+    # two spaces before edge name, because alto does it :)
+    return pn.encode(G, indent=0).replace('\n', '  ')
 
 
-def graph_to_isi_tree_rec(graph, i, convert_to_int=False, ud=True):
+def graph_to_tree_rec(graph, i, convert_to_int=False, ud=True):
     node = graph.nodes[i]
     lemma = preprocess_node_alto(preprocess_lemma(node['lemma']))
     pos = node['upos']
@@ -121,7 +127,7 @@ def graph_to_isi_tree_rec(graph, i, convert_to_int=False, ud=True):
     for j, edge in graph[i].items():
         deprel = preprocess_edge_alto(edge['deprel'])
         isi += f"_{deprel}("
-        isi += graph_to_isi_tree_rec(graph, j, convert_to_int)
+        isi += graph_to_tree_rec(graph, j, convert_to_int)
         isi += f"), {pos}("
 
     lemma_int = f"{lemma}_{i}"
@@ -147,9 +153,32 @@ def graph_to_isi(
     if root_id is None:
         root_id = get_root_id(graph, ud)
     if algebra == "tree":
-        isi = graph_to_isi_tree_rec(graph, root_id, convert_to_int, ud)
+        isi = graph_to_tree_rec(graph, root_id, convert_to_int, ud)
     elif algebra == "graph":
-        isi = graph_to_isi_graph_rec(
+        isi = graph_to_isi_graph(
             graph, root_id, convert_to_int=convert_to_int, ud=ud,
             preprocess=preprocess)
     return f"ROOT({isi})" if algebra == "tree" else isi
+
+
+def read_and_write_graph(in_graph_str):
+    G, root = read_alto_output(in_graph_str)
+    return graph_to_isi(
+        G, ud=False, algebra='graph', root_id=root, preprocess=False)
+
+
+def test_graph_simple():
+    in_graph_str = "(u_1<root> / begruenen  :2 (u_3 / Stand  :0 (u_6 / Wissenschaft  :0 (u_9 / technisch))  :0 (u_12 / entsprechend))  :2 (u_15 / Flachdaecher  :0 (u_18 / Dachneigung  :0 (u_21 / Grad  :0 (u_24 / fuenf)  :0 (u_27 / von))  :0 (u_30 / zu)  :0 (u_33 / bis))))"  # noqa
+    out_graph_str = read_and_write_graph(in_graph_str)
+    assert in_graph_str == out_graph_str
+
+
+def test_graph_complex():
+    in_graph_str = '(u_1<root> / ausbilden  :2 (u_11 / Dachflaeche  :0 (u_14 / Gebaeude))  :1-of (u_3 / als  :2 (u_4 / Flachdaecher  :0 (u_8 / begruent)))  :1-of (u_17 / auf  :2 (u_18 / Flaeche  :0 (u_22 / bezeichnet  :0 (u_25 / BB2)))))'  # noqa
+    out_graph_str = read_and_write_graph(in_graph_str)
+    assert in_graph_str == out_graph_str
+
+
+if __name__ == '__main__':
+    in_graph_str = "(u_1<root> / begruenen  :2 (u_3 / Stand  :0 (u_6 / Wissenschaft  :0 (u_9 / technisch))  :0 (u_12 / entsprechend))  :2 (u_15 / Flachdaecher  :0 (u_18 / Dachneigung  :0 (u_21 / Grad  :0 (u_24 / fuenf)  :0 (u_27 / von))  :0 (u_30 / zu)  :0 (u_33 / bis))))"  # noqa
+    print(read_and_write_graph(in_graph_str))

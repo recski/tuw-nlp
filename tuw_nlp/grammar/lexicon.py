@@ -186,6 +186,8 @@ class CFLLexicon(IRTGRuleLexicon):
             ("VERB", "OBJ", "NOUN"): [r("2")],
             # Fuer alle Flaechen ... zu treffen # TODO
             ("VERB", "OBL", "NOUN"): [r("2")],
+            # zu begruenen, e.g. 7181_6_0
+            ("VERB", "MARK", "PART"): [r("0")],
             ("VERB", "NSUBJ", "NOUN"): [r("1")],
             # ...Pflanzung möglich ist...
             ("VERB", "NSUBJ", "ADJ"): [r("1")],
@@ -232,6 +234,9 @@ class CFLLexicon(IRTGRuleLexicon):
             ],
             "unzulaessig": [
                 n('FOR')
+            ],
+            ("zu", "PART"): [
+                n('OBL')
             ],
         }
 

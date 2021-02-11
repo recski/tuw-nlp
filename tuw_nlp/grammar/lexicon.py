@@ -58,18 +58,8 @@ class IRTGRuleLexicon():
         TODO: allow lookup based on lemma and/or clemma (that's 3 options)"""
         return self.bin_fnc.get((pos, dep, cpos)) or [self.default_binary_rule]
 
-    def get_terminal_rules(self, word, pos):
-        """returns a list of interpretations associated with the
-        word or word, pos pair. Word-only match takes precedence to discourage
-        using it as an elsewhere condition: if POS matters then
-        the word should be listed with all possible POS-tags"""
-
-        if word in self.prop or (word, pos) in self.prop or word[0] == 'X':
-            # return [f"[prop: {word}]"]
-            return [self.get_lexical_terminal(word)]
-
-        return self.term_fnc.get(word, self.term_fnc.get(
-            (word, pos))) or [self.get_default_terminal(word)]
+    def get_terminal_rules(self, word, pos, **kwargs):
+        raise NotImplementedError
 
     def get_props_from_file(self, fn):
         self.prop = set()
@@ -186,6 +176,8 @@ class CFLLexicon(IRTGRuleLexicon):
             ("VERB", "OBJ", "NOUN"): [r("2")],
             # Fuer alle Flaechen ... zu treffen # TODO
             ("VERB", "OBL", "NOUN"): [r("2")],
+            # zu begruenen, e.g. 7181_6_0
+            ("VERB", "MARK", "PART"): [r("0")],
             ("VERB", "NSUBJ", "NOUN"): [r("1")],
             # ...Pflanzung möglich ist...
             ("VERB", "NSUBJ", "ADJ"): [r("1")],
@@ -233,7 +225,22 @@ class CFLLexicon(IRTGRuleLexicon):
             "unzulaessig": [
                 n('FOR')
             ],
+            ("zu", "PART"): [
+                n('OBL')
+            ],
         }
+
+    def get_terminal_rules(self, word, pos, xpos):
+        """returns a list of interpretations associated with the
+        word or word, pos pair. Word-only match takes precedence to discourage
+        using it as an elsewhere condition: if POS matters then
+        the word should be listed with all possible POS-tags"""
+
+        if xpos == 'VVIZU':
+            return [f'"({word}<root> / {word} :0 (OBL / OBL))"']
+
+        return self.term_fnc.get(word, self.term_fnc.get(
+            (word, pos))) or [self.get_default_terminal(word)]
 
     def get_lexical_terminal(self, word):
         return self.get_default_terminal(word)

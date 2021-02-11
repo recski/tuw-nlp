@@ -96,8 +96,8 @@ class UD_FL(IRTGGrammar):
         self.input_graph = sen_to_graph(input_sen)
         return graph_to_isi(self.input_graph)
 
-    def gen_terminal_rules(self, lemma, pos):
-        fss = self.lexicon.get_terminal_rules(lemma, pos)
+    def gen_terminal_rules(self, lemma, pos, xpos):
+        fss = self.lexicon.get_terminal_rules(lemma, pos, xpos)
         for i, fs in enumerate(fss):
             yield (
                 f"{pos} -> {lemma}_{pos}_{i}",
@@ -110,7 +110,8 @@ class UD_FL(IRTGGrammar):
         node = graph.nodes[i]
         lemma = preprocess_node_alto(preprocess_lemma(node['lemma']))
         pos = node['upos']
-        yield from self.gen_terminal_rules(lemma, pos)
+        xpos = node['xpos']
+        yield from self.gen_terminal_rules(lemma, pos, xpos)
         for j, edge in graph[i].items():
             cnode = graph.nodes[j]
             clemma = preprocess_node_alto(graph.nodes[j]['lemma'])
@@ -133,12 +134,14 @@ class UD_FL(IRTGGrammar):
                 'nonterminal')
 
             if parent:
-                subgraphs = self.lexicon.handle_subgraphs(lemma, pos, clemma, cpos, deprel, parent, i, j)
+                subgraphs = self.lexicon.handle_subgraphs(
+                    lemma, pos, clemma, cpos, deprel, parent, i, j)
 
                 if subgraphs:
                     yield from subgraphs
 
-            yield from self.gen_rules_rec(graph, j, parent=(lemma, pos, deprel))
+            yield from self.gen_rules_rec(
+                graph, j, parent=(lemma, pos, deprel))
 
     def gen_rules(self):
         graph = self.input_graph

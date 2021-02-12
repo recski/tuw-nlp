@@ -178,6 +178,8 @@ class CFLLexicon(IRTGRuleLexicon):
             ("VERB", "OBL", "NOUN"): [r("2")],
             # zu begruenen, e.g. 7181_6_0
             ("VERB", "MARK", "PART"): [r("0")],
+            # sofern.., e.g. 7408_10_1
+            ("VERB", "MARK", "SCONJ"): [r("0")],
             ("VERB", "NSUBJ", "NOUN"): [r("1")],
             # ...Pflanzung möglich ist...
             ("VERB", "NSUBJ", "ADJ"): [r("1")],
@@ -218,6 +220,9 @@ class CFLLexicon(IRTGRuleLexicon):
             ],
             "zulaessig": [
                 n('PER')
+            ],
+            "sofern": [
+                n('EXC')
             ],
             "untersagen": [
                 n('FOR')

@@ -378,17 +378,17 @@ class DefaultLexicon():
         )
         return [acl_relcl, acl_relcl2]
 
-    def handle_obl_case(self, parent_pos, current_pos, children_pos, i, clemma):
+    def handle_obl_case(self, parent_pos, current_pos, children_pos, i, clemma, j):
         if clemma == "by":
             obl_case = (
-                f"{parent_pos} -> handle_obl_case{i}({parent_pos}, {current_pos}, {children_pos})",
+                f"{parent_pos} -> handle_obl_case{i}_{j}({parent_pos}, {current_pos}, {children_pos})",
                 {'ud': f'f_dep2(merge(merge(?1,"(r<root> :OBL (d2<dep2>))"), r_dep2(f_dep1(merge(merge(?2,"(r<root> :CASE (d1<dep1>))"), r_dep1(?3))))))',
                 'fourlang': f'f_dep1(merge(merge(?1,"(r<root> :1 (d1<dep1> :0 (r<root>)))"), r_dep1(?2)))'},
                 "nonterminal"
             )
         else:
             obl_case = (
-                f"{parent_pos} -> handle_obl_case{i}({parent_pos}, {current_pos}, {children_pos})",
+                f"{parent_pos} -> handle_obl_case{i}_{j}({parent_pos}, {current_pos}, {children_pos})",
                 {'ud': f'f_dep2(merge(merge(?1,"(r<root> :OBL (d2<dep2>))"), r_dep2(f_dep1(merge(merge(?2,"(r<root> :CASE (d1<dep1>))"), r_dep1(?3))))))',
                 'fourlang': f'f_dep2(f_dep1(merge(merge(merge(?1,"(d1<dep1> :1 (r<root>) :2 (d2<dep2>))"), r_dep1(?3)), r_dep2(?2))))'},
                 "nonterminal"
@@ -409,7 +409,7 @@ class DefaultLexicon():
             return self.handle_acl_relcl(parent_pos, pos, cpos, i, j)
 
         if parent_dep == "OBL":
-            return self.handle_obl_case(parent_pos, pos, cpos, i, clemma)
+            return self.handle_obl_case(parent_pos, pos, cpos, i, clemma, j)
 
         return subgraph
 

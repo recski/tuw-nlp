@@ -99,19 +99,38 @@ def graph_to_isi_graph(
         graph, root_node, convert_to_int=False, ud=True, preprocess=True):
     nodes = {}
     pn_edges, pn_nodes = [], []
-    for u, v, e in graph.edges(data=True):
+   
+    for u, v, e in graph.edges(data=True): 
         for node in u, v:
             if node not in nodes:
-                name, id_and_src = node.split('_')
-                if node == root_node and not node.endswith('<root>'):
+                if ud:
+                    if not graph.nodes[node]:
+                        continue
+                    name = preprocess_lemma(graph.nodes[node]['lemma'])
+                    name = preprocess_node_alto(name)
+                    id_and_src = f'{name}_{node}'
+                else:
+                    name, id_and_src = node.split('_')
+                
+                if node == root_node and not id_and_src.endswith('<root>'):
                     id_and_src += '<root>'
                 if preprocess:
                     name = preprocess_node_alto(name)
-                pn_id = f'u_{id_and_src}'
+                
+                if ud:
+                    pn_id = id_and_src
+                else:
+                    pn_id = f'u_{id_and_src}'
+                
                 nodes[node] = (pn_id, name)
                 pn_nodes.append((pn_id, ':instance', name))
 
-        pn_edges.append((nodes[u][0], f':{e["color"]}', nodes[v][0]))
+        if ud:
+            if u in nodes and v in nodes:
+                deprel = preprocess_edge_alto(e["deprel"])
+                pn_edges.append((nodes[u][0], f':{deprel}', nodes[v][0]))
+        else:
+            pn_edges.append((nodes[u][0], f':{e["color"]}', nodes[v][0]))
 
     G = pn.Graph(pn_nodes + pn_edges)
 
@@ -180,5 +199,7 @@ def test_graph_complex():
 
 
 if __name__ == '__main__':
+    test_graph_simple()
+    test_graph_complex()
     in_graph_str = "(u_1<root> / begruenen  :2 (u_3 / Stand  :0 (u_6 / Wissenschaft  :0 (u_9 / technisch))  :0 (u_12 / entsprechend))  :2 (u_15 / Flachdaecher  :0 (u_18 / Dachneigung  :0 (u_21 / Grad  :0 (u_24 / fuenf)  :0 (u_27 / von))  :0 (u_30 / zu)  :0 (u_33 / bis))))"  # noqa
     print(read_and_write_graph(in_graph_str))

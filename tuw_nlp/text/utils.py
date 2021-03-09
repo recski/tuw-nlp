@@ -1,6 +1,43 @@
 import json
 
 from stanza.models.common.doc import Document as StanzaDocument
+from stanza.utils.conll import CoNLL
+
+
+def gen_tsv_sens(stream, swaps=()):
+    curr_sen = []
+    for raw_line in stream:
+        line = raw_line.strip()
+        if line.startswith("#"):
+            continue
+        if not line:
+            yield curr_sen
+            curr_sen = []
+            continue
+        fields = line.split('\t')
+        for i, j in swaps:
+            fields[i], fields[j] = fields[j], fields[i]
+        curr_sen.append(fields)
+
+
+def gen_conll_sens(stream, swaps=()):
+    for sen in gen_tsv_sens(stream, swaps):
+        dic = CoNLL.convert_conll([sen])
+        yield StanzaDocument(dic).sentences[0]
+
+
+def gen_conll_sens_from_file(fn, swaps=()):
+    with open(fn, "r") as f:
+        yield from gen_conll_sens(f, swaps)
+
+
+def print_conll_sen(sen, sent_id=None, swaps=()):
+    out = f'# sent_id = {sent_id}\n# text = {sen.text}\n'
+    for fields in CoNLL.convert_dict([sen.to_dict()])[0]:
+        for i, j in swaps:
+            fields[i], fields[j] = fields[j], fields[i]
+        out += "\t".join(fields) + '\n'
+    return out
 
 
 def normalize_whitespace(text):

@@ -185,7 +185,9 @@ class CFLLexicon(IRTGRuleLexicon):
             ("VERB", "NSUBJ", "ADJ"): [r("1")],
             ("VERB", "NSUBJ", "PRON"): [r("1")],
             ("VERB", "CONJ", "VERB"): [coord],
-            ("NOUN", "CASE", "ADP"): [r("0")]
+            ("NOUN", "CASE", "ADP"): [r("0")],
+            # 7181_3_1
+            ("NOUN", "APPOS", "PROPN"): [r("0")]
         }
 
         self.bin_fnc.update({edge: [r("0")] for edge in self.mod_edges})

@@ -253,10 +253,10 @@ class CFLLexicon(IRTGRuleLexicon):
     def get_default_terminal(self, word):
         return f'"({word}<root> / {word})"'
 
-    def handle_obl_case(self, parent_pos, current_pos, children_pos, i, clemma):
+    def handle_obl_case(self, parent_dep, parent_pos, current_pos, children_pos, i, clemma):
         obl_case = (
-            f"{parent_pos} -> HANDLE_OBL_CASE_{children_pos}_{i}({children_pos}, {current_pos}, {parent_pos})",
-            {'ud': f'{parent_pos}_2(_OBL_1({current_pos}_2(_CASE_1(?1), ?2)),?3)',
+            f"{parent_pos} -> HANDLE_{parent_dep}_CASE_{children_pos}_{i}({children_pos}, {current_pos}, {parent_pos})",
+            {'ud': f'{parent_pos}_2(_{parent_dep}_1({current_pos}_2(_CASE_1(?1), ?2)),?3)',
             'fl': f'f_dep2(f_dep1(merge(merge(merge(?3,"(d1<dep1> :1 (r<root>) :2 (d2<dep2>))"), r_dep1(?1)), r_dep2(?2))))'},
             "nonterminal"
         )
@@ -269,8 +269,9 @@ class CFLLexicon(IRTGRuleLexicon):
 
         subgraph = None
 
-        if parent_dep == "OBL":
-            return self.handle_obl_case(parent_pos, pos, cpos, i, clemma)
+        if parent_dep in("NMOD", "OBL"):
+            return self.handle_obl_case(
+                parent_dep, parent_pos, pos, cpos, i, clemma)
 
         return subgraph
 

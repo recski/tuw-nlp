@@ -13,6 +13,41 @@ dummy_isi_graph = '(dummy_0 / dummy_0)'
 dummy_tree = 'dummy(dummy)'
 
 
+def pn_to_graph(raw_dl):
+    g = pn.decode(raw_dl)
+    G = nx.DiGraph()
+
+    for i, trip in enumerate(g.triples):
+        if i == 0:
+            root_id = int(trip[0].split("_")[1].split("<root>")[0])
+            name = trip[2].split("<root>")[0]
+            G.add_node(root_id, name=name)
+
+        if trip[1] == ":instance":
+            i, name = int(trip[0].split("<root>")[0].split("_")[1]), trip[2]
+            G.add_node(i, name=name)
+
+    for trip in g.triples:
+        if trip[1] != ":instance":
+            edge = trip[1].split(":")[1]
+            if '-' in edge:
+                assert edge.endswith('-of')
+                edge = edge.split('-')[0]
+                src = trip[2]
+                tgt = trip[0]
+            else:
+                src = trip[0]
+                tgt = trip[2]
+
+            src_id = int(src.split("<root>")[0].split("_")[1])
+            tgt_id = int(tgt.split("<root>")[0].split("_")[1])
+
+            if edge != "UNKNOWN":
+                G.add_edge(src_id, tgt_id, color=int(edge))
+
+    return G, root_id
+
+
 def read_alto_output(raw_dl):
     id_to_word = {}
 
@@ -99,8 +134,8 @@ def graph_to_isi_graph(
         graph, root_node, convert_to_int=False, ud=True, preprocess=True):
     nodes = {}
     pn_edges, pn_nodes = [], []
-   
-    for u, v, e in graph.edges(data=True): 
+
+    for u, v, e in graph.edges(data=True):
         for node in u, v:
             if node not in nodes:
                 if ud:
@@ -111,17 +146,17 @@ def graph_to_isi_graph(
                     id_and_src = f'{name}_{node}'
                 else:
                     name, id_and_src = node.split('_')
-                
+
                 if node == root_node and not id_and_src.endswith('<root>'):
                     id_and_src += '<root>'
                 if preprocess:
                     name = preprocess_node_alto(name)
-                
+
                 if ud:
                     pn_id = id_and_src
                 else:
                     pn_id = f'u_{id_and_src}'
-                
+
                 nodes[node] = (pn_id, name)
                 pn_nodes.append((pn_id, ':instance', name))
 

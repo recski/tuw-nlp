@@ -1,6 +1,8 @@
+import logging
 from itertools import chain
 
 import networkx as nx
+from networkx.algorithms.isomorphism import DiGraphMatcher
 import penman as pn
 
 from tuw_nlp.text.patterns.misc import (
@@ -11,6 +13,53 @@ from tuw_nlp.text.patterns.misc import (
 
 dummy_isi_graph = '(dummy_0 / dummy_0)'
 dummy_tree = 'dummy(dummy)'
+
+
+class GraphMatcher():
+    @staticmethod
+    def node_matcher(n1, n2):
+        logging.debug(f'matchig these: {n1}, {n2}')
+        if n1['name'] is None or n2['name'] is None:
+            return True
+        return n1['name'] == n2['name']
+
+    def __init__(self, patterns):
+        self.patts = [
+            (pn_to_graph(patt)[0], key) for patt, key in patterns]
+
+    def match(self, graph):
+        for i, (patt, key) in enumerate(self.patts):
+            logging.debug(f'matching this: {self.patts[i]}')
+            matcher = DiGraphMatcher(
+                graph, patt, node_match=GraphMatcher.node_matcher)
+            if matcher.subgraph_is_isomorphic():
+                logging.debug('MATCH!')
+                yield key
+
+
+def gen_subgraphs(M, no_edges):
+    """M must be dict of dicts, see networkx.convert.to_dict_of_dicts.
+    Generates dicts of dicts, use networkx.convert.from_dict_of_dicts"""
+    if no_edges == 0:
+        yield from ({v: {}} for v in M)
+        return
+    for s_graph in gen_subgraphs(M, no_edges-1):
+        if no_edges >= 2:
+            yield s_graph
+        # print('sgraph:', s_graph)
+        for node in M:
+            for neighbor, edge in M[node].items():
+                if node in s_graph and neighbor in s_graph[node]:
+                    continue
+                if node not in s_graph and neighbor not in s_graph:
+                    continue
+
+                new_graph = s_graph.copy()
+                if node not in new_graph:
+                    new_graph[node] = {neighbor: edge}
+                else:
+                    new_graph[node][neighbor] = edge
+                yield new_graph
 
 
 def pn_to_graph(raw_dl):
@@ -46,6 +95,26 @@ def pn_to_graph(raw_dl):
                 G.add_edge(src_id, tgt_id, color=int(edge))
 
     return G, root_id
+
+
+def graph_to_pn(graph):
+    nodes = {}
+    pn_edges, pn_nodes = [], []
+
+    for u, v, e in graph.edges(data=True):
+        for node in u, v:
+            if node not in nodes:
+                name = graph.nodes[node]['name']
+                pn_id = f'u_{node}'
+                nodes[node] = (pn_id, name)
+                pn_nodes.append((pn_id, ':instance', name))
+
+        pn_edges.append((nodes[u][0], f':{e["color"]}', nodes[v][0]))
+
+    G = pn.Graph(pn_nodes + pn_edges)
+
+    # two spaces before edge name, because alto does it :)
+    return pn.encode(G, indent=0).replace('\n', '  ')
 
 
 def read_alto_output(raw_dl):

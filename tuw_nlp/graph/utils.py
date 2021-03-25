@@ -44,8 +44,7 @@ def gen_subgraphs(M, no_edges):
         yield from ({v: {}} for v in M)
         return
     for s_graph in gen_subgraphs(M, no_edges-1):
-        if no_edges >= 2:
-            yield s_graph
+        yield s_graph
         # print('sgraph:', s_graph)
         for node in M:
             for neighbor, edge in M[node].items():

@@ -20,7 +20,7 @@ class LexGraphs():
 
     def from_tuple(self, T):
         G = fdd(
-            {v1: {v2: {"color": e} for v2, e in edges} for v1, edges in T})
+            {v1: {v2: {"color": e} for v2, e in edges} for v1, edges in T}, create_using=nx.MultiDiGraph())
         self.add_names(G)
         return G
 

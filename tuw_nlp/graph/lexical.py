@@ -20,7 +20,7 @@ class LexGraphs():
 
     def from_tuple(self, T):
         G = fdd(
-            {v1: {v2: {"color": e} for v2, e in edges} for v1, edges in T})
+            {v1: {v2: {"color": e} for v2, e in edges} for v1, edges in T}, create_using=nx.MultiDiGraph())
         self.add_names(G)
         return G
 
@@ -34,7 +34,7 @@ class LexGraphs():
         H = self.from_plain(G)
         H_dict = tdd(H)
         for sgraph_dict in gen_subgraphs(H_dict, n):
-            sgraph = fdd(sgraph_dict)
+            sgraph = fdd(sgraph_dict, create_using=nx.MultiDiGraph())
             for node in sgraph.nodes:
                 sgraph.nodes[node]['name'] = self.vocab.get_word(node)
 

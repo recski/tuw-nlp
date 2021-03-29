@@ -110,6 +110,13 @@ def graph_to_pn(graph):
 
         pn_edges.append((nodes[u][0], f':{e["color"]}', nodes[v][0]))
 
+    for node in graph.nodes():
+        if node not in nodes:
+            name = graph.nodes[node]['name']
+            pn_id = f'u_{node}'
+            nodes[node] = (pn_id, name)
+            pn_nodes.append((pn_id, ':instance', name))
+
     G = pn.Graph(pn_nodes + pn_edges)
 
     # two spaces before edge name, because alto does it :)

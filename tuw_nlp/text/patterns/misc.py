@@ -41,7 +41,10 @@ PUNCT_REPLACEMENTS = {
     '"': "QUOTE",
     '²': "SQUARE",
     '³': "CUBE",
-    "\uf0b7": "INVALID"
+    "\uf0b7": "INVALID",
+    "@": "ATSYMBOL",
+    "&": "AMPERSAND",
+    "#": "HASHTAG"
     }
 
 MISC_REPLACEMENTS = {

@@ -1,4 +1,3 @@
-import stanza
 from stanza.models.common import doc
 from stanza.pipeline.processor import Processor, register_processor
 
@@ -66,22 +65,3 @@ class SsplitFixer(Processor):
                 token_id += 1
 
         return doc.Document(sens, document.text)
-
-
-class CustomStanzaPipeline():
-    def __init__(self, lang='de', processors=None):
-        assert lang == 'de', "CustomStanzaTokenizer only supports German"
-        self.tokenizer = stanza.Pipeline(
-            lang='de', processors='tokenize,fix_ssplit')
-        self.additional = stanza.Pipeline(
-            lang='de', processors=processors, tokenize_no_ssplit=True)
-
-    def ssplit(self, text):
-        return [sen.text for sen in self.tokenizer(text).sentences]
-
-    def process(self, text):
-        sens = self.ssplit(text)
-        return self.additional("\n\n".join(sens))
-
-    def __call__(self, text):
-        return self.process(text)

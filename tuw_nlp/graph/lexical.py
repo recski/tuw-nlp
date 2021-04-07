@@ -12,7 +12,7 @@ class LexGraphs():
 
     def from_plain(self, G):
         return nx.relabel_nodes(
-            G, lambda n: self.vocab.get_id(G.nodes[n]['name']))
+            G, lambda n: self.vocab.get_id(G.nodes[n]['name'], allow_new=True))
 
     def add_names(self, G):
         for node in G.nodes:
@@ -20,7 +20,8 @@ class LexGraphs():
 
     def from_tuple(self, T):
         G = fdd(
-            {v1: {v2: {"color": e} for v2, e in edges} for v1, edges in T}, create_using=nx.MultiDiGraph())
+            {v1: {v2: {"color": e} for v2, e in edges} for v1, edges in T},
+            create_using=nx.MultiDiGraph())
         self.add_names(G)
         return G
 

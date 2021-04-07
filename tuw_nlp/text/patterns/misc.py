@@ -20,6 +20,7 @@ PUNCT_REPLACEMENTS = {
     "_": "UNDERSCORE",
     "-": "HYPHEN",
     "–": "ENDASH",
+    "—": "EMDASH",
     "(": "LRB",
     ")": "RRB",
     "<": "LT",

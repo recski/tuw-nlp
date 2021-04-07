@@ -43,5 +43,5 @@ class CachedStanzaPipeline():
     def __enter__(self):
         return self
 
-    def __exit__(self):
+    def __exit__(self, exc_type, exc_value, exc_traceback):
         save_parsed(self.parsed, self.cache_path)

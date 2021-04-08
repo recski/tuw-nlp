@@ -4,7 +4,8 @@ def print_cat_stats(cat_stats, max_n=None):
     cats_sorted = sorted(
         cat_stats.keys(), key=lambda k: -sum(cat_stats[k].values()))
 
-    for cat, s in cats_sorted.items():
+    for cat in cats_sorted:
+        s = cat_stats[cat]
         print(f"{cat:<50}\t{s['gold']:>4}\t{s['pred']:>4}\t{s['P']:>6.2%}\t{s['R']:>6.2%}\t{s['F']:>6.2%}")  # noqa
 
 

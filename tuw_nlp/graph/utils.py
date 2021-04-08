@@ -10,6 +10,7 @@ from tuw_nlp.text.patterns.misc import (
     PUNCT_REPLACEMENTS,
     MISC_REPLACEMENTS
 )
+from tuw_nlp.text.utils import replace_emojis
 
 dummy_isi_graph = '(dummy_0 / dummy_0)'
 dummy_tree = 'dummy(dummy)'
@@ -169,6 +170,7 @@ def preprocess_node_alto(edge):
             CHAR_REPLACEMENTS.items(), PUNCT_REPLACEMENTS.items(),
             MISC_REPLACEMENTS.items()):
         out = out.replace(a, b)
+    out = replace_emojis(out)
     if out[0].isdigit():
         out = "X" + out
     return out

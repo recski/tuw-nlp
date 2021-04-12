@@ -4,10 +4,13 @@ import re
 # based on https://stackoverflow.com/a/49986645
 EMOJI_PATT = re.compile(
     pattern="["
-    u"\U0001F600-\U0001F64F"  # emoticons
-    u"\U0001F300-\U0001F5FF"  # symbols & pictographs
-    u"\U0001F680-\U0001F6FF"  # transport & map symbols
+    u"\U00002600-\U000026FF"  # misc symbols
+    u"\U00002700-\U000027BF"  # dingbats
     u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+    u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+    u"\U0001F600-\U0001F64F"  # emoticons
+    u"\U0001F680-\U0001F6FF"  # transport & map symbols
+    u"\U0001F900-\U0001F9FF"  # Supplemental Symbols and Pictographs
     "]+", flags=re.UNICODE)
 
 CHAR_PATT = re.compile(r'start_char=([0-9]*)\|end_char=([0-9]*)')
@@ -21,6 +24,7 @@ CHAR_REPLACEMENTS = {
     "Ä": 'Ae',
     "ß": "ss",
     "ō": "oe",  # encountered in plandok (OCR err?)
+    "ó": "o1",
     "é": "e1",
     "è": "e1",
     "ï": "i2"
@@ -40,6 +44,7 @@ PUNCT_REPLACEMENTS = {
     "}": "RCB",
     "[": "LSB",
     "]": "RSB",
+    "|": "PIPE",
     "<": "LT",
     ">": "GT",
     "^": "CARET",
@@ -53,15 +58,23 @@ PUNCT_REPLACEMENTS = {
     ";": "SEMICOLON",
     "%": "PERCENTAGE",
     "$": "DOLLAR",
+    "¢": "CENT",
+    "€": "EURO",
     "°": "XDEGREE",
     "§": "PARAGRAPH",
     "§§": "PARAGRAPHS",
+    "‚": "QUOTE",
     "„": "QUOTE",
     "“": "QUOTE",
     '”': "QUOTE",
     "'": "QUOTE",
     '"': "QUOTE",
     '‘': "QUOTE",
+    '`': "QUOTE",
+    '´': "QUOTE",
+    'ˋ': "QUOTE",
+    '«': "QUOTE",
+    '»': "QUOTE",
     '²': "SQUARE",
     '³': "CUBE",
     "@": "ATSYMBOL",
@@ -76,8 +89,69 @@ PUNCT_REPLACEMENTS = {
 MISC_REPLACEMENTS = {
     "m²": "m2",
     "m³": "m3",
+    "½": "1SLASH2",
+    "™": "TM",
+    "©": "COPYRIGHT",
+    "Æ": "ae",
+    "‼": "EXCLEXCL",
+    "⁉": "EXCLQUE",
     "\uf0b7": "INVALID",
     "\uf818": "INVALID",
     "\uf0e0": "INVALID",
-    "\u200B": "INVALID"
+    "\u00ad": "INVALID",
+    "\u200B": "INVALID",
+    "\ufe0f": "INVALID",
+    "\u02c8": "INVALID",
+    "\u06de": "INVALID",
+    "\u06e9": "INVALID",
+    "\u2019": "INVALID",
+    "\u2032": "INVALID",
+    "\u2501": "INVALID",
+    "\u2523": "INVALID",
+    "\u252b": "INVALID",
+    "\u25ac": "INVALID",
+    "\u25cf": "INVALID",
+    "\u2605": "INVALID",
+    "\u2764": "INVALID",
+    "\u2765": "INVALID",
+    "\u27a4": "INVALID",
+    "\u1d00": "INVALID",
+    "\u1d05": "INVALID",
+    "\u1d07": "INVALID",
+    "\u0259": "INVALID",
+    "\u0261": "INVALID",
+    "\u0262": "INVALID",
+    "\u029c": "INVALID",
+    "\u1d35": "INVALID",
+    "\u026a": "INVALID",
+    "\u1d0b": "INVALID",
+    "\u1d0d": "INVALID",
+    "\u0274": "INVALID",
+    "\u014f": "INVALID",
+    "\u1d0f": "INVALID",
+    "\u0280": "INVALID",
+    "\u1d1b": "INVALID",
+    "\u028a": "INVALID",
+    "\u1d21": "INVALID",
+    "\u028f": "INVALID",
+    "\u05d0": "INVALID",
+    "\u05d5": "INVALID",
+    "\u05d7": "INVALID",
+    "\u05d9": "INVALID",
+    "\u05db": "INVALID",
+    "\u05dc": "INVALID",
+    "\u05dd": "INVALID",
+    "\u05e2": "INVALID",
+    "\u05e9": "INVALID",
+    "\u200d": "INVALID",
+    "\u010d": "INVALID",
+    "\u015f": "INVALID",
+    "\u017a": "INVALID",
+    "\u017b": "INVALID",
+    "\u03b1": "INVALID",
+    "\u0435": "INVALID",
+    "\u043b": "INVALID",
+    "\u041c": "INVALID",
+    "\u0441": "INVALID",
+    "\u0b9c": "INVALID"
     }

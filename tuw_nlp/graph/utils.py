@@ -165,18 +165,24 @@ def preprocess_edge_alto(edge):
 
 
 def preprocess_node_alto(edge):
+    # sys.stderr.write(f'prepr_node_alto IN: {edge}\t')
     out = edge
     for a, b in chain(
             CHAR_REPLACEMENTS.items(), PUNCT_REPLACEMENTS.items(),
             MISC_REPLACEMENTS.items()):
         out = out.replace(a, b)
+    # sys.stderr.write(f'replace_emojis IN: {out}\t')
     out = replace_emojis(out)
+    # sys.stderr.write(f'OUT: {out}\n')
     if out[0].isdigit():
         out = "X" + out
     return out
 
 
 def preprocess_lemma(lemma):
+    # sys.stderr.write(f'prepr_lemma IN: {lemma}\t')
+    if lemma.startswith('|'):
+        return lemma
     return lemma.split('|')[0]
 
 
@@ -252,6 +258,7 @@ def graph_to_isi_graph(
 
 def graph_to_tree_rec(graph, i, convert_to_int=False, ud=True):
     node = graph.nodes[i]
+    # sys.stderr.write(f'node: {node}\n')
     lemma = preprocess_node_alto(preprocess_lemma(node['lemma']))
     pos = node['upos']
     isi = f"{pos}("

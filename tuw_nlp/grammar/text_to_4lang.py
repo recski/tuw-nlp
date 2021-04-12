@@ -1,8 +1,10 @@
 import argparse
 import logging
 import sys
+import traceback
 
 import stanza
+from tqdm import tqdm
 
 from tuw_nlp.grammar.ud_fl import UD_FL
 from tuw_nlp.graph.utils import graph_to_pn, pn_to_graph
@@ -51,8 +53,13 @@ def main():
     logging.getLogger().setLevel(logging.WARNING)
     args = get_args()
     with TextTo4lang(args) as tfl:
-        for line in sys.stdin:
-            fl = tfl(line.strip())
+        for i, line in tqdm(enumerate(sys.stdin)):
+            try:
+                fl = tfl(line.strip())
+            except (TypeError, IndexError, KeyError):
+                traceback.print_exc()
+                sys.stderr.write(f'error on line {i}: {line}')
+                sys.exit(-1)
             print(graph_to_pn(fl))
 
 

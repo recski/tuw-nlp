@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import Counter
 from heapq import nlargest
 
 
@@ -6,7 +6,7 @@ class Vocabulary():
     def __init__(self):
         self.id_to_word = {}
         self.word_to_id = {}
-        self.word_to_freq = defaultdict(int)
+        self.word_to_freq = Counter()
         self.next_id = 0
 
     def __len__(self):
@@ -34,8 +34,7 @@ class Vocabulary():
         return self.id_to_word[word_id]
 
     def select_n_best(self, max_features):
-        res_largest = nlargest(
-            max_features, self.word_to_freq, key=self.word_to_freq.get)
+        res_largest = [word[0] for word in self.word_to_freq.most_common(max_features)]
 
         relabeled_indices = {}
 

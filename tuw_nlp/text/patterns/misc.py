@@ -25,8 +25,10 @@ CHAR_REPLACEMENTS = {
     "ß": "ss",
     "ō": "oe",  # encountered in plandok (OCR err?)
     "ó": "o1",
+    "È": "E1",
     "é": "e1",
     "è": "e1",
+    "á": "a1",
     "ï": "i2"
 }
 
@@ -95,12 +97,23 @@ MISC_REPLACEMENTS = {
     "Æ": "ae",
     "‼": "EXCLEXCL",
     "⁉": "EXCLQUE",
+    "ą": "INVALID",
+    "ñ": "INVALID",
+    "\u2020": "INVALID",
+    "\xe5": "INVALID",
+    "\xe7": "INVALID",
+    "\xca": "INVALID",
+    "\u0131": "INVALID",
+    "\u2b07": "INVALID",
+    "\u0130": "INVALID",
+    "\u2260": "INVALID",
     "\uf0b7": "INVALID",
     "\uf818": "INVALID",
     "\uf0e0": "INVALID",
     "\u00ad": "INVALID",
     "\u200B": "INVALID",
     "\ufe0f": "INVALID",
+    "\u010f": "INVALID",
     "\u02c8": "INVALID",
     "\u06de": "INVALID",
     "\u06e9": "INVALID",
@@ -115,6 +128,7 @@ MISC_REPLACEMENTS = {
     "\u2764": "INVALID",
     "\u2765": "INVALID",
     "\u27a4": "INVALID",
+    "\u2935": "INVALID",
     "\u1d00": "INVALID",
     "\u1d05": "INVALID",
     "\u1d07": "INVALID",
@@ -153,5 +167,9 @@ MISC_REPLACEMENTS = {
     "\u043b": "INVALID",
     "\u041c": "INVALID",
     "\u0441": "INVALID",
+    "\u516c": "INVALID",
+    "\u0650": "INVALID",
+    "\u0119": "INVALID",
+    "\u0155": "INVALID",
     "\u0b9c": "INVALID"
     }

@@ -1,4 +1,5 @@
 import logging
+from copy import deepcopy
 from itertools import chain
 
 import networkx as nx
@@ -46,7 +47,9 @@ def gen_subgraphs(M, no_edges):
         return
     for s_graph in gen_subgraphs(M, no_edges-1):
         yield s_graph
+        # print('==============================')
         # print('sgraph:', s_graph)
+        # print('==============================')
         for node in M:
             for neighbor, edge in M[node].items():
                 if node in s_graph and neighbor in s_graph[node]:
@@ -54,11 +57,15 @@ def gen_subgraphs(M, no_edges):
                 if node not in s_graph and neighbor not in s_graph:
                     continue
 
-                new_graph = s_graph.copy()
+                # print('    node, neighbor, edge:', node, neighbor, edge)
+                new_graph = deepcopy(s_graph)
+                # print('    ngraph:', new_graph)
                 if node not in new_graph:
                     new_graph[node] = {neighbor: edge}
                 else:
                     new_graph[node][neighbor] = edge
+                    new_graph[neighbor] = {}
+                # print('    new_graph:', new_graph)
                 yield new_graph
 
 

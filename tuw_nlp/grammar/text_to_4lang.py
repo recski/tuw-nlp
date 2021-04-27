@@ -25,10 +25,10 @@ class TextTo4lang():
         self.ud_fl = UD_FL(cache_dir=args.cache_dir)
 
     def __call__(self, text):
-        sen = self.nlp(text).sentences[0]
-        fl = self.ud_fl.parse(sen, 'ud', 'fl', 'amr-sgraph-src')
-        graph, root = pn_to_graph(fl)
-        return graph
+        for sen in self.nlp(text).sentences:
+            fl = self.ud_fl.parse(sen, 'ud', 'fl', 'amr-sgraph-src')
+            graph, root = pn_to_graph(fl)
+            yield graph
 
     def __enter__(self):
         self.nlp.__enter__()
@@ -55,12 +55,15 @@ def main():
     with TextTo4lang(args) as tfl:
         for i, line in tqdm(enumerate(sys.stdin)):
             try:
-                fl = tfl(line.strip())
+                fl_graphs = list(tfl(line.strip()))
             except (TypeError, IndexError, KeyError):
                 traceback.print_exc()
                 sys.stderr.write(f'error on line {i}: {line}')
-                sys.exit(-1)
-            print(graph_to_pn(fl))
+                print('ERROR')
+                continue
+                # sys.exit(-1)
+
+            print("\t".join(graph_to_pn(fl) for fl in fl_graphs))
 
 
 if __name__ == "__main__":

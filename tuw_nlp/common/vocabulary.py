@@ -42,3 +42,28 @@ class Vocabulary():
             relabeled_indices[self.word_to_id[top]] = i
 
         return relabeled_indices, len(res_largest)
+
+    def select_n_best_from_each_class(self, max_features, edge_to_features, up_to):
+        def subsetter(c, sub):
+            out = {}
+            for x in sub:
+                out[self.get_word(x)] = c[self.get_word(x)]
+            return Counter(out)
+
+        largest_subsets = []
+
+        for i in range(1, up_to+1):
+            subset = subsetter(self.word_to_freq, edge_to_features[i])
+            most_common = [(word[0], word[1]*i) for word in subset.most_common(max_features)]
+            largest_subsets += most_common
+        
+        largest_subsets.sort(reverse=True, key=lambda x: x[1])
+
+        largest_subsets = [i[0] for i in largest_subsets]
+
+        relabeled_indices = {}
+
+        for i, top in enumerate(largest_subsets):
+            relabeled_indices[self.word_to_id[top]] = i
+
+        return relabeled_indices, len(largest_subsets)

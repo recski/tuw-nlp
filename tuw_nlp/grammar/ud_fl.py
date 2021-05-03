@@ -110,7 +110,8 @@ class UD_FL(IRTGGrammar):
         node = graph.nodes[i]
         lemma = preprocess_node_alto(preprocess_lemma(node['lemma']))
         pos = node['upos']
-        xpos = node['xpos']
+        # xpos missing in a few rare cases, try 'US-Wirt.Minister:"Bürger, die'
+        xpos = node.get('xpos')
         yield from self.gen_terminal_rules(lemma, pos, xpos)
         for j, edge in graph[i].items():
             cnode = graph.nodes[j]

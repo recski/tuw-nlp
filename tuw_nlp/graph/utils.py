@@ -37,6 +37,40 @@ class GraphMatcher():
                 yield key
 
 
+class GraphFormulaMatcher():
+    @staticmethod
+    def node_matcher(n1, n2):
+        logging.debug(f'matchig these: {n1}, {n2}')
+        if n1['name'] is None or n2['name'] is None:
+            return True
+        return n1['name'] == n2['name']
+
+    def __init__(self, patterns):
+        self.patts = []
+
+        for patt, negs, key in patterns:
+            neg_graphs = [pn_to_graph(neg_patt)[0] for neg_patt in negs]
+            self.patts.append((pn_to_graph(patt)[0], neg_graphs, key))
+
+    def match(self, graph):
+        for i, (patt, negs, key) in enumerate(self.patts):
+            logging.debug(f'matching this: {self.patts[i]}')
+
+            neg_match = False
+            for neg in negs:
+                matcher = DiGraphMatcher(
+                    graph, neg, node_match=GraphMatcher.node_matcher)
+                if matcher.subgraph_is_isomorphic():
+                    neg_match = True
+                    break
+
+            matcher = DiGraphMatcher(
+                graph, patt, node_match=GraphMatcher.node_matcher)
+            if matcher.subgraph_is_isomorphic() and not neg_match:
+                logging.debug('MATCH!')
+                yield key
+
+
 def gen_subgraphs(M, no_edges):
     """M must be dict of dicts, see networkx.convert.to_dict_of_dicts.
     Generates dicts of dicts, use networkx.convert.from_dict_of_dicts"""
@@ -99,6 +133,14 @@ def pn_to_graph(raw_dl):
 def graph_to_pn(graph):
     nodes = {}
     pn_edges, pn_nodes = [], []
+
+    if not graph.edges():
+        for node in graph.nodes(data=True):
+            if node[0] not in nodes:
+                name = node[1]['name']
+                pn_id = f'u_{node[0]}'
+                nodes[node[0]] = (pn_id, name)
+                pn_nodes.append((pn_id, ':instance', name))
 
     for u, v, e in graph.edges(data=True):
         for node in u, v:

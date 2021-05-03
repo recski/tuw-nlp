@@ -22,7 +22,7 @@ class Vocabulary():
             self.word_to_id[word] = self.next_id
             self.next_id += 1
 
-    def get_id(self, word, allow_new=True):
+    def get_id(self, word, allow_new=False):
         if allow_new is False and word not in self.word_to_id:
             raise ValueError(
                 f'{word} not in vocab and allow_new set to False')

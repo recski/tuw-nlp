@@ -11,9 +11,10 @@ class SetupAlto(develop):
         os.system("echo 'Setting up Alto parser'")
         os.system(f"bash {os.getcwd()}/setup.sh")
 
-        with open(os.path.expanduser("~/.bashrc"), "a") as outfile:
-            outfile.write(f"export ALTO_JAR={os.getcwd()}/alto-2.3.6-SNAPSHOT-all.jar")
-            os.system('bash -c \'source ~/.bashrc\'')
+        if os.environ.get('ALTO_JAR') is None:
+            with open(os.path.expanduser("~/.bashrc"), "a") as outfile:
+                outfile.write(f"export ALTO_JAR={os.getcwd()}/alto-2.3.6-SNAPSHOT-all.jar")
+                os.system('bash -c \'source ~/.bashrc\'')
 
 
 setup(
@@ -28,7 +29,8 @@ setup(
         'dict-recursive-update',
         'networkx',
         'penman',
-        'stanza'
+        'stanza',
+        'nltk'
     ],
     packages=find_packages(),
     scripts=['setup.sh'],

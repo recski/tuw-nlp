@@ -62,7 +62,7 @@ class TextTo4lang():
                 
         relabeled_graph = self.graph_lexical.from_plain(graph)
 
-        return relabeled_graph, self.graph_lexical.vocab.get_id(graph.nodes[root]["name"], allow_new=True)
+        return relabeled_graph, self.graph_lexical.vocab.get_id(graph.nodes[root]["name"])
 
     def __call__(self, text, depth=0, substitute=False):
         for sen in self.nlp(text).sentences:

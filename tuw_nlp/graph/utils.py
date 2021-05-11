@@ -25,6 +25,11 @@ class GraphMatcher():
             return True
         return n1['name'] == n2['name']
 
+    @staticmethod
+    def edge_matcher(e1, e2):
+        logging.debug(f'matchig these: {e1}, {e2}')
+        return e1['color'] == e2['color']
+
     def __init__(self, patterns):
         self.patts = [
             (pn_to_graph(patt)[0], key) for patt, key in patterns]
@@ -33,26 +38,20 @@ class GraphMatcher():
         for i, (patt, key) in enumerate(self.patts):
             logging.debug(f'matching this: {self.patts[i]}')
             matcher = DiGraphMatcher(
-                graph, patt, node_match=GraphMatcher.node_matcher)
+                graph, patt, node_match=GraphMatcher.node_matcher, edge_match=GraphMatcher.edge_matcher)
             if matcher.subgraph_is_isomorphic():
                 logging.debug('MATCH!')
                 yield key
 
 
 class GraphFormulaMatcher():
-    @staticmethod
-    def node_matcher(n1, n2):
-        logging.debug(f'matchig these: {n1}, {n2}')
-        if n1['name'] is None or n2['name'] is None:
-            return True
-        return n1['name'] == n2['name']
-
     def __init__(self, patterns):
         self.patts = []
 
-        for patt, negs, key in patterns:
+        for patts, negs, key in patterns:
+            pos_patts = [pn_to_graph(patt)[0] for patt in patts]
             neg_graphs = [pn_to_graph(neg_patt)[0] for neg_patt in negs]
-            self.patts.append((pn_to_graph(patt)[0], neg_graphs, key))
+            self.patts.append((pos_patts, neg_graphs, key))
 
     def match(self, graph):
         for i, (patt, negs, key) in enumerate(self.patts):
@@ -61,15 +60,20 @@ class GraphFormulaMatcher():
             neg_match = False
             for neg in negs:
                 matcher = DiGraphMatcher(
-                    graph, neg, node_match=GraphMatcher.node_matcher)
+                    graph, neg, node_match=GraphMatcher.node_matcher, edge_match=GraphMatcher.edge_matcher)
                 if matcher.subgraph_is_isomorphic():
                     neg_match = True
                     break
 
-            matcher = DiGraphMatcher(
-                graph, patt, node_match=GraphMatcher.node_matcher)
-            if matcher.subgraph_is_isomorphic() and not neg_match:
-                logging.debug('MATCH!')
+            pos_match = True
+            for p in patt:
+                matcher = DiGraphMatcher(
+                    graph, p, node_match=GraphMatcher.node_matcher, edge_match=GraphMatcher.edge_matcher)
+                if not matcher.subgraph_is_isomorphic():
+                    pos_match = False
+                    break
+
+            if pos_match and not neg_match:
                 yield key
 
 
@@ -142,14 +146,6 @@ def graph_to_pn(graph):
     nodes = {}
     pn_edges, pn_nodes = [], []
 
-    if not graph.edges():
-        for node in graph.nodes(data=True):
-            if node[0] not in nodes:
-                name = node[1]['name']
-                pn_id = f'u_{node[0]}'
-                nodes[node[0]] = (pn_id, name)
-                pn_nodes.append((pn_id, ':instance', name))
-
     for u, v, e in graph.edges(data=True):
         for node in u, v:
             if node not in nodes:
@@ -160,12 +156,12 @@ def graph_to_pn(graph):
 
         pn_edges.append((nodes[u][0], f':{e["color"]}', nodes[v][0]))
 
-    for node in graph.nodes():
-        if node not in nodes:
-            name = graph.nodes[node]['name']
-            pn_id = f'u_{node}'
-            nodes[node] = (pn_id, name)
-            pn_nodes.append((pn_id, ':instance', name))
+    # for node in graph.nodes():
+    #     if node not in nodes:
+    #         name = graph.nodes[node]['name']
+    #         pn_id = f'u_{node}'
+    #         nodes[node] = (pn_id, name)
+    #         pn_nodes.append((pn_id, ':instance', name))
 
     G = pn.Graph(pn_nodes + pn_edges)
 

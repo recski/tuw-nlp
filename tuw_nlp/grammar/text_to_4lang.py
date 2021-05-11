@@ -40,7 +40,7 @@ class TextTo4lang():
 
         nodes = [node for node in graph.G.nodes(data=True)]
         for d_node, node_data in nodes:
-            if all(("expanded", "substituted")) not in node_data:
+            if all(elem not in node_data for elem in ["expanded", "substituted"]):
                 node = graph.d_clean(node_data["name"]).split('_')[0]
                 if(node not in self.lexicon.stopwords or d_node == graph.root):
                     definition = self.lexicon.get_definition(node)

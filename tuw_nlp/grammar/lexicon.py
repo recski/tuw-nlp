@@ -41,6 +41,8 @@ class IRTGRuleLexicon():
             ("VERB", "ADVMOD", "PART"),
             # sample 112 of sample_10
             ("VERB", "ADVCL", "VERB"),
+            # nicht gewaehlt... , weil er gegen die Homo-Ehe... (Germeval '18)
+            ("VERB", "ADVCL", "ADJ"),
             # betragen duerfen, sample 13
             ("VERB", "AUX", "AUX"),
             # liegen -> Baulinie, sample 6
@@ -157,6 +159,8 @@ class CFLLexicon(IRTGRuleLexicon):
         self.bin_fnc = {
             # Errichtung ist untersagt
             ("ADJ", "NSUBJ", "NOUN"): [r('1')],
+            # Verloren ist die Zeit
+            ("NOUN", "NSUBJ", "NOUN"): [r('1')],
             ("VERB", "NSUBJ_PASS", "NOUN"): [r("2")],
             # ...wird bestimmt, dass...
             ("VERB", "CSUBJ_PASS", "VERB"): [r("2")],
@@ -173,7 +177,11 @@ class CFLLexicon(IRTGRuleLexicon):
             ("NOUN", "CCOMP", "VERB"): [r("0")],  # TODO
             # vorhanden bleiben (correct parse? why not obj or obl?)
             ("VERB", "XCOMP", "ADJ"): [r("2")],  # TODO
+            # hat ... zu tun (Germeval '18)
+            ("VERB", "XCOMP", "VERB"): [r("2")],  # TODO
             ("VERB", "OBJ", "NOUN"): [r("2")],
+            # hat nichts... (Germeval '18)
+            ("VERB", "OBJ", "PRON"): [r("2")],
             # Fuer alle Flaechen ... zu treffen # TODO
             ("VERB", "OBL", "NOUN"): [r("2")],
             # zu begruenen, e.g. 7181_6_0
@@ -184,10 +192,13 @@ class CFLLexicon(IRTGRuleLexicon):
             # ...Pflanzung möglich ist...
             ("VERB", "NSUBJ", "ADJ"): [r("1")],
             ("VERB", "NSUBJ", "PRON"): [r("1")],
+            ("VERB", "NSUBJ", "PROPN"): [r("1")],
             ("VERB", "CONJ", "VERB"): [coord],
             ("NOUN", "CASE", "ADP"): [r("0")],
             # 7181_3_1
-            ("NOUN", "APPOS", "PROPN"): [r("0")]
+            ("NOUN", "APPOS", "PROPN"): [r("0")],
+            # Rede ... jetzt
+            ("NOUN", "APPOS", "ADV"): [r("0")]
         }
 
         self.bin_fnc.update({edge: [r("0")] for edge in self.mod_edges})

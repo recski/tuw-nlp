@@ -19,6 +19,9 @@ class Dictionary():
         self.lang = lang
 
         self.stopwords = set(nltk_stopwords.words(self.lang_map[lang]))
+        self.__init_lexicons(definitions_fn)
+
+    def __init_lexicons(self, definitions_fn):
         with open(definitions_fn, "r") as f:
             for line in f:
                 line = line.split("\t")

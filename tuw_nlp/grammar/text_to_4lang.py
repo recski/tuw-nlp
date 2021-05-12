@@ -34,6 +34,14 @@ class TextTo4lang():
 
         self.graph_lexical = LexGraphs()
 
+    def add_definition(self, graph, node, definition, substitute):
+        sen = self.nlp(definition).sentences[0]
+        def_graph, root = self.parse(sen)
+        fourlang_graph = FourLang(def_graph, root, self.graph_lexical)
+        if len(def_graph.nodes()) > 0:
+            graph.merge_definition_graph(
+                fourlang_graph, node, substitute)
+
     def expand(self, graph, depth=1, substitute=False):
         if depth == 0:
             return
@@ -45,12 +53,8 @@ class TextTo4lang():
                 if(node not in self.lexicon.stopwords or d_node == graph.root):
                     definition = self.lexicon.get_definition(node)
                     if definition:
-                        sen = self.nlp(definition).sentences[0]
-                        def_graph, root = self.parse(sen)
-                        fourlang_graph = FourLang(def_graph, root, self.graph_lexical)
-                        if len(def_graph.nodes()) > 0:
-                            graph.merge_definition_graph(
-                                fourlang_graph, d_node, substitute)
+                        self.add_definition(
+                            graph, d_node, definition, substitute)
 
         self.expand(graph, depth-1, substitute=substitute)
 
@@ -59,7 +63,7 @@ class TextTo4lang():
         fl = self.ud_fl.parse(sen, 'ud', interpretation, 'amr-sgraph-src')
 
         graph, root = pn_to_graph(fl)
-                
+
         relabeled_graph = self.graph_lexical.from_plain(graph)
 
         return relabeled_graph, self.graph_lexical.vocab.get_id(graph.nodes[root]["name"])

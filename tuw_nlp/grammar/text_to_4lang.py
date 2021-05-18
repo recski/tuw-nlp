@@ -6,29 +6,76 @@ import traceback
 import stanza
 from tqdm import tqdm
 
-from tuw_nlp.grammar.ud_fl import UD_FL
+from tuw_nlp.grammar.ud_fl import UD_FL, UD_Fourlang
 from tuw_nlp.graph.utils import graph_to_pn, pn_to_graph
+from tuw_nlp.graph.fourlang import FourLang
 from tuw_nlp.text.pipeline import CachedStanzaPipeline, CustomStanzaPipeline
+from tuw_nlp.text.dictionary import Dictionary
+from tuw_nlp.graph.lexical import LexGraphs
 
 
 class TextTo4lang():
-    def __init__(self, args):
-        if args.lang == 'de':
+    def __init__(self, lang, nlp_cache, cache_dir=None):
+        if lang == 'de':
             nlp = CustomStanzaPipeline(
                 processors='tokenize,mwt,pos,lemma,depparse')
-        elif args.lang == 'en':
+        elif lang == 'en':
             nlp = stanza.Pipeline(
                 'en', processors='tokenize,mwt,pos,lemma,depparse')
 
-        self.nlp = CachedStanzaPipeline(nlp, args.nlp_cache)
+        self.lang = lang
 
-        self.ud_fl = UD_FL(cache_dir=args.cache_dir)
+        self.nlp = CachedStanzaPipeline(nlp, nlp_cache)
 
-    def __call__(self, text):
+        self.ud_fl = UD_FL(cache_dir=cache_dir) if lang == "de" else UD_Fourlang(
+            cache_dir=cache_dir)
+
+        self.lexicon = Dictionary(lang)
+
+        self.graph_lexical = LexGraphs()
+
+    def add_definition(self, graph, node, definition, substitute):
+        sen = self.nlp(definition).sentences[0]
+        def_graph, root = self.parse(sen)
+        fourlang_graph = FourLang(def_graph, root, self.graph_lexical)
+        if len(def_graph.nodes()) > 0:
+            graph.merge_definition_graph(
+                fourlang_graph, node, substitute)
+
+    def expand(self, graph, depth=1, substitute=False):
+        if depth == 0:
+            return
+
+        nodes = [node for node in graph.G.nodes(data=True)]
+        for d_node, node_data in nodes:
+            if all(elem not in node_data for elem in ["expanded", "substituted"]):
+                node = graph.d_clean(node_data["name"]).split('_')[0]
+                if(node not in self.lexicon.stopwords or d_node == graph.root):
+                    definition = self.lexicon.get_definition(node)
+                    if definition:
+                        self.add_definition(
+                            graph, d_node, definition, substitute)
+
+        self.expand(graph, depth-1, substitute=substitute)
+
+    def parse(self, sen):
+        interpretation = "fl" if self.lang == "de" else "fourlang"
+        fl = self.ud_fl.parse(sen, 'ud', interpretation, 'amr-sgraph-src')
+
+        graph, root = pn_to_graph(fl)
+
+        relabeled_graph = self.graph_lexical.from_plain(graph)
+
+        return relabeled_graph, self.graph_lexical.vocab.get_id(graph.nodes[root]["name"])
+
+    def __call__(self, text, depth=0, substitute=False):
         for sen in self.nlp(text).sentences:
-            fl = self.ud_fl.parse(sen, 'ud', 'fl', 'amr-sgraph-src')
-            graph, root = pn_to_graph(fl)
-            yield graph
+            graph, root = self.parse(sen)
+
+            fourlang = FourLang(graph, root, self.graph_lexical)
+
+            self.expand(fourlang, depth=depth, substitute=substitute)
+            yield fourlang.G
 
     def __enter__(self):
         self.nlp.__enter__()
@@ -43,6 +90,8 @@ def get_args():
     parser.add_argument("-cd", "--cache-dir", default=None, type=str)
     parser.add_argument("-cn", "--nlp-cache", default=None, type=str)
     parser.add_argument("-l", "--lang", default=None, type=str)
+    parser.add_argument("-d", "--depth", default=0, type=int)
+    parser.add_argument("-s", "--substitute", default=False, type=bool)
     return parser.parse_args()
 
 
@@ -52,7 +101,7 @@ def main():
         "%(module)s (%(lineno)s) - %(levelname)s - %(message)s")
     logging.getLogger().setLevel(logging.WARNING)
     args = get_args()
-    with TextTo4lang(args) as tfl:
+    with TextTo4lang(args.lang, args.nlp_cache, args.cache_dir) as tfl:
         for i, line in tqdm(enumerate(sys.stdin)):
             try:
                 fl_graphs = list(tfl(line.strip()))

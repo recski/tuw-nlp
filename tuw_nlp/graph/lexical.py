@@ -33,6 +33,7 @@ class LexGraphs():
 
     def gen_lex_subgraphs(self, G, n):
         H = self.from_plain(G)
+        H.remove_edges_from(nx.selfloop_edges(H))
         H_dict = tdd(H)
         seen_tuples = set()
         for sgraph_dict in gen_subgraphs(H_dict, n):

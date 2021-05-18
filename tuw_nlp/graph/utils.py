@@ -25,6 +25,11 @@ class GraphMatcher():
             return True
         return n1['name'] == n2['name']
 
+    @staticmethod
+    def edge_matcher(e1, e2):
+        logging.debug(f'matchig these: {e1}, {e2}')
+        return e1['color'] == e2['color']
+
     def __init__(self, patterns):
         self.patts = [
             (pn_to_graph(patt)[0], key) for patt, key in patterns]
@@ -33,9 +38,42 @@ class GraphMatcher():
         for i, (patt, key) in enumerate(self.patts):
             logging.debug(f'matching this: {self.patts[i]}')
             matcher = DiGraphMatcher(
-                graph, patt, node_match=GraphMatcher.node_matcher)
+                graph, patt, node_match=GraphMatcher.node_matcher, edge_match=GraphMatcher.edge_matcher)
             if matcher.subgraph_is_isomorphic():
                 logging.debug('MATCH!')
+                yield key
+
+
+class GraphFormulaMatcher():
+    def __init__(self, patterns):
+        self.patts = []
+
+        for patts, negs, key in patterns:
+            pos_patts = [pn_to_graph(patt)[0] for patt in patts]
+            neg_graphs = [pn_to_graph(neg_patt)[0] for neg_patt in negs]
+            self.patts.append((pos_patts, neg_graphs, key))
+
+    def match(self, graph):
+        for i, (patt, negs, key) in enumerate(self.patts):
+            logging.debug(f'matching this: {self.patts[i]}')
+
+            neg_match = False
+            for neg in negs:
+                matcher = DiGraphMatcher(
+                    graph, neg, node_match=GraphMatcher.node_matcher, edge_match=GraphMatcher.edge_matcher)
+                if matcher.subgraph_is_isomorphic():
+                    neg_match = True
+                    break
+
+            pos_match = True
+            for p in patt:
+                matcher = DiGraphMatcher(
+                    graph, p, node_match=GraphMatcher.node_matcher, edge_match=GraphMatcher.edge_matcher)
+                if not matcher.subgraph_is_isomorphic():
+                    pos_match = False
+                    break
+
+            if pos_match and not neg_match:
                 yield key
 
 

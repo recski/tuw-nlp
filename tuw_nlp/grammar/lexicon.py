@@ -31,6 +31,8 @@ class IRTGRuleLexicon():
             ("NOUN", "AMOD", "VERB"),
             # Gebaeudefront_NOUN -ACL-> liegen_VERB, sample 5
             ("NOUN", "ACL", "VERB"),
+            # Aussenminister ... der strunzdumm ist
+            ("NOUN", "ACL", "ADJ"),
             ("NOUN", "NUMMOD", "NUM"),
             ("NUM", "ADVMOD", "ADV"),
             ("NUM", "ADVMOD", "ADV"),
@@ -161,7 +163,11 @@ class CFLLexicon(IRTGRuleLexicon):
             ("ADJ", "NSUBJ", "NOUN"): [r('1')],
             # Verloren ist die Zeit
             ("NOUN", "NSUBJ", "NOUN"): [r('1')],
+            ("PROPN", "NSUBJ", "NOUN"): [r('1')],
+            ("NOUN", "NSUBJ", "PROPN"): [r('1')],
             ("VERB", "NSUBJ_PASS", "NOUN"): [r("2")],
+            # jeder der ... paktiert, hat ... verschissen
+            ("VERB", "CSUBJ", "VERB"): [r("1")],
             # ...wird bestimmt, dass...
             ("VERB", "CSUBJ_PASS", "VERB"): [r("2")],
             # ...wird bestimmt, dass...
@@ -180,6 +186,10 @@ class CFLLexicon(IRTGRuleLexicon):
             # hat ... zu tun (Germeval '18)
             ("VERB", "XCOMP", "VERB"): [r("2")],  # TODO
             ("VERB", "OBJ", "NOUN"): [r("2")],
+            # habt ihr Angst
+            ("AUX", "OBJ", "NOUN"): [r("2")],
+            ("NOUN", "OBJ", "NOUN"): [r("2")],
+            ("VERB", "OBJ", "PROPN"): [r("2")],
             # hat nichts... (Germeval '18)
             ("VERB", "OBJ", "PRON"): [r("2")],
             # Fuer alle Flaechen ... zu treffen # TODO
@@ -194,9 +204,13 @@ class CFLLexicon(IRTGRuleLexicon):
             ("VERB", "NSUBJ", "PRON"): [r("1")],
             ("VERB", "NSUBJ", "PROPN"): [r("1")],
             ("VERB", "CONJ", "VERB"): [coord],
+            ("VERB", "CONJ", "AUX"): [coord],
             ("NOUN", "CASE", "ADP"): [r("0")],
             # 7181_3_1
             ("NOUN", "APPOS", "PROPN"): [r("0")],
+            ("PROPN", "APPOS", "PROPN"): [r("0")],
+            ("PROPN", "FLAT", "PROPN"): [r("0")],
+            ("NOUN", "COMPOUND", "NOUN"): [r("0")],
             # Rede ... jetzt
             ("NOUN", "APPOS", "ADV"): [r("0")]
         }

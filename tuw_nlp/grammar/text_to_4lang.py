@@ -7,11 +7,12 @@ import stanza
 from tqdm import tqdm
 
 from tuw_nlp.grammar.ud_fl import UD_FL, UD_Fourlang
-from tuw_nlp.graph.utils import graph_to_pn, pn_to_graph
 from tuw_nlp.graph.fourlang import FourLang
-from tuw_nlp.text.pipeline import CachedStanzaPipeline, CustomStanzaPipeline
-from tuw_nlp.text.dictionary import Dictionary
 from tuw_nlp.graph.lexical import LexGraphs
+from tuw_nlp.graph.utils import graph_to_pn, pn_to_graph
+from tuw_nlp.text.dictionary import Dictionary
+from tuw_nlp.text.pipeline import CachedStanzaPipeline, CustomStanzaPipeline
+from tuw_nlp.text.preprocessor import Preprocessor
 
 
 class TextTo4lang():
@@ -27,8 +28,9 @@ class TextTo4lang():
 
         self.nlp = CachedStanzaPipeline(nlp, nlp_cache)
 
-        self.ud_fl = UD_FL(cache_dir=cache_dir) if lang == "de" else UD_Fourlang(
-            cache_dir=cache_dir)
+        self.ud_fl = UD_FL(
+            cache_dir=cache_dir) if lang == "de" else UD_Fourlang(
+                cache_dir=cache_dir)
 
         self.lexicon = Dictionary(lang)
 
@@ -48,7 +50,9 @@ class TextTo4lang():
 
         nodes = [node for node in graph.G.nodes(data=True)]
         for d_node, node_data in nodes:
-            if all(elem not in node_data for elem in ["expanded", "substituted"]):
+            if all(
+                    elem not in node_data
+                    for elem in ["expanded", "substituted"]):
                 node = graph.d_clean(node_data["name"]).split('_')[0]
                 if(node not in self.lexicon.stopwords or d_node == graph.root):
                     definition = self.lexicon.get_definition(node)
@@ -66,7 +70,8 @@ class TextTo4lang():
 
         relabeled_graph = self.graph_lexical.from_plain(graph)
 
-        return relabeled_graph, self.graph_lexical.vocab.get_id(graph.nodes[root]["name"])
+        return relabeled_graph, self.graph_lexical.vocab.get_id(
+            graph.nodes[root]["name"])
 
     def __call__(self, text, depth=0, substitute=False):
         for sen in self.nlp(text).sentences:
@@ -92,6 +97,7 @@ def get_args():
     parser.add_argument("-l", "--lang", default=None, type=str)
     parser.add_argument("-d", "--depth", default=0, type=int)
     parser.add_argument("-s", "--substitute", default=False, type=bool)
+    parser.add_argument("-p", "--preprocessor", default=None, type=str)
     return parser.parse_args()
 
 
@@ -101,10 +107,11 @@ def main():
         "%(module)s (%(lineno)s) - %(levelname)s - %(message)s")
     logging.getLogger().setLevel(logging.WARNING)
     args = get_args()
+    preproc = Preprocessor(args.preprocessor)
     with TextTo4lang(args.lang, args.nlp_cache, args.cache_dir) as tfl:
         for i, line in tqdm(enumerate(sys.stdin)):
             try:
-                fl_graphs = list(tfl(line.strip()))
+                fl_graphs = list(tfl(preproc(line.strip())))
             except (TypeError, IndexError, KeyError):
                 traceback.print_exc()
                 sys.stderr.write(f'error on line {i}: {line}')

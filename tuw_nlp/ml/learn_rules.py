@@ -82,7 +82,7 @@ def main():
 
     # rule_names = rl.get_rule_names(rules_sorted)
     with open('rules.txt', 'w') as f:
-        for rule in rules_sorted[:100]:
+        for rule in rules_sorted[:1000]:
             rule_name = graph_to_pn(lexgraphs.from_tuple(
                 rl.features.get_word(rule)))
             train_matches = rl.match(set([rule]), rl.train_events)

@@ -19,10 +19,11 @@ def get_args():
     parser.add_argument("-cn", "--nlp-cache", default=None, type=str)
     parser.add_argument("-l", "--lang", default=None, type=str)
     parser.add_argument("-p", "--preprocessor", default=None, type=str)
+    parser.add_argument("-i", "--inverse", action='store_true')
     return parser.parse_args()
 
 
-def gen_events(stream, tfl, lexgraphs, preproc):
+def gen_events(stream, tfl, lexgraphs, preproc, inverse=False):
     for i, line in tqdm(enumerate(stream)):
         try:
             text, label = line.strip().split('\t')
@@ -33,6 +34,8 @@ def gen_events(stream, tfl, lexgraphs, preproc):
             continue
         label = eval(label)
         assert label in (0, 1, True, False)
+        label = bool(label)
+        label = not label if inverse else label
         features = []
         try:
             for fl in tfl(text):
@@ -61,24 +64,27 @@ def main():
             lang=args.lang, nlp_cache=args.nlp_cache,
             cache_dir=args.cache_dir) as tfl:
         with open(args.train_file) as f:
-            for features, label in gen_events(f, tfl, lexgraphs, preproc):
+            for features, label in gen_events(
+                    f, tfl, lexgraphs, preproc, inverse=args.inverse):
                 if features is None:
                     continue
                 rl.add_train_event(features, label)
 
         with open(args.valid_file) as f:
-            for features, label in gen_events(f, tfl, lexgraphs, preproc):
+            for features, label in gen_events(
+                    f, tfl, lexgraphs, preproc, inverse=args.inverse):
                 if features is None:
                     continue
                 rl.add_valid_event(features, label)
 
     # for n in range(20, 100, 10):
     # for n in (50,):
-    rules_sorted = rl.dumb_choice(fp_weight=100, min_freq=5)
+    # rules_sorted = rl.dumb_choice(fp_weight=100, min_freq=5)
+    # rules_sorted = rl.dumb_choice(fp_weight=1, min_freq=5)
     # rules_sorted = rl.dumb_choice(fp_weight=1)
 
-    # rl.cutoff(5)
-    # rules_sorted = rl.logreg_choice()
+    rl.cutoff(5)
+    rules_sorted = rl.logreg_choice()
 
     # rule_names = rl.get_rule_names(rules_sorted)
     with open('rules.txt', 'w') as f:

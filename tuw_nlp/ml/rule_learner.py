@@ -47,7 +47,7 @@ class RuleLearner():
         self.valid_events = self._cutoff_events(self.valid_events)
 
     def logreg_choice(self):
-        logreg = LogisticRegression()
+        logreg = LogisticRegression(max_iter=500)
         X, y = get_x_y(self.train_events, self.features)
         logreg.fit(X, y)
         weights = logreg.coef_.reshape(-1)

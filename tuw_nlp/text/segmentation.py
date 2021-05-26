@@ -1,4 +1,3 @@
-import stanza
 from stanza.models.common import doc
 from stanza.pipeline.processor import Processor, register_processor
 
@@ -20,6 +19,10 @@ class SsplitFixer(Processor):
 
     def is_err(self, sen1, sen2):
         """determine if the split between sen1 and sen2 was an error"""
+
+        if sen1.text.endswith(':'):
+            return True, True
+
         for abbr in ABBREV:
             if sen1.text.endswith(f' {abbr}'):
                 return True, True
@@ -62,23 +65,3 @@ class SsplitFixer(Processor):
                 token_id += 1
 
         return doc.Document(sens, document.text)
-
-
-class CustomStanzaPipeline():
-    def __init__(self, lang='de', processors=None):
-        assert lang == 'de', "CustomStanzaTokenizer only supports German"
-        self.tokenizer = stanza.Pipeline(
-            lang='de', processors='tokenize,fix_ssplit')
-        self.additional = stanza.Pipeline(
-            lang='de', processors=processors, tokenize_pretokenized=True)
-
-    def ssplit(self, text):
-        return [sen.text for sen in self.tokenizer(text).sentences]
-
-    def process(self, text):
-        return self.additional([
-            [word.text for word in sen.words]
-            for sen in self.tokenizer(text).sentences])
-
-    def __call__(self, text):
-        return self.process(text)

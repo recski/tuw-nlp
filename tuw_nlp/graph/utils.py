@@ -1,16 +1,13 @@
 import logging
+import re
 from copy import deepcopy
 from itertools import chain
 
 import networkx as nx
-from networkx.algorithms.isomorphism import DiGraphMatcher
 import penman as pn
-
-from tuw_nlp.text.patterns.misc import (
-    CHAR_REPLACEMENTS,
-    PUNCT_REPLACEMENTS,
-    MISC_REPLACEMENTS
-)
+from networkx.algorithms.isomorphism import DiGraphMatcher
+from tuw_nlp.text.patterns.misc import (CHAR_REPLACEMENTS, MISC_REPLACEMENTS,
+                                        PUNCT_REPLACEMENTS)
 from tuw_nlp.text.utils import replace_emojis
 
 dummy_isi_graph = '(dummy_0 / dummy_0)'
@@ -45,6 +42,19 @@ class GraphMatcher():
 
 
 class GraphFormulaMatcher():
+    @staticmethod
+    def node_matcher(n1, n2):
+        logging.debug(f'matchig these: {n1}, {n2}')
+        if n1['name'] is None or n2['name'] is None:
+            return True
+
+        return True if re.match(n2['name'], n1['name']) else False
+
+    @staticmethod
+    def edge_matcher(e1, e2):
+        logging.debug(f'matchig these: {e1}, {e2}')
+        return e1['color'] == e2['color']
+
     def __init__(self, patterns):
         self.patts = []
 
@@ -60,7 +70,7 @@ class GraphFormulaMatcher():
             neg_match = False
             for neg in negs:
                 matcher = DiGraphMatcher(
-                    graph, neg, node_match=GraphMatcher.node_matcher, edge_match=GraphMatcher.edge_matcher)
+                    graph, neg, node_match=GraphFormulaMatcher.node_matcher, edge_match=GraphFormulaMatcher.edge_matcher)
                 if matcher.subgraph_is_isomorphic():
                     neg_match = True
                     break
@@ -68,13 +78,13 @@ class GraphFormulaMatcher():
             pos_match = True
             for p in patt:
                 matcher = DiGraphMatcher(
-                    graph, p, node_match=GraphMatcher.node_matcher, edge_match=GraphMatcher.edge_matcher)
+                    graph, p, node_match=GraphFormulaMatcher.node_matcher, edge_match=GraphFormulaMatcher.edge_matcher)
                 if not matcher.subgraph_is_isomorphic():
                     pos_match = False
                     break
 
             if pos_match and not neg_match:
-                yield key
+                yield key, i
 
 
 def gen_subgraphs(M, no_edges):

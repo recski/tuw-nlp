@@ -1,5 +1,7 @@
 import re
 
+TWITTER_USERNAME_PATT = re.compile(r"@(\S+)")
+TWITTER_HASHTAG_PATT = re.compile(r"#(\S+)")
 
 # based on https://stackoverflow.com/a/49986645
 EMOJI_PATT = re.compile(

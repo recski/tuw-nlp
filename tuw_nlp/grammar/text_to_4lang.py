@@ -6,7 +6,7 @@ import traceback
 import stanza
 from tqdm import tqdm
 
-from tuw_nlp.grammar.ud_fl import UD_FL, UD_Fourlang
+from tuw_nlp.grammar.ud_fl import UD_FL
 from tuw_nlp.graph.utils import graph_to_pn, pn_to_graph
 from tuw_nlp.graph.fourlang import FourLang
 from tuw_nlp.text.pipeline import CachedStanzaPipeline, CustomStanzaPipeline
@@ -27,8 +27,7 @@ class TextTo4lang():
 
         self.nlp = CachedStanzaPipeline(nlp, nlp_cache)
 
-        self.ud_fl = UD_FL(cache_dir=cache_dir) if lang == "de" else UD_Fourlang(
-            cache_dir=cache_dir)
+        self.ud_fl = UD_FL(cache_dir=cache_dir, lang=lang)
 
         self.lexicon = Dictionary(lang)
 
@@ -59,8 +58,7 @@ class TextTo4lang():
         self.expand(graph, depth-1, substitute=substitute)
 
     def parse(self, sen):
-        interpretation = "fl" if self.lang == "de" else "fourlang"
-        fl = self.ud_fl.parse(sen, 'ud', interpretation, 'amr-sgraph-src')
+        fl = self.ud_fl.parse(sen, 'ud', "fl", 'amr-sgraph-src')
 
         graph, root = pn_to_graph(fl)
 

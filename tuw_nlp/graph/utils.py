@@ -220,6 +220,7 @@ def preprocess_edge_alto(edge):
 
 
 def preprocess_node_alto(edge):
+    # import sys
     # sys.stderr.write(f'prepr_node_alto IN: {edge}\t')
     out = edge
     for a, b in chain(

@@ -3,14 +3,30 @@ from heapq import nlargest
 
 
 class Vocabulary():
+    @staticmethod
+    def from_file(fn):
+        with open(fn) as f:
+            v = Vocabulary()
+            for line in f:
+                v.add(line.strip())
+        return v
+
     def __init__(self):
         self.id_to_word = {}
         self.word_to_id = {}
         self.word_to_freq = Counter()
         self.next_id = 0
 
+    def __contains__(self, item):
+        return item in self.word_to_id
+
     def __len__(self):
         return self.next_id
+
+    def to_file(self, fn):
+        with open(fn, 'w') as f:
+            for i in range(self.next_id):
+                f.write(f"{self.id_to_word[i]}\n")
 
     def add(self, word, fail_if_exists=False):
         if word in self.word_to_id:

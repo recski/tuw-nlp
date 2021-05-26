@@ -3,7 +3,8 @@ import json
 from stanza.models.common.doc import Document as StanzaDocument
 from stanza.utils.conll import CoNLL
 
-from tuw_nlp.text.patterns.misc import EMOJI_PATT
+from tuw_nlp.text.patterns.misc import (
+    EMOJI_PATT, TWITTER_USERNAME_PATT, TWITTER_HASHTAG_PATT)
 
 
 def gen_tsv_sens(stream, swaps=()):
@@ -64,3 +65,12 @@ def save_parsed(parsed, fn):
 
 def replace_emojis(text, with_what='EMOJI'):
     return EMOJI_PATT.sub(with_what, text)
+
+
+def preprocess_tweet(text, keep_username=False, keep_hashtag=False):
+    user_sub = r"\1" if keep_username else r""
+    hashtag_sub = r"\1" if keep_hashtag else r""
+    tweet = TWITTER_USERNAME_PATT.sub(user_sub, text)
+    tweet = TWITTER_HASHTAG_PATT.sub(hashtag_sub, tweet)
+    tweet = normalize_whitespace(tweet)
+    return tweet

@@ -1,12 +1,16 @@
 
-def print_cat_stats(cat_stats, max_n=None):
+def print_cat_stats(cat_stats, max_n=None, out_stream=None):
     cat_stats = count_p_r_f(cat_stats)
     cats_sorted = sorted(
         cat_stats.keys(), key=lambda k: -sum(cat_stats[k].values()))
 
     for cat in cats_sorted:
         s = cat_stats[cat]
-        print(f"{cat:<50}\t{s['gold']:>4}\t{s['pred']:>4}\t{s['P']:>6.2%}\t{s['R']:>6.2%}\t{s['F']:>6.2%}")  # noqa
+        out_str = f"{cat:<50}\t{s['gold']:>4}\t{s['pred']:>4}\t{s['P']:>6.2%}\t{s['R']:>6.2%}\t{s['F']:>6.2%}"  # noqa
+        if out_stream is None:
+            print(out_str)
+        else:
+            out_stream.write(out_str)
 
 
 def count_p_r_f(cat_stats):

@@ -29,9 +29,10 @@ class UD_FL(IRTGGrammar):
 
     def gen_terminal_rules(self, lemma, pos, xpos):
         fss = self.lexicon.get_terminal_rules(lemma, pos, xpos)
+        xpos_print = 'None' if xpos is None else preprocess_node_alto(xpos)
         for i, fs in enumerate(fss):
             yield (
-                f"{pos} -> {lemma}_{pos}_{i}",
+                f"{pos} -> {lemma}_{pos}_{xpos_print}_{i}",
                 {
                     'ud': f"{pos}_1({lemma}_0)",
                     'fl': fs},

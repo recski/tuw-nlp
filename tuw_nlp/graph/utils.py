@@ -107,7 +107,7 @@ def gen_subgraphs(M, no_edges):
                 yield new_graph
 
 
-def pn_to_graph(raw_dl):
+def pn_to_graph(raw_dl, edge_attr='color'):
     g = pn.decode(raw_dl)
     G = nx.DiGraph()
 
@@ -137,7 +137,8 @@ def pn_to_graph(raw_dl):
             tgt_id = int(tgt.split("<root>")[0].split("_")[1])
 
             if edge != "UNKNOWN":
-                G.add_edge(src_id, tgt_id, color=int(edge))
+                G.add_edge(src_id, tgt_id)
+                G[src_id][tgt_id].update({edge_attr: int(edge)})
 
     return G, root_id
 

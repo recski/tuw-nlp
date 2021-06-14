@@ -3,9 +3,10 @@ import subprocess
 
 from setuptools import find_packages, setup
 from setuptools.command.develop import develop
+from setuptools.command.install import install
 
 
-class SetupAlto(develop):
+class SetupAltoDevelop(develop):
     def run(self):
         develop.run(self)
         os.system("echo 'Setting up Alto parser'")
@@ -16,6 +17,16 @@ class SetupAlto(develop):
                 outfile.write(f"export ALTO_JAR={os.getcwd()}/alto-2.3.6-SNAPSHOT-all.jar")
                 os.system('bash -c \'source ~/.bashrc\'')
 
+class SetupAltoInstall(install):
+    def run(self):
+        install.run(self)
+        os.system("echo 'Setting up Alto parser'")
+        os.system(f"bash {os.getcwd()}/setup.sh")
+
+        if os.environ.get('ALTO_JAR') is None:
+            with open(os.path.expanduser("~/.bashrc"), "a") as outfile:
+                outfile.write(f"export ALTO_JAR={os.getcwd()}/alto-2.3.6-SNAPSHOT-all.jar")
+                os.system('bash -c \'source ~/.bashrc\'')
 
 setup(
     name='tuw-nlp',
@@ -34,5 +45,5 @@ setup(
     ],
     packages=find_packages(),
     scripts=['setup.sh'],
-    cmdclass={'develop': SetupAlto},
+    cmdclass={'develop': SetupAltoDevelop, 'install': SetupAltoInstall},
     zip_safe=False)

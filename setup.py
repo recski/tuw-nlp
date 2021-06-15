@@ -15,8 +15,9 @@ class SetupAltoDevelop(develop):
 
         if os.environ.get('ALTO_JAR') is None:
             with open(os.path.expanduser("~/.bash_profile"), "a") as outfile:
-                outfile.write(f"export ALTO_JAR=~/tuw_nlp_resources/alto-2.3.6-SNAPSHOT-all.jar")
-                os.system('bash -c \'source ~/.bash_profile\'')
+                alto_path = os.path.expanduser("~/tuw_nlp_resources/alto-2.3.6-SNAPSHOT-all.jar")
+                outfile.write(f"export ALTO_JAR={alto_path}")
+                os.system(f'bash -c \'source {outfile}\'')
 
 class SetupAltoInstall(install):
     def run(self):
@@ -26,8 +27,9 @@ class SetupAltoInstall(install):
 
         if os.environ.get('ALTO_JAR') is None:
             with open(os.path.expanduser("~/.bash_profile"), "a") as outfile:
-                outfile.write(f"export ALTO_JAR=~/tuw_nlp_resources/alto-2.3.6-SNAPSHOT-all.jar")
-                os.system('bash -c \'source ~/.bash_profile\'')
+                alto_path = os.path.expanduser("~/tuw_nlp_resources/alto-2.3.6-SNAPSHOT-all.jar")
+                outfile.write(f"export ALTO_JAR={alto_path}")
+                os.system(f'bash -c \'source {outfile}\'')
 
 class SetupAltoEgg(egg_info):
     def run(self):
@@ -37,8 +39,9 @@ class SetupAltoEgg(egg_info):
 
         if os.environ.get('ALTO_JAR') is None:
             with open(os.path.expanduser("~/.bash_profile"), "a") as outfile:
-                outfile.write(f"export ALTO_JAR=~/tuw_nlp_resources/alto-2.3.6-SNAPSHOT-all.jar")
-                os.system('bash -c \'source ~/.bash_profile\'')
+                alto_path = os.path.expanduser("~/tuw_nlp_resources/alto-2.3.6-SNAPSHOT-all.jar")
+                outfile.write(f"export ALTO_JAR={alto_path}")
+                os.system(f'bash -c \'source {outfile}\'')
 
 setup(
     name='tuw-nlp',

@@ -4,8 +4,8 @@ import subprocess
 
 ALTO_JAR = os.getenv('ALTO_JAR')
 if ALTO_JAR == None:
-    if os.path.isfile('~/tuw_nlp_resources/alto-2.3.6-SNAPSHOT-all.jar'):
-        ALTO_JAR = "~/tuw_nlp_resources/alto-2.3.6-SNAPSHOT-all.jar"
+    if os.path.isfile(os.path.expanduser("~/tuw_nlp_resources/alto-2.3.6-SNAPSHOT-all.jar")):
+        ALTO_JAR = os.path.expanduser("~/tuw_nlp_resources/alto-2.3.6-SNAPSHOT-all.jar")
 
 assert ALTO_JAR, 'ALTO_JAR environment variable not set'
 

@@ -74,8 +74,6 @@ class FourLang():
             node_name = node[0]
             if algorithms.has_path(zero_graph, from_node, node_name):
                 if node_name != from_node:
-                    short = shortest_path_length(
-                        zero_graph, from_node, node_name)
                     whitelist.append(node_name)
             else:
                 delete_list.append(node_name)

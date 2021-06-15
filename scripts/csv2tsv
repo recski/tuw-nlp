@@ -1,0 +1,12 @@
+#!/usr/bin/env python
+
+import csv
+import sys
+
+if len(sys.argv) > 1:
+    f = open(sys.argv[1])
+    for row in csv.reader(f, delimiter=",", quotechar='"'):
+        print("\t".join(field.replace('\n', '\\n') for field in row))
+else:
+    for row in csv.reader(iter(sys.stdin.readline, ''), delimiter=",", quotechar='"'):
+        print("\t".join(row))

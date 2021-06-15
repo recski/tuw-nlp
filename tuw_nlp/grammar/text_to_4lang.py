@@ -34,19 +34,30 @@ class TextTo4lang():
 
         self.graph_lexical = LexGraphs()
 
-    def add_definition(self, graph, node, definition, substitute):
+    def add_definition(self, graph, node, definition, substitute, strategy):
         sen = self.nlp(definition).sentences[0]
         def_graph, root = self.parse(sen)
         fourlang_graph = FourLang(def_graph, root, self.graph_lexical)
         if len(def_graph.nodes()) > 0:
-            graph.merge_definition_graph(
-                fourlang_graph, node, substitute)
+            if strategy == "None":
+                graph.merge_definition_graph(
+                    fourlang_graph, node, substitute)
+            elif strategy == "whitelisting":
+                fourlang_graph.whitelisting()
+                graph.merge_definition_graph(
+                    fourlang_graph, node, substitute)
 
-    def expand(self, graph, depth=1, substitute=False):
+        return [node[1]["name"] for node in fourlang_graph.G.nodes(data=True)]
+
+    def expand(self, graph, depth=1, substitute=False, expand_set=set(), strategy="None"):
         if depth == 0:
             return
 
-        nodes = [node for node in graph.G.nodes(data=True)]
+        if not expand_set:
+            nodes = [node for node in graph.G.nodes(data=True)]
+        else:
+            nodes = [node for node in graph.G.nodes(
+                data=True) if node[1]["name"] in expand_set]
         for d_node, node_data in nodes:
             if all(
                     elem not in node_data
@@ -55,10 +66,13 @@ class TextTo4lang():
                 if(node not in self.lexicon.stopwords or d_node == graph.root):
                     definition = self.lexicon.get_definition(node)
                     if definition:
-                        self.add_definition(
-                            graph, d_node, definition, substitute)
+                        definition_nodes = self.add_definition(
+                            graph, d_node, definition, substitute, strategy)
+                        if expand_set:
+                            expand_set |= set(definition_nodes)
 
-        self.expand(graph, depth-1, substitute=substitute)
+        self.expand(graph, depth-1, substitute=substitute,
+                    expand_set=expand_set, strategy=strategy)
 
     def parse(self, sen):
         fl = self.ud_fl.parse(sen, 'ud', "fl", 'amr-sgraph-src')
@@ -70,13 +84,13 @@ class TextTo4lang():
         return relabeled_graph, self.graph_lexical.vocab.get_id(
             graph.nodes[root]["name"])
 
-    def __call__(self, text, depth=0, substitute=False):
+    def __call__(self, text, depth=0, substitute=False, expand_set=set(), strategy="None"):
         for sen in self.nlp(text).sentences:
             graph, root = self.parse(sen)
 
             fourlang = FourLang(graph, root, self.graph_lexical)
 
-            self.expand(fourlang, depth=depth, substitute=substitute)
+            self.expand(fourlang, depth=depth, substitute=substitute, expand_set=expand_set, strategy=strategy)
             yield fourlang.G
 
     def __enter__(self):

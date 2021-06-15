@@ -15,7 +15,7 @@ class SetupAltoDevelop(develop):
 
         if os.environ.get('ALTO_JAR') is None:
             with open(os.path.expanduser("~/.bashrc"), "a") as outfile:
-                outfile.write(f"export ALTO_JAR={os.getcwd()}/alto-2.3.6-SNAPSHOT-all.jar")
+                outfile.write(f"export ALTO_JAR=~/tuw_nlp_resources/alto-2.3.6-SNAPSHOT-all.jar")
                 os.system('bash -c \'source ~/.bashrc\'')
 
 class SetupAltoInstall(install):
@@ -26,7 +26,7 @@ class SetupAltoInstall(install):
 
         if os.environ.get('ALTO_JAR') is None:
             with open(os.path.expanduser("~/.bashrc"), "a") as outfile:
-                outfile.write(f"export ALTO_JAR={os.getcwd()}/alto-2.3.6-SNAPSHOT-all.jar")
+                outfile.write(f"export ALTO_JAR=~/tuw_nlp_resources/alto-2.3.6-SNAPSHOT-all.jar")
                 os.system('bash -c \'source ~/.bashrc\'')
 
 class SetupAltoEgg(egg_info):
@@ -37,7 +37,7 @@ class SetupAltoEgg(egg_info):
 
         if os.environ.get('ALTO_JAR') is None:
             with open(os.path.expanduser("~/.bashrc"), "a") as outfile:
-                outfile.write(f"export ALTO_JAR={os.getcwd()}/alto-2.3.6-SNAPSHOT-all.jar")
+                outfile.write(f"export ALTO_JAR=~/tuw_nlp_resources/alto-2.3.6-SNAPSHOT-all.jar")
                 os.system('bash -c \'source ~/.bashrc\'')
 
 setup(
@@ -52,10 +52,11 @@ setup(
         'dict-recursive-update',
         'networkx',
         'penman',
-        'stanza',
+        'stanza==1.1.1',
         'nltk'
     ],
     packages=find_packages(),
     scripts=['setup.sh'],
+    include_package_data=True,
     cmdclass={'develop': SetupAltoDevelop, 'install': SetupAltoInstall, "egg_info": SetupAltoEgg},
     zip_safe=False)

@@ -2,6 +2,29 @@
 
 NLP utilities developed at TUW informatics
 
+## Install and Quick Start
+Install the tuw-nlp repository:
+
+```
+pip install .
+```
+
+Then you can parse a sentence as simple as:
+
+```python
+from tuw_nlp.grammar.text_to_4lang import TextTo4lang
+
+tfl = TextTo4lang("en", "en_nlp_cache")
+
+fl_graphs = list(tfl("brown dog", depth=1, substitute=False))
+
+# Then the fl_graphs will directly contain a networkx graph object
+fl_graphs[0].nodes(data=True)
+
+```
+For more examples you can check the jupyter notebook under *notebooks/experiment*
+
+
 ## Modules
 
 ### text 

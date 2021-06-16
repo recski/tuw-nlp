@@ -32,11 +32,11 @@ class TFLFeaturizer(Featurizer):
         self.nlp_cache = os.path.join(self.cache_dir, 'nlp_cache.json')
 
     def get_features(self, fl, tfl):
-        features = []
+        features = set()
         for sg_tuple, sg in self.lexgraphs.gen_lex_subgraphs(fl, 2):
-            features.append(sg_tuple)
+            features.add(sg_tuple)
             self.feat_names[sg_tuple] = graph_to_pn(sg)
-        return features
+        return list(features)
 
     def gen_events(self, iterable):
         with TextTo4lang(
@@ -59,22 +59,24 @@ class SimpleFeaturizer(Featurizer):
     def __init__(self, *args, **kwargs):
         super(SimpleFeaturizer, self).__init__(*args, **kwargs)
         self.nlp_cache = os.path.join(self.cache_dir, 'nlp_cache.json')
-        self.nlp = stanza.Pipeline(lang=self.lang)
+        self.nlp_init = lambda: stanza.Pipeline(lang=self.lang)
 
     def get_features(self, raw_text, nlp):
         text = self.preproc(raw_text)
         doc = nlp(text)
-        feats = []
+        feats = set()
         for sen in doc.sentences:
             for tok in sen.words:
                 # feats.append(f'{tok.lemma}_{tok.xpos}')
-                feats.append(tok.lemma)
-                feats.append(tok.text)
+                if tok.upos not in ('NOUN', 'PROPN'):
+                    feats.add(tok.lemma)
+                # feats.add(tok.text)
 
-        return feats
+        return list(feats)
 
     def gen_events(self, iterable):
-        with CachedStanzaPipeline(self.nlp, self.nlp_cache) as nlp:
+        with CachedStanzaPipeline(
+                None, self.nlp_cache, init=self.nlp_init) as nlp:
             for raw_text, label in iterable:
                 text = self.preproc(raw_text)
                 features = self.get_features(text, nlp)

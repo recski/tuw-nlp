@@ -221,6 +221,12 @@ class ENLexicon(BaseLexicon):
             ("PROPN", "NMOD_POSS", "PROPN"): [poss],
             ("PROPN", "NMOD_POSS", "PRON"): [poss],
 
+            #compound
+            ("NOUN", "NOUN", "compound"): [r("0")],
+            ("PROPN", "PROPN", "compound"): [r("0")],
+            ("NOUN", "PROPN", "compound"): [r("0")],
+            ("NUM", "NUM", "compound"): [r("0")],
+
             # obj
             ("VERB", "OBJ", "NOUN"): [r("2")],
             ("VERB", "OBJ", "PRON"): [r("2")],

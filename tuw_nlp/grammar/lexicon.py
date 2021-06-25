@@ -259,17 +259,17 @@ class ENLexicon(BaseLexicon):
             ]
         }
 
-    def handle_obl_case(self, parent_dep, parent_pos, current_pos, children_pos, i, clemma):
+    def handle_obl_case(self, parent_dep, parent_pos, current_pos, children_pos, i, j, clemma):
         if clemma == "by":
             obl_case = (
-                f"{parent_pos} -> HANDLE_{parent_dep}_CASE_{children_pos}_{i}({children_pos}, {current_pos}, {parent_pos})",
+                f"{parent_pos} -> HANDLE_{parent_dep}_CASE_{children_pos}_{i}_{j}({children_pos}, {current_pos}, {parent_pos})",
                 {'ud': f'{parent_pos}_2(_{parent_dep}_1({current_pos}_2(_CASE_1(?1), ?2)),?3)',
                  'fl': f'f_dep1(merge(merge(?3,"(r<root> :1 (d1<dep1> :0 (r<root>)))"), r_dep1(?2)))'},
                 "nonterminal"
             )
         else:
             obl_case = (
-                f"{parent_pos} -> HANDLE_{parent_dep}_CASE_{children_pos}_{i}({children_pos}, {current_pos}, {parent_pos})",
+                f"{parent_pos} -> HANDLE_{parent_dep}_CASE_{children_pos}_{i}_{j}({children_pos}, {current_pos}, {parent_pos})",
                 {'ud': f'{parent_pos}_2(_{parent_dep}_1({current_pos}_2(_CASE_1(?1), ?2)),?3)',
                  'fl': f'f_dep2(f_dep1(merge(merge(merge(?3,"(d1<dep1> :1 (r<root>) :2 (d2<dep2>))"), r_dep1(?1)), r_dep2(?2))))'},
                 "nonterminal"
@@ -299,7 +299,7 @@ class ENLexicon(BaseLexicon):
 
         if parent_dep in ("NMOD", "OBL"):
             return self.handle_obl_case(
-                parent_dep, parent_pos, pos, cpos, i, clemma)
+                parent_dep, parent_pos, pos, cpos, i, j, clemma)
         if parent_dep == "ACL_RELCL":
             return self.handle_acl_relcl(dep, parent_pos, pos, cpos, i, j)
 

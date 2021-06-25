@@ -24,6 +24,21 @@ fl_graphs[0].nodes(data=True)
 ```
 For more examples you can check the jupyter notebook under *notebooks/experiment*
 
+## Demo app
+
+To run the browser-based demo (also available [online](https://ir-group.ec.tuwien.ac.at/fourlang)), first start the graph building service:
+
+```
+python backend/service.py
+```
+
+Then run the frontend with this command:
+
+```
+streamlit run frontend/extract.py
+```
+
+In the demo you can parse english and german sentences and you can also try out multiple algorithms our graphs implement, such as `expand`, `substitute` and `append_zero_paths`.
 
 ## Modules
 

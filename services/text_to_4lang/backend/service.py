@@ -7,6 +7,7 @@ import graphviz
 import stanza
 from flask import Flask, request
 from graphviz import Source
+import networkx as nx
 from networkx.readwrite import json_graph
 from tuw_nlp.grammar.text_to_4lang import TextTo4lang
 from tuw_nlp.graph.fourlang import FourLang
@@ -59,14 +60,20 @@ def build():
         append_zero_graph = data["append"]
         if lang == "en":
             fl_graphs = list(text_to_4lang_en(text))
-            fl = FourLang(fl_graphs[0], 0)
+            g = fl_graphs[0]
+            for n in fl_graphs[1:]:
+                g = nx.compose(g, n)
+            fl = FourLang(g, 0)
             if int(depth):
                 text_to_4lang_en.expand(
                     fl, depth=int(depth), substitute=substitute)
             sen = nlp(text).sentences[0]
         elif lang == "de":
             fl_graphs = list(text_to_4lang_de(text))
-            fl = FourLang(fl_graphs[0], 0)
+            g = fl_graphs[0]
+            for n in fl_graphs[1:]:
+                g = nx.compose(g, n)
+            fl = FourLang(g, 0)
             if int(depth):
                 text_to_4lang_de.expand(
                     fl, depth=int(depth), substitute=substitute)

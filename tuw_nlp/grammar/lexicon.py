@@ -152,6 +152,7 @@ class ENLexicon(BaseLexicon):
             ("VERB", "ADVMOD", "ADV"),
             ("VERB", "ADVMOD", "PART"),
             ("NOUN", "ADVMOD", "PART"),
+            ("PRON", "ADVMOD", "PART"),
 
             ("NOUN", "NMOD", "NOUN"),
             ("NOUN", "NMOD", "PROPN"),
@@ -169,6 +170,12 @@ class ENLexicon(BaseLexicon):
 
             ("VERB", "ADVCL", "VERB"),
             ("ADJ", "ADVCL", "VERB"),
+            ("VERB", "ADVCL", "ADJ"),
+            ("VERB", "ADVCL", "NOUN"),
+            # The second memorable shift was in September, when the plant made the 75-millionth ton of steel.
+            ("PROPN", "ADVCL", "VERB"),
+            # Although big city marathons offer great crowd support and a large camaraderie of runners, running in a big city marathon is not for everyone.
+            ("PRON", "ADVCL", "VERB"),
         }
 
         self.mod_edges |= {
@@ -182,28 +189,62 @@ class ENLexicon(BaseLexicon):
 
         coord = f'f_dep1(f_dep2(merge(merge(r_dep1(?1),"(coord<root> / COORD :0 (d1<dep1>) :0 (d2<dep2>))"), r_dep2(?2))))'  # noqa
         poss = f'f_relation(f_dep1(merge(merge(?2,"(has<relation> / HAS :2 (r<root>) :1 (d1<dep1>)))"), r_dep1(?1))))'
+        csubj = f'f_dep1(merge(merge(?1,"(r<root> :1 (d1<dep1>))"), r_dep1(?2)))'
 
         self.bin_fnc = {
             ("ADJ", "NSUBJ", "NOUN"): [r('1')],
             ("VERB", "NSUBJ_PASS", "NOUN"): [r("2")],
             ("VERB", "NSUBJ_PASS", "PRON"): [r("2")],
             ("VERB", "NSUBJ_PASS", "PROPN"): [r("2")],
-            ("VERB", "CCOMP", "VERB"): [r("2")],
+            ("VERB", "CCOMP", "VERB"): [r("0")],
+            ("VERB", "CCOMP", "ADJ"): [r("2")],
             ("VERB", "CCOMP", "ADJ"): [r("2")],
             # make sure they have a copy of the invoice - sure ->CCOMP -> have
             ("ADJ", "CCOMP", "VERB"): [r("2")],
+            ("VERB", "CCOMP", "NOUN"): [r("2")],
 
             ("VERB", "OBL", "NOUN"): [r("2")],
+
+            # ACL
+            ("NOUN", "ACL", "VERB"): [r("0")],
+
+            # FLAT - Andrew -flat> Wakefield
+            ("PROPN", "FLAT", "PROPN"): [r("0")],
+
+            # Parataxis
+            ("VERB", "PARATAXIS", "VERB"): [r("0")],
+            ("NOUN", "PARATAXIS", "VERB"): [r("0")],
+            ("PROPN", "PARATAXIS", "NOUN"): [r("0")],
+
+            # ACL_RELCL
+            ("NOUN", "ACL_RELCL", "VERB"): [r("0")],
+            ("PRON", "ACL_RELCL", "VERB"): [r("0")],
+            ("NOUN", "ACL_RELCL", "ADJ"): [r("0")],
+            ("PROPN", "ACL_RELCL", "VERB"): [r("0")],
+            ("NOUN", "ACL_RELCL", "NOUN"): [r("0")],
 
             # NSUBJ
             ("VERB", "NSUBJ", "NOUN"): [r("1")],
             ("VERB", "NSUBJ", "ADJ"): [r("1")],
             ("VERB", "NSUBJ", "PROPN"): [r("1")],
+            ("VERB", "NSUBJ", "PRON"): [r("1")],
+            ("ADJ", "NSUBJ", "PRON"): [r("1")],
+            ("NOUN", "NSUBJ", "PRON"): [r("1")],
+            ("NOUN", "NSUBJ", "PROPN"): [r("1")],
+            ("ADJ", "NSUBJ", "NOUN"): [r("1")],
+            ("NOUN", "NSUBJ", "NOUN"): [r("1")],
+            ("PROPN", "NSUBJ", "NOUN"): [r("1")],
+            ("PROPN", "NSUBJ", "PRON"): [r("1")],
+            ("ADV", "NSUBJ", "NOUN"): [r("1")],
+            ("VERB", "NSUBJ", "DET"): [r("1")],
 
             # CSUBJ
-            ("ADJ", "CSUBJ", "VERB"): [r("1")],
-            ("NOUN", "CSUBJ", "VERB"): [r("1")],
-            ("VERB", "CSUBJ", "VERB"): [r("1")],
+            ("ADJ", "CSUBJ", "VERB"): [csubj],
+            ("NOUN", "CSUBJ", "VERB"): [csubj],
+            ("VERB", "CSUBJ", "VERB"): [csubj],
+            ("PROPN", "CSUBJ", "VERB"): [csubj],
+            #Although big city marathons offer great crowd support and a large camaraderie of runners, running in a big city marathon is not for everyone.
+            ("PRON", "CSUBJ", "VERB"): [csubj],
 
 
             ("VERB", "CONJ", "VERB"): [coord],
@@ -222,10 +263,10 @@ class ENLexicon(BaseLexicon):
             ("PROPN", "NMOD_POSS", "PRON"): [poss],
 
             #compound
-            ("NOUN", "NOUN", "compound"): [r("0")],
-            ("PROPN", "PROPN", "compound"): [r("0")],
-            ("NOUN", "PROPN", "compound"): [r("0")],
-            ("NUM", "NUM", "compound"): [r("0")],
+            ("NOUN" ,"COMPOUND", "NOUN"): [r("0")],
+            ("PROPN", "COMPOUND", "PROPN"): [r("0")],
+            ("NOUN", "COMPOUND", "PROPN"): [r("0")],
+            ("NUM", "COMPOUND", "NUM"): [r("0")],
 
             # obj
             ("VERB", "OBJ", "NOUN"): [r("2")],
@@ -281,14 +322,14 @@ class ENLexicon(BaseLexicon):
         acl_relcl = (
             f"{parent_pos} -> HANDLE_ACL_RELCL_NSUBJ_{children_pos}_{i}_{j}({children_pos}, {current_pos}, {parent_pos})",
             {'ud': f'{parent_pos}_2(_ACL_RELCL_1({current_pos}_2(_NSUBJ_1(?1), ?2)),?3)',
-             'fl': f'f_dep1(merge(merge(?3,"(r<root> :1 (d1<dep1> :0 (r<root>)))"), r_dep1(?2)))'},
+             'fl': f'f_dep1(merge(merge(?3,"(r<root> :0 (d1<dep1> :1 (r<root>)))"), r_dep1(?2)))'},
             "nonterminal"
         )
 
         acl_relcl2 = (
             f"{parent_pos} -> HANDLE_ACL_RELCL_NSUBJ_PASS_{children_pos}_{i}_{j}({children_pos}, {current_pos}, {parent_pos})",
             {'ud': f'{parent_pos}_2(_ACL_RELCL_1({current_pos}_2(_NSUBJ_PASS_1(?1), ?2)),?3)',
-             'fl': f'f_dep1(merge(merge(?3,"(r<root> :1 (d1<dep1> :0 (r<root>)))"), r_dep1(?2)))'},
+             'fl': f'f_dep1(merge(merge(?3,"(r<root> :0 (d1<dep1> :1 (r<root>)))"), r_dep1(?2)))'},
             "nonterminal"
         )
         return [acl_relcl, acl_relcl2]

@@ -176,6 +176,8 @@ class ENLexicon(BaseLexicon):
             ("PROPN", "ADVCL", "VERB"),
             # Although big city marathons offer great crowd support and a large camaraderie of runners, running in a big city marathon is not for everyone.
             ("PRON", "ADVCL", "VERB"),
+            # As the earth revolves around the sun, the place where light shines the brightest changes.
+            ("NOUN", "ADVCL", "VERB"),
         }
 
         self.mod_edges |= {
@@ -207,6 +209,9 @@ class ENLexicon(BaseLexicon):
 
             # ACL
             ("NOUN", "ACL", "VERB"): [r("0")],
+            ("PROPN", "ACL", "VERB"): [r("0")],
+            # The painting was one of the first used as a poster in an advertising campaign for soap powder.
+            ("NUM", "ACL", "VERB"): [r("0")],
 
             # FLAT - Andrew -flat> Wakefield
             ("PROPN", "FLAT", "PROPN"): [r("0")],
@@ -237,6 +242,10 @@ class ENLexicon(BaseLexicon):
             ("PROPN", "NSUBJ", "PRON"): [r("1")],
             ("ADV", "NSUBJ", "NOUN"): [r("1")],
             ("VERB", "NSUBJ", "DET"): [r("1")],
+
+            # The painting was one of the first used as a poster in an advertising campaign for soap powder.
+            ("NUM", "NSUBJ", "NOUN"): [r("1")],
+            ("NUM", "NSUBJ", "PROPN"): [r("1")],
 
             # CSUBJ
             ("ADJ", "CSUBJ", "VERB"): [csubj],
@@ -272,6 +281,13 @@ class ENLexicon(BaseLexicon):
             ("VERB", "OBJ", "NOUN"): [r("2")],
             ("VERB", "OBJ", "PRON"): [r("2")],
             ("VERB", "OBJ", "PROPN"): [r("2")],
+
+            # appos
+            ("NOUN", "APPOS", "PROPN"): [r("0")],
+            ("PROPN", "APPOS", "PROPN"): [r("0")],
+            ("NOUN", "APPOS", "NOUN"): [r("0")],
+            ("PROPN", "APPOS", "NOUN"): [r("0")],
+            ("VERB", "APPOS", "NOUN"): [r("0")],
         }
 
         self.bin_fnc.update({edge: [r("0")] for edge in self.mod_edges})

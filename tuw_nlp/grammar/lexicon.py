@@ -144,6 +144,8 @@ class ENLexicon(BaseLexicon):
             ("ADJ", "ADVMOD", "ADV"),
             ("ADJ", "ADVMOD", "PART"),
             ("ADJ", "ADVMOD", "ADJ"),
+            ("PROPN", "ADVMOD", "ADJ"),
+            ("PROPN", "ADVMOD", "ADV"),
             ("NOUN", "ADVMOD", "ADV"),
             ("NOUN", "ADVMOD", "NUM"),
             ("NOUN", "ADVMOD", "PRON"),
@@ -153,6 +155,10 @@ class ENLexicon(BaseLexicon):
             ("VERB", "ADVMOD", "PART"),
             ("NOUN", "ADVMOD", "PART"),
             ("PRON", "ADVMOD", "PART"),
+
+            ("ADJ", "OBL_NPMOD", "NOUN"),
+            ("ADV", "OBL_NPMOD", "NOUN"),
+            ("VERB", "OBL_NPMOD", "NOUN"),
 
             ("NOUN", "NMOD", "NOUN"),
             ("NOUN", "NMOD", "PROPN"),
@@ -204,10 +210,19 @@ class ENLexicon(BaseLexicon):
             # make sure they have a copy of the invoice - sure ->CCOMP -> have
             ("ADJ", "CCOMP", "VERB"): [r("2")],
             ("VERB", "CCOMP", "NOUN"): [r("2")],
+            # It is no accident that the title of the exhibition is a homage to one of the classic figures of contemporaneity, Antoni Tapies, whose work breached all the boundaries imposed on artistic creation by the critics.
+            ("NOUN", "CCOMP", "NOUN"): [r("2")],
 
+            # OBL
             ("VERB", "OBL", "NOUN"): [r("2")],
+            # Show 1 in the series is a documentary detailing the first stages of the celebrity students' conductor training as they enter into a week long 'Baton Camp'.
+            ("VERB", "OBL", "PROPN"): [r("2")],
 
             # ACL
+            # An Afghan handed over innocent people into torture. Afghan ADJ?
+            ("PROPN", "ACL", "VERB"): [r("0")],
+            ("ADJ", "ACL", "VERB"): [r("0")],
+
             ("NOUN", "ACL", "VERB"): [r("0")],
             ("PROPN", "ACL", "VERB"): [r("0")],
             # The painting was one of the first used as a poster in an advertising campaign for soap powder.
@@ -219,6 +234,8 @@ class ENLexicon(BaseLexicon):
             # Parataxis
             ("VERB", "PARATAXIS", "VERB"): [r("0")],
             ("NOUN", "PARATAXIS", "VERB"): [r("0")],
+            # 77793 civilians have arrived into the government controlled areas within the last two days.
+            ("NUM", "PARATAXIS", "VERB"): [r("0")],
             ("PROPN", "PARATAXIS", "NOUN"): [r("0")],
 
             # ACL_RELCL
@@ -232,16 +249,27 @@ class ENLexicon(BaseLexicon):
             ("VERB", "NSUBJ", "NOUN"): [r("1")],
             ("VERB", "NSUBJ", "ADJ"): [r("1")],
             ("VERB", "NSUBJ", "PROPN"): [r("1")],
+            # One of the guards at the entrance of the supermarket said it had been the same scenario on Saturday with a long queue for sugar being the order of the day.
+            ("VERB", "NSUBJ", "NUM"): [r("1")],
             ("VERB", "NSUBJ", "PRON"): [r("1")],
             ("ADJ", "NSUBJ", "PRON"): [r("1")],
+            # Ironically, the damage caused by the floods, and the subsequent insurance payout, were what prompted the restoration of the station building.
+            ("PRON", "NSUBJ", "NOUN"): [r("1")],
             ("NOUN", "NSUBJ", "PRON"): [r("1")],
             ("NOUN", "NSUBJ", "PROPN"): [r("1")],
             ("ADJ", "NSUBJ", "NOUN"): [r("1")],
+            # Jennifer Holt, a former actress from Western movies, was "Aunt Judy," the only human in the cast. human ADJ?
+            ("ADJ", "NSUBJ", "PROPN"): [r("1")],
             ("NOUN", "NSUBJ", "NOUN"): [r("1")],
             ("PROPN", "NSUBJ", "NOUN"): [r("1")],
             ("PROPN", "NSUBJ", "PRON"): [r("1")],
             ("ADV", "NSUBJ", "NOUN"): [r("1")],
+            # Here is Jose Mojica Marins, the popular Coffin Joe, a filmmaker who invented a cinema of total grossness.
+            ("ADV", "NSUBJ", "PROPN"): [r("1")],
+            ("ADV", "NSUBJ", "NUM"): [r("1")],
             ("VERB", "NSUBJ", "DET"): [r("1")],
+            # Patient survival one year after transplantation from a living-related donor is 95% and comparably high if the organ comes from a cadaveric donor. - For some reason % is the root
+            ("SYM", "NSUBJ", "NOUN"): [r("1")],
 
             # The painting was one of the first used as a poster in an advertising campaign for soap powder.
             ("NUM", "NSUBJ", "NOUN"): [r("1")],
@@ -252,7 +280,7 @@ class ENLexicon(BaseLexicon):
             ("NOUN", "CSUBJ", "VERB"): [csubj],
             ("VERB", "CSUBJ", "VERB"): [csubj],
             ("PROPN", "CSUBJ", "VERB"): [csubj],
-            #Although big city marathons offer great crowd support and a large camaraderie of runners, running in a big city marathon is not for everyone.
+            # Although big city marathons offer great crowd support and a large camaraderie of runners, running in a big city marathon is not for everyone.
             ("PRON", "CSUBJ", "VERB"): [csubj],
 
 
@@ -262,6 +290,8 @@ class ENLexicon(BaseLexicon):
             ("VERB", "XCOMP", "VERB"): [r("2")],
             # make sure they have a copy of the invoice
             ("VERB", "XCOMP", "ADJ"): [r("2")],
+            # It becomes a lunch-time respite from the busy city life as a diner relaxes with his buffet delight while watching the commuters waiting alongside each other.
+            ("VERB", "XCOMP", "NOUN"): [r("2")],
             ("ADJ", "XCOMP", "VERB"): [r("2")],
 
             # poss
@@ -271,23 +301,33 @@ class ENLexicon(BaseLexicon):
             ("PROPN", "NMOD_POSS", "PROPN"): [poss],
             ("PROPN", "NMOD_POSS", "PRON"): [poss],
 
-            #compound
-            ("NOUN" ,"COMPOUND", "NOUN"): [r("0")],
+            # compound
+            ("NOUN", "COMPOUND", "NOUN"): [r("0")],
             ("PROPN", "COMPOUND", "PROPN"): [r("0")],
             ("NOUN", "COMPOUND", "PROPN"): [r("0")],
             ("NUM", "COMPOUND", "NUM"): [r("0")],
+            # 77793 civilians have arrived into the government controlled areas within the last two days.
+            ("VERB", "COMPOUND", "NOUN"): [r("0")],
 
             # obj
             ("VERB", "OBJ", "NOUN"): [r("2")],
             ("VERB", "OBJ", "PRON"): [r("2")],
             ("VERB", "OBJ", "PROPN"): [r("2")],
+            # Show 1 in the series is a documentary detailing the first stages of the celebrity students' conductor training as they enter into a week long 'Baton Camp'.
+            ("VERB", "OBJ", "NUM"): [r("2")],
 
             # appos
             ("NOUN", "APPOS", "PROPN"): [r("0")],
             ("PROPN", "APPOS", "PROPN"): [r("0")],
+            # Dalindyebo R900-million and the tribe a further R80-billion in compensation for the humiliation caused by the monarch's criminal trial.
+            ("PROPN", "APPOS", "NUM"): [r("0")],
+            # Jennifer Holt, a former actress from Western movies, was "Aunt Judy," the only human in the cast.
+            ("PROPN", "APPOS", "ADJ"): [r("0")],
             ("NOUN", "APPOS", "NOUN"): [r("0")],
             ("PROPN", "APPOS", "NOUN"): [r("0")],
             ("VERB", "APPOS", "NOUN"): [r("0")],
+            # Non-UK students benefit from the bursary scheme.
+            ("NOUN", "APPOS", "VERB"): [r("0")],
         }
 
         self.bin_fnc.update({edge: [r("0")] for edge in self.mod_edges})
@@ -313,6 +353,12 @@ class ENLexicon(BaseLexicon):
             ],
             "none": [
                 n('NEG')
+            ],
+            "no": [
+                n('NEG')
+            ],
+            "non": [
+                n('NEG')
             ]
         }
 
@@ -334,6 +380,16 @@ class ENLexicon(BaseLexicon):
 
         return [obl_case]
 
+    def handle_advcl_mark(self, parent_dep, parent_pos, current_pos, children_pos, i, j, clemma):
+        advcl_mark = (
+            f"{parent_pos} -> HANDLE_{parent_dep}_MARK_{children_pos}_{i}_{j}({children_pos}, {current_pos}, {parent_pos})",
+            {'ud': f'{parent_pos}_2(_{parent_dep}_1({current_pos}_2(_MARK_1(?1), ?2)),?3)',
+                'fl': f'f_dep2(f_dep1(merge(merge(merge(?3,"(d1<dep1> :1 (r<root>) :2 (d2<dep2>))"), r_dep1(?1)), r_dep2(?2))))'},
+            "nonterminal"
+        )
+
+        return [advcl_mark]
+
     def handle_acl_relcl(self, dep, parent_pos, current_pos, children_pos, i, j):
         acl_relcl = (
             f"{parent_pos} -> HANDLE_ACL_RELCL_NSUBJ_{children_pos}_{i}_{j}({children_pos}, {current_pos}, {parent_pos})",
@@ -354,8 +410,11 @@ class ENLexicon(BaseLexicon):
         parent_dep = parent[2]
         parent_pos = parent[1]
 
-        if parent_dep in ("NMOD", "OBL"):
+        if parent_dep in ("NMOD", "OBL", "OBL_NPMOD"):
             return self.handle_obl_case(
+                parent_dep, parent_pos, pos, cpos, i, j, clemma)
+        if parent_dep in ("ADVCL"):
+            return self.handle_advcl_mark(
                 parent_dep, parent_pos, pos, cpos, i, j, clemma)
         if parent_dep == "ACL_RELCL":
             return self.handle_acl_relcl(dep, parent_pos, pos, cpos, i, j)

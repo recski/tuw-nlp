@@ -173,6 +173,8 @@ class ENLexicon(BaseLexicon):
             ("NOUN", "ACL", "VERB"),
 
             ("NOUN", "NUMMOD", "NUM"),
+            # Up to 85% of viruses that cause respiratory illness are identified by the technology.
+            ("SYM", "NUMMOD", "NUM"),
 
             ("VERB", "ADVCL", "VERB"),
             ("ADJ", "ADVCL", "VERB"),
@@ -184,6 +186,10 @@ class ENLexicon(BaseLexicon):
             ("PRON", "ADVCL", "VERB"),
             # As the earth revolves around the sun, the place where light shines the brightest changes.
             ("NOUN", "ADVCL", "VERB"),
+            # We placed some wax into the old tin can.
+            ("VERB", "ADVCL", "AUX"),
+            # I have no idea why this rather loud blazer from the GAP was in a bin at my local Dollar Tree.
+            ("VERB", "ADVCL", "PROPN"),
         }
 
         self.mod_edges |= {
@@ -204,6 +210,10 @@ class ENLexicon(BaseLexicon):
             ("VERB", "NSUBJ_PASS", "NOUN"): [r("2")],
             ("VERB", "NSUBJ_PASS", "PRON"): [r("2")],
             ("VERB", "NSUBJ_PASS", "PROPN"): [r("2")],
+            # 38% of the world's generated electrical energy is gained from coal.
+            ("VERB", "NSUBJ_PASS", "SYM"): [r("2")],
+
+            # CCOMP
             ("VERB", "CCOMP", "VERB"): [r("0")],
             ("VERB", "CCOMP", "ADJ"): [r("2")],
             ("VERB", "CCOMP", "ADJ"): [r("2")],
@@ -217,6 +227,12 @@ class ENLexicon(BaseLexicon):
             ("VERB", "OBL", "NOUN"): [r("2")],
             # Show 1 in the series is a documentary detailing the first stages of the celebrity students' conductor training as they enter into a week long 'Baton Camp'.
             ("VERB", "OBL", "PROPN"): [r("2")],
+            # Typically, the maximum heat generated from 24 fuel assemblies stored in a cask is less than that given off by a typical home heating system in an hour.
+            ("ADJ", "OBL", "PRON"): [r("2")],
+            # Up to 85% of viruses that cause respiratory illness are identified by the technology.
+            ("VERB", "OBL", "SYM"): [r("2")],
+            # The film makes the point that decision-making is an important aspect of such an affair of the heart.
+            ("VERB", "OBL_TMOD", "NOUN"): [r("2")],
 
             # ACL
             # An Afghan handed over innocent people into torture. Afghan ADJ?
@@ -227,6 +243,10 @@ class ENLexicon(BaseLexicon):
             ("PROPN", "ACL", "VERB"): [r("0")],
             # The painting was one of the first used as a poster in an advertising campaign for soap powder.
             ("NUM", "ACL", "VERB"): [r("0")],
+            # The book asserts the notion that men and women are as different as beings from other planets.
+            ("NOUN", "ACL", "ADJ"): [r("0")],
+            # It was a dispute discussing the question whether the language of the Greek people (Dimotiki) or a cultivated imitation of Ancient Greek (Katharevousa) should be the official language of the Greek nation.
+            ("NOUN", "ACL", "NOUN"): [r("0")],
 
             # FLAT - Andrew -flat> Wakefield
             ("PROPN", "FLAT", "PROPN"): [r("0")],
@@ -237,6 +257,14 @@ class ENLexicon(BaseLexicon):
             # 77793 civilians have arrived into the government controlled areas within the last two days.
             ("NUM", "PARATAXIS", "VERB"): [r("0")],
             ("PROPN", "PARATAXIS", "NOUN"): [r("0")],
+            # A hairdresser fine-tunes your hair color without causing excessive damage by using toners.
+            ("ADJ", "PARATAXIS", "VERB"): [r("0")],
+            # The film makes the point that decision-making is an important aspect of such an affair of the heart.
+            ("VERB", "PARATAXIS", "NOUN"): [r("0")],
+            # The 50g is hands-down, the absolute best calculator for engineers, surveyors, and hackers.
+            ("NOUN", "PARATAXIS", "NOUN"): [r("0")],
+            # The image is from the poster 'Selling Counterfeit Products is Illegal'.
+            ("NOUN", "PARATAXIS", "PROPN"): [r("0")],
 
             # ACL_RELCL
             ("NOUN", "ACL_RELCL", "VERB"): [r("0")],
@@ -244,6 +272,7 @@ class ENLexicon(BaseLexicon):
             ("NOUN", "ACL_RELCL", "ADJ"): [r("0")],
             ("PROPN", "ACL_RELCL", "VERB"): [r("0")],
             ("NOUN", "ACL_RELCL", "NOUN"): [r("0")],
+            ("PROPN", "ACL_RELCL", "NOUN"): [r("0")],
 
             # NSUBJ
             ("VERB", "NSUBJ", "NOUN"): [r("1")],
@@ -293,6 +322,8 @@ class ENLexicon(BaseLexicon):
             # It becomes a lunch-time respite from the busy city life as a diner relaxes with his buffet delight while watching the commuters waiting alongside each other.
             ("VERB", "XCOMP", "NOUN"): [r("2")],
             ("ADJ", "XCOMP", "VERB"): [r("2")],
+            # It's called Symform - a stealthy Seattle outfit founded by a pair of ex-Microsoft employees, Praerit Garg and Bassam Tabbara.
+            ("VERB", "XCOMP", "PROPN"): [r("2")],
 
             # poss
             ("NOUN", "NMOD_POSS", "PRON"): [poss],
@@ -308,6 +339,7 @@ class ENLexicon(BaseLexicon):
             ("NUM", "COMPOUND", "NUM"): [r("0")],
             # 77793 civilians have arrived into the government controlled areas within the last two days.
             ("VERB", "COMPOUND", "NOUN"): [r("0")],
+            ("AUX", "COMPOUND", "NOUN"): [r("0")],
 
             # obj
             ("VERB", "OBJ", "NOUN"): [r("2")],
@@ -315,6 +347,12 @@ class ENLexicon(BaseLexicon):
             ("VERB", "OBJ", "PROPN"): [r("2")],
             # Show 1 in the series is a documentary detailing the first stages of the celebrity students' conductor training as they enter into a week long 'Baton Camp'.
             ("VERB", "OBJ", "NUM"): [r("2")],
+            # The company builds many of the machines used in the manufacturing of the beds and the upfitting of the chassis.
+            ("VERB", "OBJ", "ADJ"): [r("2")],
+            # Local fisherman heated some of their catch cooked over coals in a scuttle.
+            ("VERB", "OBJ", "DET"): [r("2")],
+            # The company has made available its collection of luxurious full black parts.
+            ("ADJ", "OBJ", "NOUN"): [r("2")],
 
             # appos
             ("NOUN", "APPOS", "PROPN"): [r("0")],
@@ -339,6 +377,10 @@ class ENLexicon(BaseLexicon):
         self.bin_fnc.update(
             {(pos, "CONJ", "VERB"): [coord] for pos in self.npos})
 
+        # I am a semi-professional myself and I also have a small hug of teddy bears, but the photos that Marc Hoberman made of these bears are really fantastic.
+        self.bin_fnc.update(
+            {("PRON", "CONJ", "VERB"): [coord]})
+
         self.bin_fnc.update({
             (pos1, "CONJ", pos2): [coord]
             for pos1 in self.npos for pos2 in self.npos})
@@ -362,7 +404,7 @@ class ENLexicon(BaseLexicon):
             ]
         }
 
-    def handle_obl_case(self, parent_dep, parent_pos, current_pos, children_pos, i, j, clemma):
+    def handle_obl_case_mark(self, parent_dep, parent_pos, current_pos, children_pos, i, j, clemma):
         if clemma == "by":
             obl_case = (
                 f"{parent_pos} -> HANDLE_{parent_dep}_CASE_{children_pos}_{i}_{j}({children_pos}, {current_pos}, {parent_pos})",
@@ -378,7 +420,15 @@ class ENLexicon(BaseLexicon):
                 "nonterminal"
             )
 
-        return [obl_case]
+        # The opposition leader has gone into hiding.
+        obl_mark = (
+            f"{parent_pos} -> HANDLE_{parent_dep}_MARK_{children_pos}_{i}_{j}({children_pos}, {current_pos}, {parent_pos})",
+            {'ud': f'{parent_pos}_2(_{parent_dep}_1({current_pos}_2(_MARK_1(?1), ?2)),?3)',
+                'fl': f'f_dep2(f_dep1(merge(merge(merge(?3,"(d1<dep1> :1 (r<root>) :2 (d2<dep2>))"), r_dep1(?1)), r_dep2(?2))))'},
+            "nonterminal"
+        )
+
+        return [obl_case, obl_mark]
 
     def handle_advcl_mark(self, parent_dep, parent_pos, current_pos, children_pos, i, j, clemma):
         advcl_mark = (
@@ -411,7 +461,7 @@ class ENLexicon(BaseLexicon):
         parent_pos = parent[1]
 
         if parent_dep in ("NMOD", "OBL", "OBL_NPMOD"):
-            return self.handle_obl_case(
+            return self.handle_obl_case_mark(
                 parent_dep, parent_pos, pos, cpos, i, j, clemma)
         if parent_dep in ("ADVCL"):
             return self.handle_advcl_mark(

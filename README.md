@@ -3,7 +3,7 @@
 NLP utilities developed at TUW informatics
 
 ## Install and Quick Start
-Install the tuw-nlp repository:
+Install the tuw-nlp repository (Windows shell: run as Administrator):
 
 ```
 pip install .

@@ -11,7 +11,7 @@ class Dictionary():
         langnames_fn = os.path.join(base_fn, "langnames")
         definitions_fn = os.path.join(base_fn, "definitions", lang)
 
-        with open(langnames_fn, "r") as f:
+        with open(langnames_fn, "r", encoding="utf8") as f:
             for line in f:
                 line = line.split("\t")
                 self.lang_map[line[0]] = line[1].strip("\n")
@@ -22,7 +22,7 @@ class Dictionary():
         self.__init_lexicons(definitions_fn)
 
     def __init_lexicons(self, definitions_fn):
-        with open(definitions_fn, "r") as f:
+        with open(definitions_fn, "r", encoding="utf8") as f:
             for line in f:
                 line = line.split("\t")
                 if len(line[2].strip().strip("\n")) > 5:

@@ -203,6 +203,7 @@ class ENLexicon(BaseLexicon):
 
         coord = f'f_dep1(f_dep2(merge(merge(r_dep1(?1),"(coord<root> / COORD :0 (d1<dep1>) :0 (d2<dep2>))"), r_dep2(?2))))'  # noqa
         poss = f'f_relation(f_dep1(merge(merge(?2,"(has<relation> / HAS :2 (r<root>) :1 (d1<dep1>)))"), r_dep1(?1))))'
+        obl_tmod = f'f_relation(f_dep1(merge(merge(?2,"(at<relation> / AT :2 (r<root>) :1 (d1<dep1>)))"), r_dep1(?1))))'
         csubj = f'f_dep1(merge(merge(?1,"(r<root> :1 (d1<dep1>))"), r_dep1(?2)))'
 
         self.bin_fnc = {
@@ -232,7 +233,7 @@ class ENLexicon(BaseLexicon):
             # Up to 85% of viruses that cause respiratory illness are identified by the technology.
             ("VERB", "OBL", "SYM"): [r("2")],
             # The film makes the point that decision-making is an important aspect of such an affair of the heart.
-            ("VERB", "OBL_TMOD", "NOUN"): [r("2")],
+            ("VERB", "OBL_TMOD", "NOUN"): [obl_tmod],
 
             # ACL
             # An Afghan handed over innocent people into torture. Afghan ADJ?

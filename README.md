@@ -3,11 +3,17 @@
 NLP utilities developed at TUW informatics
 
 ## Install and Quick Start
-Install the tuw-nlp repository:
+Install the tuw-nlp repository (Windows shell: run as Administrator):
 
 ```
 pip install .
 ```
+
+Additionally for graph visualizations on Windows, manually install [Graphviz](https://graphviz.org/download/) (With PATH!) & 
+```
+pip install graphviz
+```
+.
 
 Then you can parse a sentence as simple as:
 

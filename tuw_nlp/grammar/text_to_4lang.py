@@ -23,7 +23,8 @@ class TextTo4lang():
         elif lang == 'en':
             nlp = stanza.Pipeline(
                 'en', processors='tokenize,mwt,pos,lemma,depparse')
-
+        assert lang, "TextTo4lang does not have lang set"
+        
         self.lang = lang
 
         self.nlp = CachedStanzaPipeline(nlp, nlp_cache)

@@ -13,6 +13,13 @@ assert ALTO_JAR, 'ALTO_JAR environment variable not set'
 def get_alto_command(
         input_fn, grammar_fn, output_fn, input_int, output_int, output_codec,
         timeout=60, memory='32G'):
+    if os.name == 'nt': # timeout not available on windows
+        return [
+        'java', f'-Xmx{memory}', '-cp',
+        ALTO_JAR,
+        'de.up.ling.irtg.script.ParsingEvaluator', input_fn,
+        '-g', grammar_fn, '-I', input_int,
+        '-O', f"{output_int}={output_codec}", '-o', output_fn]
     return [
         'timeout', str(timeout), 'java', f'-Xmx{memory}', '-cp',
         ALTO_JAR,

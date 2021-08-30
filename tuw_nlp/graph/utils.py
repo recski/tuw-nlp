@@ -48,7 +48,7 @@ class GraphFormulaMatcher():
         if n1['name'] is None or n2['name'] is None:
             return True
 
-        return True if re.match(n2['name'], n1['name']) else False
+        return True if re.match(fr"\b({n2['name']})\b", n1['name']) else False
 
     @staticmethod
     def edge_matcher(e1, e2):

@@ -55,12 +55,12 @@ class GraphFormulaMatcher():
         logging.debug(f'matchig these: {e1}, {e2}')
         return e1['color'] == e2['color']
 
-    def __init__(self, patterns):
+    def __init__(self, patterns, converter):
         self.patts = []
 
         for patts, negs, key in patterns:
-            pos_patts = [pn_to_graph(patt)[0] for patt in patts]
-            neg_graphs = [pn_to_graph(neg_patt)[0] for neg_patt in negs]
+            pos_patts = [converter(patt)[0] for patt in patts]
+            neg_graphs = [converter(neg_patt)[0] for neg_patt in negs]
             self.patts.append((pos_patts, neg_graphs, key))
 
     def match(self, graph):

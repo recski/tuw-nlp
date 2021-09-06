@@ -178,5 +178,6 @@ MISC_REPLACEMENTS = {
     "\u0107": "INVALID",
     "\u0282": "INVALID",
     "\u016f": "INVALID",
-    "\u0b9c": "INVALID"
+    "\u0b9c": "INVALID",
+    "\u2022": "INVALID"
     }

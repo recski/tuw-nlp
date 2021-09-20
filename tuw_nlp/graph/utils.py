@@ -53,7 +53,7 @@ class GraphFormulaMatcher():
     @staticmethod
     def edge_matcher(e1, e2):
         logging.debug(f'matchig these: {e1}, {e2}')
-        return e1['color'] == e2['color']
+        return True if re.match(fr"\b({str(e2['color'])})\b", str(e1['color'])) else False
 
     def __init__(self, patterns, converter):
         self.patts = []

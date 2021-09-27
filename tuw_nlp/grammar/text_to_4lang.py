@@ -18,11 +18,14 @@ from tuw_nlp.text.preprocessor import Preprocessor
 class TextTo4lang():
     def __init__(self, lang, nlp_cache, cache_dir=None):
         if lang == 'de':
-            nlp = CustomStanzaPipeline(
+            nlp = stanza.Pipeline(
                 processors='tokenize,mwt,pos,lemma,depparse')
         elif lang == 'en':
             nlp = stanza.Pipeline(
                 'en', processors='tokenize,mwt,pos,lemma,depparse')
+        elif lang == 'en_bio':
+            nlp = stanza.Pipeline(
+                'en', package="craft")
         assert lang, "TextTo4lang does not have lang set"
         
         self.lang = lang

@@ -31,7 +31,9 @@ CHAR_REPLACEMENTS = {
     "é": "e1",
     "è": "e1",
     "á": "a1",
-    "ï": "i2"
+    "ï": "i2",
+    "Ã": "A",
+    "Â²": "A2"
 }
 
 PUNCT_REPLACEMENTS = {

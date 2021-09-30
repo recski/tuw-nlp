@@ -18,7 +18,7 @@ from tuw_nlp.text.preprocessor import Preprocessor
 class TextTo4lang():
     def __init__(self, lang, nlp_cache, cache_dir=None):
         if lang == 'de':
-            nlp = stanza.Pipeline(
+            nlp = CustomStanzaPipeline(
                 processors='tokenize,mwt,pos,lemma,depparse')
         elif lang == 'en':
             nlp = stanza.Pipeline(

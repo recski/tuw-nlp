@@ -48,12 +48,12 @@ class GraphFormulaMatcher():
         if n1['name'] is None or n2['name'] is None:
             return True
 
-        return True if re.match(fr"\b({n2['name']})\b", n1['name']) else False
+        return True if re.match(fr"\b({n2['name']})\b", n1['name'], re.IGNORECASE) else False
 
     @staticmethod
     def edge_matcher(e1, e2):
         logging.debug(f'matchig these: {e1}, {e2}')
-        return e1['color'] == e2['color']
+        return True if re.match(fr"\b({str(e2['color'])})\b", str(e1['color']), re.IGNORECASE) else False
 
     def __init__(self, patterns, converter):
         self.patts = []

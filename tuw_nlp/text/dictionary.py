@@ -9,7 +9,7 @@ class Dictionary():
         self.lang_map = {}
         base_fn = os.path.dirname(os.path.abspath(__file__))
         langnames_fn = os.path.join(base_fn, "langnames")
-        definitions_fn = os.path.join(base_fn, "definitions", lang)
+        definitions_fn = os.path.join(base_fn, "definitions", lang.split("_")[0])
 
         with open(langnames_fn, "r", encoding="utf8") as f:
             for line in f:
@@ -28,7 +28,6 @@ class Dictionary():
                 if len(line[2].strip().strip("\n")) > 5:
                     word = line[0].strip()
 
-                    lemmas = []
                     defi = line[2].strip().strip("\n")
                     defi = self.parse_definition(defi)
                     if defi.strip() != word:

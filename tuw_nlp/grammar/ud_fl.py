@@ -20,7 +20,7 @@ class UD_FL(IRTGGrammar):
         self.lang = kwargs.get('lang') or "de"
         super(UD_FL, self).__init__(**kwargs)
 
-        lexicon_map = {"en": ENLexicon(), "de": CFLLexicon()}
+        lexicon_map = {"en": ENLexicon(), "en_bio": ENLexicon(),  "de": CFLLexicon()}
         self.lexicon = lexicon_map[self.lang]
 
     def preprocess_input(self, input_sen):

@@ -3,10 +3,15 @@
 NLP utilities developed at TUW informatics
 
 ## Install and Quick Start
-Install the tuw-nlp repository:
+Install the tuw-nlp repository from pip:
 
 ```
-pip install .
+pip install tuw-nlp
+```
+
+Or install from source:
+```
+pip install -e .
 ```
 
 On Windows and Mac, you might also need to install [Graphviz](https://graphviz.org/download/) manually.

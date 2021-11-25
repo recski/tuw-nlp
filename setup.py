@@ -11,21 +11,21 @@ from setuptools.command.egg_info import egg_info
 class SetupAltoDevelop(develop):
     def run(self):
         develop.run(self)
-        os.system("echo 'Setting up Alto parser'")
+        os.system("echo 'Setting up...'")
         run_script_install()
 
 
 class SetupAltoInstall(install):
     def run(self):
         install.run(self)
-        os.system("echo 'Setting up Alto parser'")
+        os.system("echo 'Setting up...'")
         run_script_install()
 
 
 class SetupAltoEgg(egg_info):
     def run(self):
         egg_info.run(self)
-        os.system("echo 'Setting up Alto parser'")
+        os.system("echo 'Setting up...'")
         run_script_install()
 
 

@@ -1,4 +1,4 @@
-from tuw_nlp.text.segmentation import CustomStanzaPipeline
+from tuw_nlp.text.pipeline import CustomStanzaPipeline
 from tuw_nlp.graph.utils import graph_to_isi, sen_to_graph
 
 

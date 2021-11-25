@@ -25,7 +25,7 @@ class SetupAltoEgg(egg_info):
 
 setup(
     name='tuw-nlp',
-    version='0.1',
+    version='0.0.1',
     description='NLP tools at TUW Informatics',
     url='http://github.com/recski/tuw-nlp',
     author='Gabor Recski,Adam Kovacs',

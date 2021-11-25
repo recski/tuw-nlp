@@ -25,10 +25,13 @@ class SetupAltoEgg(egg_info):
 
 setup(
     name='tuw-nlp',
-    version='0.0.1',
+    version='0.0.1.1',
     description='NLP tools at TUW Informatics',
+    long_description=open("README.md", "r", encoding="utf-8").read(),
+    long_description_content_type="text/markdown",
+    keywords="NLP graph transformation explainable AI XAI semantic graphs",
     url='http://github.com/recski/tuw-nlp',
-    author='Gabor Recski,Adam Kovacs',
+    author='Gabor Recski, Adam Kovacs',
     author_email='gabor.recski@tuwien.ac.at,adam.kovacs@tuwien.ac.at',
     license='MIT',
     install_requires=[

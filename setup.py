@@ -11,30 +11,16 @@ from setuptools.command.egg_info import egg_info
 class SetupAltoDevelop(develop):
     def run(self):
         develop.run(self)
-        os.system("echo 'Setting up...'")
-        run_script_install()
 
 
 class SetupAltoInstall(install):
     def run(self):
         install.run(self)
-        os.system("echo 'Setting up...'")
-        run_script_install()
 
 
 class SetupAltoEgg(egg_info):
     def run(self):
         egg_info.run(self)
-        os.system("echo 'Setting up...'")
-        run_script_install()
-
-
-def run_script_install():
-    if os.name == 'nt':  # use ps1 script
-        os.system(
-            f'powershell iex -Command "$( get-content {os.getcwd()}/setup.ps1 | Out-String )"')
-    else:
-        os.system(f"bash {os.getcwd()}/setup.sh")
 
 
 setup(

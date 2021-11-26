@@ -1,4 +1,4 @@
-from tuw_nlp.text.segmentation import CustomStanzaPipeline
+from tuw_nlp.text.pipeline import CustomStanzaPipeline
 
 
 def test_stanza_pipeline():

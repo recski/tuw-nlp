@@ -3,13 +3,46 @@
 NLP utilities developed at TUW informatics
 
 ## Install and Quick Start
-Install the tuw-nlp repository:
+Install the tuw-nlp repository from pip:
 
 ```
-pip install .
+pip install tuw-nlp
+```
+
+Or install from source:
+```
+pip install -e .
 ```
 
 On Windows and Mac, you might also need to install [Graphviz](https://graphviz.org/download/) manually.
+
+You will also need some additional steps to use the library:
+
+Download nltk stopwords:
+
+```python
+import nltk
+nltk.download('stopwords')
+```
+
+Download stanza models for UD parsing:
+
+```python
+import stanza
+
+stanza.download("en")
+stanza.download("de")
+```
+
+And then finally download ALTO and tuw_nlp dictionaries:
+```python
+import tuw_nlp
+
+tuw_nlp.download_alto()
+tuw_nlp.download_definitions()
+```
+
+__Also please make sure to have JAVA on your system to be able to use the parser!__
 
 Then you can parse a sentence as simple as:
 

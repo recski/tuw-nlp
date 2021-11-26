@@ -3,20 +3,29 @@ import re
 from collections import defaultdict
 from nltk.corpus import stopwords as nltk_stopwords
 
+
 class Dictionary():
     def __init__(self, lang):
         self.lexicon = defaultdict(list)
         self.lang_map = {}
         base_fn = os.path.dirname(os.path.abspath(__file__))
         langnames_fn = os.path.join(base_fn, "langnames")
-        definitions_fn = os.path.join(base_fn, "definitions", lang.split("_")[0])
+
+        self.lang = lang
+
+        definitions_base_fn = os.path.join(os.path.expanduser(
+            "~/tuw_nlp_resources"), "definitions", lang.split("_")[0])
+
+        definitions_fn = None
+        if os.path.isfile(definitions_base_fn):
+            definitions_fn = definitions_base_fn
+
+        assert definitions_fn, 'Definition dictionaries are not downloaded, for setup please use tuw_nlp.download_definitions(), otherwise you will not be able to use expand functionalities'
 
         with open(langnames_fn, "r", encoding="utf8") as f:
             for line in f:
                 line = line.split("\t")
                 self.lang_map[line[0]] = line[1].strip("\n")
-
-        self.lang = lang
 
         self.stopwords = set(nltk_stopwords.words(self.lang_map[lang]))
         self.__init_lexicons(definitions_fn)

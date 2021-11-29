@@ -105,6 +105,22 @@ We welcome all contributions! Please fork this repository and create a branch fo
 
 ## Citing
 
+If you use the library, please cite our [paper](http://ceur-ws.org/Vol-2888/paper3.pdf)
+
+```bib
+@inproceedings{Recski:2021,
+  title={Explainable Rule Extraction via Semantic Graphs},
+  author={Recski, Gabor and Lellmann, Bj{\"o}rn and Kovacs, Adam and Hanbury, Allan},
+  booktitle = {{Proceedings of the Fifth Workshop on Automated Semantic Analysis
+of Information in Legal Text (ASAIL 2021)}},
+  publisher = {{CEUR Workshop Proceedings}},
+  address = {São Paulo, Brazil},
+  pages="24--35",
+  url= "http://ceur-ws.org/Vol-2888/paper3.pdf",
+  year={2021}
+}
+```
+
 ## License 
 
 MIT license

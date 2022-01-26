@@ -9,8 +9,14 @@ from tuw_nlp.text.pipeline import CachedStanzaPipeline
 import os
 import conceptnet_lite
 from conceptnet_lite import Label, edges_between
+from conceptnet_lite.db import RelationName
 from peewee import DoesNotExist
 from pywsd.lesk import simple_lesk, cosine_lesk, adapted_lesk, original_lesk
+
+# Just for the experiments
+from xpotato.dataset.dataset import Dataset
+from xpotato.models.trainer import GraphTrainer
+from xpotato.graph_extractor.extract import FeatureEvaluator
 
 nltk.download('wordnet')
 if not os.path.exists("conceptnet/conceptnet.db"):
@@ -25,7 +31,13 @@ else:
     conceptnet_lite.connect("conceptnet/conceptnet.db")
 
 
-class KnowledgeNode:
+class KnowledgeNode(str):
+
+    # We need this because penman will not recognise it as atomic otherwise
+    def __new__(cls, *args, **kwargs):
+        obj = super(KnowledgeNode, cls).__new__(cls, args[1])
+        return obj
+
     def __init__(self, text, lemma, synset, concept):
         self.text = text
         self.lemma = lemma
@@ -53,6 +65,8 @@ class KnowledgeNode:
             return []
 
     def reg_match(self, text):
+        if text.lower() == self.text.lower():
+            return True
         text_match = re.findall(text.lower(), self.text.lower()) + re.findall(text.lower(), self.lemma.lower())
         if len(text_match) == 0:
             return False
@@ -61,7 +75,8 @@ class KnowledgeNode:
     def similarity(self, other):
         if self.synset is None or other.synset is None:
             return 1 if self.text == other.text or self.lemma == other.lemma else 0
-        similarity = self.synset.wup_similarity(other.synset)
+        # As per issue: https://github.com/alvations/pywsd/issues/54
+        similarity = wn.synset(self.synset.name()).wup_similarity(wn.synset(other.synset.name()))
         if self.antonym is not None:
             antonym_similarity = self.antonym.wup_similarity(other.synset)
             if antonym_similarity > similarity:
@@ -74,16 +89,14 @@ class KnowledgeNode:
         return self.synset._name
 
     def __eq__(self, other):
-        if isinstance(other, str):
-            return self.reg_match(other)
-        elif isinstance(other, KnowledgeNode):
+        if isinstance(other, KnowledgeNode):
             text_match = self.reg_match(other.text)
             if text_match:
                 return True
             syn_similarity_rate = 0
             concept_weight = 0 if self.concept != other.concept else 1  # There are no concept edges between the same concepts
             if self.synset is not None and other.synset is not None:
-                syn_similarity_rate = self.similarity(other)
+                syn_similarity_rate = wn.synset(self.synset.name()).wup_similarity(wn.synset(other.synset.name()))
             if self.concept is not None and other.concept is not None:
                 concept_connections = self.concept_connection(other)
                 antonyms = [e for e in concept_connections if e.relation.name == "antonym"] + \
@@ -95,8 +108,12 @@ class KnowledgeNode:
                 elif len(concept_connections) != 0:
                     concept_weight = len(related) / len(concept_connections)
             return (syn_similarity_rate + concept_weight) / 2 >= 0.5
+        elif isinstance(other, str):
+            return self.reg_match(other)
 
     def __hash__(self):
+        if self.concept is not None:
+            return hash(self.lemma) + hash(tuple(self.concept)) + hash(self.synset)
         return hash(self.lemma) + hash(self.concept) + hash(self.synset)
 
 
@@ -112,7 +129,7 @@ class KnowledgeGraph:
         self.text = text
         self.G = graph
         if self.text is not None and self.G is None:
-            self.G = nx.MultiGraph()
+            self.G = nx.DiGraph()
             self.parse_graph()
             self.connect_sentence_graphs()
 
@@ -125,13 +142,15 @@ class KnowledgeGraph:
                     synset = None
                     try:
                         concept = Label.get(text=word.lemma, language=self.lang).concepts
+                        if word.pos in self.lesk_pos:
+                            concept = [c for c in concept if f"/{self.lesk_pos[word.pos]}/" in c.uri]
                     except DoesNotExist:
                         pass
                     if word.pos in self.pos:
                         synset = wn.synsets(word.lemma, pos=self.pos[word.pos])
                         if len(synset) > 1:
                             # TODO: how to find the best???
-                            ss = simple_lesk(self.text, word.text, pos=self.lesk_pos[word.pos])
+                            ss = simple_lesk(sent.text, word.text, pos=self.lesk_pos[word.pos])
                             #sso = original_lesk(self.text, word.text)
                             #ssa = adapted_lesk(self.text, word.text, pos='a')
                             #ssc = cosine_lesk(self.text, word.text, pos='a')
@@ -140,19 +159,18 @@ class KnowledgeGraph:
                             synset = synset[0]
                         else:
                             synset = None
-                    self.G.add_node((sent_id, word.id), data=KnowledgeNode(word.text, word.lemma, synset, concept))
+                    self.G.add_node(100*(sent_id+1)+word.id, name=KnowledgeNode(word.text, word.lemma, synset, concept))
                 for dep in sent.dependencies:
                     if dep[0].id != 0:
-                        self.G.add_edge((sent_id, dep[0].id), (sent_id, dep[2].id), data={"type": "dep", "rel": dep[1]})
+                        self.G.add_edge(100*(sent_id+1)+dep[0].id, 100*(sent_id+1)+dep[2].id, color=dep[1])
 
     def connect_sentence_graphs(self):
         for node, node_data in self.G.nodes(data=True):
             for other_node, other_node_data in self.G.nodes(data=True):
-                if node[0] != other_node[0]:
-                    concept_connections = node_data["data"].concept_connection(other_node_data["data"])
+                if int(node/100) != int(other_node/100):
+                    concept_connections = node_data["name"].concept_connection(other_node_data["name"])
                     for concept_connection in concept_connections:
-                        self.G.add_edge(node, other_node, data={"type": "concept",
-                                                                "rel": concept_connection.relation.name})
+                        self.G.add_edge(node, other_node, color=concept_connection.relation.name)
 
     def similarity(self, other, with_edges=False):
         if not with_edges:
@@ -180,24 +198,25 @@ class KnowledgeGraph:
         return s
 
     def to_dot(self):
+        conceptnet_relation_names = [v for v in RelationName.__dict__.values()]
         show_graph = self.G.copy()
-        #show_graph.remove_nodes_from(list(nx.isolates(show_graph)))
         lines = [u'digraph finite_state_machine {', '\tdpi=70;']
         node_id = {n: i for (i, n) in enumerate(show_graph.nodes)}
         node_lines = []
         for node, n_data in show_graph.nodes(data=True):
-            printname = self.d_clean(str(n_data['data']))
+            printname = self.d_clean(str(n_data['name']))
             node_line = u'\t{0} [shape = circle, label = "{1}"];'.format(node_id[node], printname).replace('-', '_')
             node_lines.append(node_line)
         lines += sorted(node_lines)
         edge_lines = []
         for u, v, edata in show_graph.edges(data=True):
-            if edata['data']['type'] == "dep":
+            if edata['color'] not in conceptnet_relation_names:
                 edge_lines.append(u'\t{0} -> {1} [ label = "{2}", color = "green"];'.format(node_id[u], node_id[v],
-                                                                                            edata['data']['rel']))
+                                                                                            edata['color']))
             else:
                 edge_lines.append(u'\t{0} -> {1} [ label = "{2}", color = "blue"];'.format(node_id[u], node_id[v],
-                                                                                           edata['data']['rel']))
+                                                                                           edata['color']))
         lines += sorted(edge_lines)
         lines.append('}')
         return u'\n'.join(lines)
+

@@ -36,7 +36,7 @@ class GraphMatcher():
             logging.debug(f'matching this: {self.patts[i]}')
             matcher = DiGraphMatcher(
                 graph, patt, node_match=GraphMatcher.node_matcher, edge_match=GraphMatcher.edge_matcher)
-            if matcher.subgraph_is_isomorphic():
+            if matcher.subgraph_is_monomorphic():
                 logging.debug('MATCH!')
                 yield key
 
@@ -71,7 +71,7 @@ class GraphFormulaMatcher():
             for neg in negs:
                 matcher = DiGraphMatcher(
                     graph, neg, node_match=GraphFormulaMatcher.node_matcher, edge_match=GraphFormulaMatcher.edge_matcher)
-                if matcher.subgraph_is_isomorphic():
+                if matcher.subgraph_is_monomorphic():
                     neg_match = True
                     break
 
@@ -79,7 +79,7 @@ class GraphFormulaMatcher():
             for p in patt:
                 matcher = DiGraphMatcher(
                     graph, p, node_match=GraphFormulaMatcher.node_matcher, edge_match=GraphFormulaMatcher.edge_matcher)
-                if not matcher.subgraph_is_isomorphic():
+                if not matcher.subgraph_is_monomorphic():
                     pos_match = False
                     break
 

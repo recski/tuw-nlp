@@ -27,7 +27,7 @@ class TextTo4lang():
             nlp = stanza.Pipeline(
                 'en', package="craft")
         assert lang, "TextTo4lang does not have lang set"
-        
+
         self.lang = lang
 
         self.nlp = CachedStanzaPipeline(nlp, nlp_cache)

@@ -2,7 +2,6 @@ from stanza.models.common import doc
 from stanza.pipeline.processor import Processor, register_processor
 
 from tuw_nlp.text.patterns.de import ABBREV, MONTH
-from tuw_nlp.text.patterns.misc import CHAR_PATT
 
 
 @register_processor("fix_ssplit")
@@ -54,13 +53,12 @@ class SsplitFixer(Processor):
                         if requires_space is False:
                             char_offset -= 1
 
-                start_char, end_char = (
-                    int(c) + char_offset
-                    for c in CHAR_PATT.match(token.misc).groups())
-
                 sens[-1].append({
-                    doc.ID: (token_id + 1, ), doc.TEXT: token.text,
-                    doc.MISC: f'start_char={start_char}|end_char={end_char}'})
+                    doc.ID: (token_id + 1, ),
+                    doc.TEXT: token.text,
+                    doc.MISC: token.misc,
+                    doc.START_CHAR: token.start_char + char_offset,
+                    doc.END_CHAR: token.end_char + char_offset})
 
                 token_id += 1
 

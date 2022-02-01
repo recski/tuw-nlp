@@ -1,41 +1,37 @@
+from git import base
 import networkx as nx
 import pandas as pd
 import re
 import nltk
 import stanza
 from nltk.corpus import wordnet as wn
-from graphviz import Source
 from tuw_nlp.text.pipeline import CachedStanzaPipeline
 import os
 import conceptnet_lite
-from conceptnet_lite import Label, edges_between
+from conceptnet_lite import Label, Concept, edges_between
 from conceptnet_lite.db import RelationName
-from peewee import DoesNotExist
 from pywsd.lesk import simple_lesk, cosine_lesk, adapted_lesk, original_lesk
 
-# Just for the experiments
-from xpotato.dataset.dataset import Dataset
-from xpotato.models.trainer import GraphTrainer
-from xpotato.graph_extractor.extract import FeatureEvaluator
 
+basepath = os.path.dirname(__file__)
 nltk.download('wordnet')
-if not os.path.exists("conceptnet/conceptnet.db"):
+if not os.path.exists(os.path.join(basepath, "conceptnet/conceptnet.db")):
     answer = input("Would you like to download ConceptNet? It might take more than an hour. (Yes/no)")
     if not answer.lower().startswith('n'):
         use_conceptnet = True
-        conceptnet_lite.connect("conceptnet/conceptnet.db", db_download_url=None)
+        conceptnet_lite.connect(os.path.join(basepath, "conceptnet/conceptnet.db"), db_download_url=None)
     else:
         use_conceptnet = False
 else:
     use_conceptnet = True
-    conceptnet_lite.connect("conceptnet/conceptnet.db")
+    conceptnet_lite.connect(os.path.join(basepath, "conceptnet/conceptnet.db"))
 
 
 class KnowledgeNode(str):
 
     # We need this because penman will not recognise it as atomic otherwise
     def __new__(cls, *args, **kwargs):
-        obj = super(KnowledgeNode, cls).__new__(cls, args[1])
+        obj = super(KnowledgeNode, cls).__new__(cls, args[0])
         return obj
 
     def __init__(self, text, lemma, synset, concept):
@@ -109,6 +105,12 @@ class KnowledgeNode(str):
                     concept_weight = len(related) / len(concept_connections)
             return (syn_similarity_rate + concept_weight) / 2 >= 0.5
         elif isinstance(other, str):
+            if '.' in other and self.synset is not None:
+                try:
+                    synset = wn.synset(other)
+                    return synset.wup_similarity(wn.synset(self.synset.name())) >= 0.5
+                except ValueError:
+                    pass
             return self.reg_match(other)
 
     def __hash__(self):
@@ -116,13 +118,75 @@ class KnowledgeNode(str):
             return hash(self.lemma) + hash(tuple(self.concept)) + hash(self.synset)
         return hash(self.lemma) + hash(self.concept) + hash(self.synset)
 
+    def __setstate__(self, state):
+        self.text = state["text"]
+        self.lemma = state["lemma"]
+        self.synset = None if state["synset"] is None else wn.synset(state["synset"])
+        self.antonym = None if state["antonym"] is None else wn.synset(state["antonym"])
+        self.concept = None if state["concept"] is None else [Concept.get_by_id(concept) for concept in state["concept"]]
+    
+    def __getstate__(self):
+        return {
+            "text": self.text,
+            "lemma": self.lemma,
+            "synset": None if self.synset is None else self.synset.name(),
+            "antonym": None if self.antonym is None else self.antonym.name(),
+            "concept": None if self.concept is None else [c.id for c in self.concept]
+        }
+
 
 class KnowledgeGraph:
     def __init__(self, graph=None, text=None, pipeline=None, lang="en"):
+        self.wn_lexnames = ["adj.all", # 	all adjective clusters
+                            "adj.pert", # 	relational adjectives (pertainyms)
+                            "adv.all", #	all adverbs
+                            "noun.Tops", # 	unique beginner for nouns
+                            "noun.act", # 	nouns denoting acts or actions
+                            "noun.animal", # 	nouns denoting animals
+                            "noun.artifact", # 	nouns denoting man-made objects
+                            "noun.attribute", # 	nouns denoting attributes of people and objects
+                            "noun.body", # 	nouns denoting body parts
+                            "noun.cognition", # 	nouns denoting cognitive processes and contents
+                            "noun.communication", # 	nouns denoting communicative processes and contents
+                            "noun.event", # 	nouns denoting natural events
+                            "noun.feeling", # 	nouns denoting feelings and emotions
+                            "noun.food", # 	nouns denoting foods and drinks
+                            "noun.group", # 	nouns denoting groupings of people or objects
+                            "noun.location", # 	nouns denoting spatial position
+                            "noun.motive", # 	nouns denoting goals
+                            "noun.object", # 	nouns denoting natural objects (not man-made)
+                            "noun.person", # 	nouns denoting people
+                            "noun.phenomenon", # 	nouns denoting natural phenomena
+                            "noun.plant", # 	nouns denoting plants
+                            "noun.possession", # 	nouns denoting possession and transfer of possession
+                            "noun.process", # 	nouns denoting natural processes
+                            "noun.quantity", # 	nouns denoting quantities and units of measure
+                            "noun.relation", # 	nouns denoting relations between people or things or ideas
+                            "noun.shape", # 	nouns denoting two and three dimensional shapes
+                            "noun.state", # 	nouns denoting stable states of affairs
+                            "noun.substance", # 	nouns denoting substances
+                            "noun.time", # 	nouns denoting time and temporal relations
+                            "verb.body", # 	verbs of grooming, dressing and bodily care
+                            "verb.change", # 	verbs of size, temperature change, intensifying, etc.
+                            "verb.cognition", # 	verbs of thinking, judging, analyzing, doubting
+                            "verb.communication", # 	verbs of telling, asking, ordering, singing
+                            "verb.competition", # 	verbs of fighting, athletic activities
+                            "verb.consumption", # 	verbs of eating and drinking
+                            "verb.contact", # 	verbs of touching, hitting, tying, digging
+                            "verb.creation", # 	verbs of sewing, baking, painting, performing
+                            "verb.emotion", # 	verbs of feeling
+                            "verb.motion", # 	verbs of walking, flying, swimming
+                            "verb.perception", # 	verbs of seeing, hearing, feeling
+                            "verb.possession", # 	verbs of buying, selling, owning
+                            "verb.social", # 	verbs of political and social activities and events
+                            "verb.stative", # 	verbs of being, having, spatial relations
+                            "verb.weather", # 	verbs of raining, snowing, thawing, thundering
+                            "adj.ppl"] # 	participial adjectives
         self.pos = {'ADJ': wn.ADJ, 'ADV': wn.ADV, 'PART': wn.ADV, 'NOUN': wn.NOUN,
                     'PROPN': wn.NOUN, 'VERB': wn.VERB}
         self.lesk_pos = {'ADJ': 'a', 'ADV': 's', 'PART': 's', 'NOUN': 'n',
                          'PROPN': 'n', 'VERB': 'v'}
+        self.concept_pos = {'ADJ': 'a', 'ADV': 'r', 'NOUN': 'n', 'VERB': 'v'}
         self.parser = pipeline if pipeline is not None \
             else CachedStanzaPipeline(stanza.Pipeline(lang, processors='tokenize,mwt,pos,lemma,depparse'), "cache")
         self.lang = lang
@@ -138,14 +202,13 @@ class KnowledgeGraph:
             ud_parse = self.parser.parse(self.text)
             for sent_id, sent in enumerate(ud_parse.sentences):
                 for word in sent.words:
-                    concept = None
                     synset = None
-                    try:
-                        concept = Label.get(text=word.lemma, language=self.lang).concepts
-                        if word.pos in self.lesk_pos:
-                            concept = [c for c in concept if f"/{self.lesk_pos[word.pos]}/" in c.uri]
-                    except DoesNotExist:
-                        pass
+                    concept = Label.get_or_none(text=word.lemma, language=self.lang)
+                    if concept is not None:
+                        concept = concept.concepts
+                        if word.pos in self.concept_pos:
+                            concept = [c for c in concept if
+                                       len(re.findall(f"{self.concept_pos[word.pos]}[/$]*", c.sense_label)) > 0]
                     if word.pos in self.pos:
                         synset = wn.synsets(word.lemma, pos=self.pos[word.pos])
                         if len(synset) > 1:
@@ -169,7 +232,8 @@ class KnowledgeGraph:
             for other_node, other_node_data in self.G.nodes(data=True):
                 if int(node/100) != int(other_node/100):
                     concept_connections = node_data["name"].concept_connection(other_node_data["name"])
-                    for concept_connection in concept_connections:
+                    if len(concept_connections) > 0:
+                        concept_connection = max(concept_connections, key=lambda x: x.etc["weight"])
                         self.G.add_edge(node, other_node, color=concept_connection.relation.name)
 
     def similarity(self, other, with_edges=False):
@@ -219,4 +283,3 @@ class KnowledgeGraph:
         lines += sorted(edge_lines)
         lines.append('}')
         return u'\n'.join(lines)
-

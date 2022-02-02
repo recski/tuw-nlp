@@ -105,12 +105,13 @@ class KnowledgeNode(str):
                     concept_weight = len(related) / len(concept_connections)
             return (syn_similarity_rate + concept_weight) / 2 >= 0.5
         elif isinstance(other, str):
-            if '.' in other and self.synset is not None:
+            if re.match(r'[a-zA-Z_]+\.[arsnv]\.[0-9]{2}', other) is not None and self.synset is not None:
                 try:
                     synset = wn.synset(other)
-                    return synset.wup_similarity(wn.synset(self.synset.name())) >= 0.5
+                    if synset.wup_similarity(wn.synset(self.synset.name())) == 1:
+                        return True
                 except ValueError:
-                    pass
+                    print(other)
             return self.reg_match(other)
 
     def __hash__(self):

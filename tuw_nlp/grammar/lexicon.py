@@ -501,7 +501,8 @@ class CFLLexicon(BaseLexicon):
             ("NOUN", "ACL", "ADJ"),
             ("NOUN", "NUMMOD", "NUM"),
             ("NUM", "ADVMOD", "ADV"),
-            ("NUM", "ADVMOD", "ADV"),
+            # maximal 6,0 m
+            ("NUM", "ADVMOD", "ADJ"),
             ("NUM", "ADVMOD", "NUM"),
             ("VERB", "ADVMOD", "ADJ"),
             ("VERB", "ADVMOD", "ADV"),
@@ -543,8 +544,10 @@ class CFLLexicon(BaseLexicon):
             # ...wird bestimmt, dass...
             ("VERB", "CCOMP", "VERB"): [r("2")],
             # ...wird bestimmt: Die Errichtung...zulaesssig (8159_21_0)
-            # erroneously parsed as parataxis
+            # ...wird bestimmt: ...betragen
+            # parsed as parataxis
             ("VERB", "PARATAXIS", "ADJ"): [r("2")],
+            ("VERB", "PARATAXIS", "VERB"): [r("2")],
             # ...so auszubilden, dass...
             ("VERB", "CCOMP", "ADJ"): [r("0")],  # TODO
             # sind Vorkehrungen zu treffen, dass...moeglich

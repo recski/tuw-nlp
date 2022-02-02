@@ -25,7 +25,7 @@ class SetupAltoEgg(egg_info):
 
 setup(
     name='tuw-nlp',
-    version='0.0.1.1',
+    version='0.0.4',
     description='NLP tools at TUW Informatics',
     long_description=open("README.md", "r", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
@@ -38,7 +38,7 @@ setup(
         'dict-recursive-update',
         'networkx',
         'penman',
-        'stanza==1.1.1',
+        'stanza==1.3.0',
         'nltk',
         "graphviz"
     ],

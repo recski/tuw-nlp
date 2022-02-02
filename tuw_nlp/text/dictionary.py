@@ -2,6 +2,7 @@ import os
 import re
 from collections import defaultdict
 from nltk.corpus import stopwords as nltk_stopwords
+from tuw_nlp.graph.utils import preprocess_node_alto
 
 
 class Dictionary():
@@ -44,6 +45,7 @@ class Dictionary():
                         for def_split in def_splitted:
                             if def_split not in self.lexicon[word]:
                                 self.lexicon[word].append(def_split)
+                                self.lexicon[preprocess_node_alto(word)].append(def_split) 
 
     def parse_definition(self, defi):
         defi = re.sub(re.escape("#"), " ",  defi).strip()

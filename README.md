@@ -1,6 +1,6 @@
-# tuw-nlp
+# TUW-NLP
 
-NLP utilities developed at TUW informatics
+NLP utilities developed at TUW informatics. 
 
 ## Install and Quick Start
 Install the tuw-nlp repository from pip:
@@ -96,7 +96,7 @@ Tools for generating and using grammars, contains:
 - alto: tools for interfacing with the [alto](https://github.com/coli-saar/alto) tool
 - irtg: class for representing Interpreted Regular Tree Grammars
 - lexicon: Rule lexica for building lexicalized grammars
-- ud_fl: grammar-based mapping of [Universal Dependencies](https://universaldependencies.org/) to [4lang]() semantic graphs.
+- ud_fl: grammar-based mapping of [Universal Dependencies](https://universaldependencies.org/) to [4lang](https://github.com/kornai/4lang) semantic graphs.
 - utils: misc utilities for working with grammars
 
 ## Contributing

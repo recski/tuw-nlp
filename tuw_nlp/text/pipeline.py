@@ -1,13 +1,13 @@
-import logging
 import os
 
 import stanza
 
+from tuw_nlp import logger
 from tuw_nlp.text import segmentation  # noqa
 from tuw_nlp.text.utils import load_parsed, save_parsed
 
 
-class CustomStanzaPipeline():
+class CustomStanzaPipeline:
     def __init__(self, lang='de', processors=None):
         assert lang == 'de', "CustomStanzaTokenizer only supports German"
         self.tokenizer = stanza.Pipeline(
@@ -26,7 +26,7 @@ class CustomStanzaPipeline():
         return self.process(text)
 
 
-class CachedStanzaPipeline():
+class CachedStanzaPipeline:
     def __init__(self, stanza_pipeline, cache_path, init=None):
         if stanza_pipeline is None:
             assert init is not None
@@ -35,12 +35,12 @@ class CachedStanzaPipeline():
         self.init = init
         self.cache_path = cache_path
         if os.path.exists(self.cache_path):
-            logging.warning(f'loading NLP cache from {self.cache_path}...')
+            logger.info(f'loading NLP cache from {self.cache_path}...')
             self.parsed = load_parsed(self.cache_path)
-            logging.warning('done!')
+            logger.info('done!')
         else:
             self.parsed = {}
-            logging.warning(f'creating new NLP cache in {self.cache_path}')
+            logger.info(f'creating new NLP cache in {self.cache_path}')
 
         self.changed = False
 
@@ -62,6 +62,6 @@ class CachedStanzaPipeline():
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         if self.changed:
-            logging.warning(f'saving NLP cache to {self.cache_path}...')
+            logger.info(f'saving NLP cache to {self.cache_path}...')
             save_parsed(self.parsed, self.cache_path)
-            logging.warning('done!')
+            logger.info('done!')

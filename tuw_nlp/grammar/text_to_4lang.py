@@ -15,7 +15,7 @@ from tuw_nlp.text.pipeline import CachedStanzaPipeline, CustomStanzaPipeline
 from tuw_nlp.text.preprocessor import Preprocessor
 
 
-class TextTo4lang():
+class TextTo4lang:
     def __init__(self, lang, nlp_cache, cache_dir=None):
         if lang == 'de':
             nlp = CustomStanzaPipeline(

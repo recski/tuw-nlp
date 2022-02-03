@@ -57,7 +57,7 @@ def main():
                 continue
             rl.add_train_event(features, label)
 
-    logging.warning(f'# train events: {len(rl.train_events)}')
+    logging.info(f'# train events: {len(rl.train_events)}')
 
     with open(args.valid_file) as f:
         for features, label in tqdm(featurizer.gen_events(
@@ -66,7 +66,7 @@ def main():
                 continue
             rl.add_valid_event(features, label)
 
-    logging.warning(f'# validation events: {len(rl.valid_events)}')
+    logging.info(f'# validation events: {len(rl.valid_events)}')
 
     # for n in range(20, 100, 10):
     # for n in (50,):

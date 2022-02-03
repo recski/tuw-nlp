@@ -1,24 +1,24 @@
 import datetime
 import json
-import logging
 import os
 import random
 from collections import defaultdict
 
 from dict_recursive_update import recursive_update
 
+from tuw_nlp import logger
 from tuw_nlp.common.utils import ensure_dir
 from tuw_nlp.grammar.alto import get_rule_string, run_alto
 from tuw_nlp.grammar.utils import get_dummy_input
 
 
-class IRTGCache():
+class IRTGCache:
     @staticmethod
     def load(fn):
         with open(fn) as f:
             cache = json.load(f)
         ints = sorted(cache.keys())
-        logging.warning(f'loaded cache from {fn} with interpretations: {ints}')
+        logger.info(f'loaded cache from {fn} with interpretations: {ints}')
         obj = IRTGCache(ints, fn)
         obj.cache.update(cache)
         return obj
@@ -29,7 +29,7 @@ class IRTGCache():
         recursive_update(old.cache, self.cache)
         with open(fn, 'w') as f:
             json.dump(old.cache, f)
-        logging.warning(f'updated cache in {fn}')
+        logger.info(f'updated cache in {fn}')
 
     def __init__(self, interpretations, fn, new=False):
         self.fn = fn
@@ -74,11 +74,11 @@ class IRTGGrammar():
         ensure_dir(cache_path)
         fn = os.path.join(cache_path, cache_fn)
         if not os.path.exists(fn):
-            logging.warning(f'setting up new cache file: {fn}')
+            logger.info(f'setting up new cache file: {fn}')
             self.cache = IRTGCache(
                 sorted(self.interpretations.keys()), fn, new=True)
         else:
-            logging.warning(f'loading cache from file: {fn}')
+            logger.info(f'loading cache from file: {fn}')
             self.cache = IRTGCache.load(fn)
         self.cache_fn = fn
 

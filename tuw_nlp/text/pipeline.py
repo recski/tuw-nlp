@@ -9,6 +9,8 @@ from tuw_nlp.text.utils import load_parsed, save_parsed
 
 class CustomStanzaPipeline:
     def __init__(self, lang='de', processors=None):
+        if processors is None:
+            processors = {}
         assert lang == 'de', "CustomStanzaTokenizer only supports German"
         self.tokenizer = stanza.Pipeline(
             lang='de', processors='tokenize,fix_ssplit')

@@ -1,4 +1,3 @@
-import logging
 import re
 from copy import deepcopy
 from itertools import chain
@@ -6,6 +5,8 @@ from itertools import chain
 import networkx as nx
 import penman as pn
 from networkx.algorithms.isomorphism import DiGraphMatcher
+
+from tuw_nlp import logger
 from tuw_nlp.text.patterns.misc import (CHAR_REPLACEMENTS, MISC_REPLACEMENTS,
                                         PUNCT_REPLACEMENTS)
 from tuw_nlp.text.utils import replace_emojis
@@ -17,14 +18,14 @@ dummy_tree = 'dummy(dummy)'
 class GraphMatcher():
     @staticmethod
     def node_matcher(n1, n2):
-        logging.debug(f'matchig these: {n1}, {n2}')
+        logger.debug(f'matchig these: {n1}, {n2}')
         if n1['name'] is None or n2['name'] is None:
             return True
         return n1['name'] == n2['name']
 
     @staticmethod
     def edge_matcher(e1, e2):
-        logging.debug(f'matchig these: {e1}, {e2}')
+        logger.debug(f'matchig these: {e1}, {e2}')
         return e1['color'] == e2['color']
 
     def __init__(self, patterns):
@@ -33,18 +34,18 @@ class GraphMatcher():
 
     def match(self, graph):
         for i, (patt, key) in enumerate(self.patts):
-            logging.debug(f'matching this: {self.patts[i]}')
+            logger.debug(f'matching this: {self.patts[i]}')
             matcher = DiGraphMatcher(
                 graph, patt, node_match=GraphMatcher.node_matcher, edge_match=GraphMatcher.edge_matcher)
             if matcher.subgraph_is_monomorphic():
-                logging.debug('MATCH!')
+                logger.debug('MATCH!')
                 yield key
 
 
 class GraphFormulaMatcher():
     @staticmethod
     def node_matcher(n1, n2):
-        logging.debug(f'matchig these: {n1}, {n2}')
+        logger.debug(f'matchig these: {n1}, {n2}')
         if n1['name'] is None or n2['name'] is None:
             return True
 
@@ -52,7 +53,7 @@ class GraphFormulaMatcher():
 
     @staticmethod
     def edge_matcher(e1, e2):
-        logging.debug(f'matchig these: {e1}, {e2}')
+        logger.debug(f'matchig these: {e1}, {e2}')
         return True if re.match(fr"\b({str(e2['color'])})\b", str(e1['color']), re.IGNORECASE) else False
 
     def __init__(self, patterns, converter):
@@ -65,7 +66,7 @@ class GraphFormulaMatcher():
 
     def match(self, graph):
         for i, (patt, negs, key) in enumerate(self.patts):
-            logging.debug(f'matching this: {self.patts[i]}')
+            logger.debug(f'matching this: {self.patts[i]}')
 
             neg_match = False
             for neg in negs:

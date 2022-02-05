@@ -1,6 +1,7 @@
-import logging
 import os
 import subprocess
+
+from tuw_nlp import logger
 
 ALTO_JAR = os.getenv('ALTO_JAR')
 if ALTO_JAR == None:
@@ -50,13 +51,13 @@ def run_alto(
     command = get_alto_command(
         input_fn, grammar_fn, output_fn, input_int, output_int, output_codec,
         timeout=60, memory='32G')
-    logging.info("running alto: {}".format(" ".join(command)))
+    logger.info("running alto: {}".format(" ".join(command)))
     cproc = subprocess.run(command)
     if cproc.returncode == 124:
-        logging.warning('alto timeout')
+        logger.warning('alto timeout')
         return False
     elif cproc.returncode != 0:
-        logging.warning('alto error')
+        logger.warning('alto error')
         return False
 
     return True

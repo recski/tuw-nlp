@@ -1,16 +1,18 @@
-from git import base
 import networkx as nx
-import pandas as pd
+from collections import Counter
 import re
 import nltk
 import stanza
 from nltk.corpus import wordnet as wn
+from nltk.wsd import lesk
 from tuw_nlp.text.pipeline import CachedStanzaPipeline
 import os
 import conceptnet_lite
 from conceptnet_lite import Label, Concept, edges_between
 from conceptnet_lite.db import RelationName
 from pywsd.lesk import simple_lesk, cosine_lesk, adapted_lesk, original_lesk
+from networkx.algorithms.isomorphism import DiGraphMatcher
+from utils import GraphMatcher
 
 
 basepath = os.path.dirname(__file__)
@@ -34,11 +36,12 @@ class KnowledgeNode(str):
         obj = super(KnowledgeNode, cls).__new__(cls, args[0])
         return obj
 
-    def __init__(self, text, lemma, synset, concept):
+    def __init__(self, text, lemma, synset, concept, pos):
         self.text = text
         self.lemma = lemma
         self.synset = synset
         self.concept = concept
+        self.pos = pos
         self.antonym = self.get_antonym()
 
     def get_antonym(self):
@@ -90,11 +93,13 @@ class KnowledgeNode(str):
             if text_match:
                 return True
             syn_similarity_rate = 0
-            concept_weight = 0 if self.concept != other.concept else 1  # There are no concept edges between the same concepts
+            concept_weight = 0 if (self.concept != other.concept or self.concept is None) else 1  # There are no concept edges between the same concepts
             if self.synset is not None and other.synset is not None:
                 syn_similarity_rate = wn.synset(self.synset.name()).wup_similarity(wn.synset(other.synset.name()))
             if self.concept is not None and other.concept is not None:
                 concept_connections = self.concept_connection(other)
+                if len(concept_connections) > 0:
+                    breakpoint()
                 antonyms = [e for e in concept_connections if e.relation.name == "antonym"] + \
                            [e for e in concept_connections if e.relation.name == "distinct_from"]
                 related = [e for e in concept_connections if e.relation.name == "is_a"] + \
@@ -108,7 +113,7 @@ class KnowledgeNode(str):
             if re.match(r'[a-zA-Z_]+\.[arsnv]\.[0-9]{2}', other) is not None and self.synset is not None:
                 try:
                     synset = wn.synset(other)
-                    if synset.wup_similarity(wn.synset(self.synset.name())) == 1:
+                    if synset.wup_similarity(wn.synset(self.synset.name())) >= 0.8:
                         return True
                 except ValueError:
                     print(other)
@@ -124,7 +129,8 @@ class KnowledgeNode(str):
         self.lemma = state["lemma"]
         self.synset = None if state["synset"] is None else wn.synset(state["synset"])
         self.antonym = None if state["antonym"] is None else wn.synset(state["antonym"])
-        self.concept = None if state["concept"] is None else [Concept.get_by_id(concept) for concept in state["concept"]]
+        self.concept = None if state["concept"] is None else [Concept.get_by_id(concept) for concept in state["concept"]],
+        self.pos = state["pos"]
     
     def __getstate__(self):
         return {
@@ -132,7 +138,8 @@ class KnowledgeNode(str):
             "lemma": self.lemma,
             "synset": None if self.synset is None else self.synset.name(),
             "antonym": None if self.antonym is None else self.antonym.name(),
-            "concept": None if self.concept is None else [c.id for c in self.concept]
+            "concept": None if self.concept is None else [c.id for c in self.concept],
+            "pos": self.pos
         }
 
 
@@ -185,7 +192,7 @@ class KnowledgeGraph:
                             "adj.ppl"] # 	participial adjectives
         self.pos = {'ADJ': wn.ADJ, 'ADV': wn.ADV, 'PART': wn.ADV, 'NOUN': wn.NOUN,
                     'PROPN': wn.NOUN, 'VERB': wn.VERB}
-        self.lesk_pos = {'ADJ': 'a', 'ADV': 's', 'PART': 's', 'NOUN': 'n',
+        self.lesk_pos = {'ADJ': 'a', 'ADV': 'r', 'PART': 's', 'NOUN': 'n',
                          'PROPN': 'n', 'VERB': 'v'}
         self.concept_pos = {'ADJ': 'a', 'ADV': 'r', 'NOUN': 'n', 'VERB': 'v'}
         self.parser = pipeline if pipeline is not None \
@@ -198,35 +205,91 @@ class KnowledgeGraph:
             self.parse_graph()
             self.connect_sentence_graphs()
 
-    def parse_graph(self):
+    def get_ud(self, sentences):
+        G = nx.DiGraph()
         with self.parser:
-            ud_parse = self.parser.parse(self.text)
+            ud_parse = self.parser.parse(sentences)
             for sent_id, sent in enumerate(ud_parse.sentences):
                 for word in sent.words:
-                    synset = None
                     concept = Label.get_or_none(text=word.lemma, language=self.lang)
                     if concept is not None:
                         concept = concept.concepts
                         if word.pos in self.concept_pos:
                             concept = [c for c in concept if
                                        len(re.findall(f"{self.concept_pos[word.pos]}[/$]*", c.sense_label)) > 0]
-                    if word.pos in self.pos:
-                        synset = wn.synsets(word.lemma, pos=self.pos[word.pos])
-                        if len(synset) > 1:
-                            # TODO: how to find the best???
-                            ss = simple_lesk(sent.text, word.text, pos=self.lesk_pos[word.pos])
-                            #sso = original_lesk(self.text, word.text)
-                            #ssa = adapted_lesk(self.text, word.text, pos='a')
-                            #ssc = cosine_lesk(self.text, word.text, pos='a')
-                            synset = ss
-                        elif len(synset) == 1:
-                            synset = synset[0]
-                        else:
-                            synset = None
-                    self.G.add_node(100*(sent_id+1)+word.id, name=KnowledgeNode(word.text, word.lemma, synset, concept))
+                    G.add_node(100 * (sent_id + 1) + word.id, name=KnowledgeNode(word.text, word.lemma, None, concept, word.upos))
                 for dep in sent.dependencies:
                     if dep[0].id != 0:
-                        self.G.add_edge(100*(sent_id+1)+dep[0].id, 100*(sent_id+1)+dep[2].id, color=dep[1])
+                        G.add_edge(100 * (sent_id + 1) + dep[0].id, 100 * (sent_id + 1) + dep[2].id, color=dep[1])
+        return G, ud_parse
+
+    @staticmethod
+    def node_matcher(n1, n2):
+        if n1['name'] is None or n2['name'] is None or \
+                n1['name'].pos == 'DET' or n2['name'].pos == 'DET' or \
+                n1['name'].pos == 'PUNCT' or n2['name'].pos == 'PUNCT':
+            return True
+        return n1['name'].pos == n2['name'].pos
+
+    @staticmethod
+    def edge_matcher(e1, e2):
+        if e1['color'] == 'punct' or e2['color'] == 'punct' or \
+           e1['color'] == 'det' or e2['color'] == 'det':
+            return True
+        if (e1['color'] == 'iobj' and e2['color'] == 'obj') or \
+           (e1['color'] == 'obj' and e2['color'] == 'iobj'):
+            return True
+        return e1['color'].split(':')[0] == e2['color'].split(':')[0]
+
+    def synset_example_overlap(self, sent_graph, synsets):
+        goods = {}
+        for ss in synsets:
+            for example in ss.examples():
+                ex_graph, _ = self.get_ud(example)
+                if DiGraphMatcher(sent_graph, ex_graph, node_match=self.node_matcher,
+                                  edge_match=self.edge_matcher).subgraph_is_monomorphic():
+                    if ss not in goods:
+                        goods[ss] = len(ex_graph.nodes)
+                    else:
+                        goods[ss] += len(ex_graph.nodes)
+        return goods
+
+    def parse_graph(self):
+        self.G, ud_parse = self.get_ud(self.text)
+        for sent_id, sent in enumerate(ud_parse.sentences):
+            sent_graph = nx.subgraph(self.G, [n for n in self.G.nodes if int(n/100) == sent_id+1])
+            for word in sent.words:
+                synset = None
+                if word.pos in self.pos:
+                    synset = wn.synsets(word.lemma, pos=self.pos[word.pos])
+                    if len(synset) > 1:
+                        goods = self.synset_example_overlap(sent_graph, synset)
+                        if len(goods) > 0:
+                            best = max(goods.items(), key=lambda x: x[1])[0]
+                            synset = best
+                        else:
+                            synset = synset[0]
+                        """
+                        if len(goods) == 1:
+                            synset = goods[0]
+                        else:
+                            ls = lesk(sent.text.split(), word.text, synsets=synset)
+                            ss = simple_lesk(sent.text, word.text, pos=self.lesk_pos[word.pos], from_cache=False)
+                            sso = original_lesk(sent.text, word.text)
+                            ssa = adapted_lesk(sent.text, word.text, pos=self.lesk_pos[word.pos], from_cache=False)
+                            ssc = cosine_lesk(sent.text, word.text, pos=self.lesk_pos[word.pos], from_cache=False)
+                            syns = [ls, ss, sso, ssa, ssc, synset[0]]
+                            if len(set(syns).intersection(goods)) == 1:
+                                synset = list(set(syns).intersection(goods))[0]
+                            elif len(set(syns)) != 1:
+                                best_s = max(Counter(syns).items(), key=lambda x: x[1])[0]
+                                synset = best_s
+                        """
+                    elif len(synset) == 1:
+                        synset = synset[0]
+                    else:
+                        synset = None
+                self.G.nodes[100*(sent_id+1)+word.id]["name"].synset = synset
 
     def connect_sentence_graphs(self):
         for node, node_data in self.G.nodes(data=True):

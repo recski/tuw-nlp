@@ -1,8 +1,8 @@
-import logging
 import os
 
 import stanza
 
+from tuw_nlp import logger
 from tuw_nlp.graph.lexical import LexGraphs
 from tuw_nlp.graph.utils import graph_to_pn
 from tuw_nlp.grammar.text_to_4lang import TextTo4lang
@@ -50,7 +50,7 @@ class TFLFeaturizer(Featurizer):
                     for fl in tfl(text):
                         features += self.get_features(fl, tfl)
                 except TypeError:
-                    logging.error(f'tfl error on this text: {text}')
+                    logger.error(f'tfl error on this text: {text}')
 
                 yield features, label
 

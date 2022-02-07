@@ -54,13 +54,13 @@ def load_parsed(fn):
     with open(fn) as f:
         parsed = json.load(f)
         return {
-            doc_id: StanzaDocument(parse) for doc_id, parse in parsed.items()}
+            text: StanzaDocument(parse, text=text)
+            for text, parse in parsed.items()}
 
 
 def save_parsed(parsed, fn):
     with open(fn, 'w') as f:
-        json.dump(
-            {doc_id: doc.to_dict() for doc_id, doc in parsed.items()}, f)
+        json.dump({text: doc.to_dict() for text, doc in parsed.items()}, f)
 
 
 def replace_emojis(text, with_what='EMOJI'):

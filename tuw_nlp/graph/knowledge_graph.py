@@ -1,23 +1,29 @@
-import networkx as nx
 from collections import Counter
+import networkx as nx
 import re
+import os
 import nltk
 import stanza
+from tuw_nlp.text.pipeline import CachedStanzaPipeline
+
+# Wordnet
 from nltk.corpus import wordnet as wn
 
-from nltk.wsd import lesk
-from pywsd.lesk import simple_lesk, cosine_lesk, adapted_lesk, original_lesk
-
-from tuw_nlp.text.pipeline import CachedStanzaPipeline
-import os
+# Conceptnet
 import conceptnet_lite
 from conceptnet_lite import Label, Concept, edges_between
 from conceptnet_lite.db import RelationName
+
+# The lesk algorithms and graph matching
+from nltk.wsd import lesk
+from pywsd.lesk import simple_lesk, cosine_lesk, adapted_lesk, original_lesk
 from networkx.algorithms.isomorphism import DiGraphMatcher
 
-
+# Download wordnet
 basepath = os.path.dirname(__file__)
 nltk.download('wordnet')
+
+# Download conceptnet db
 if not os.path.exists(os.path.join(basepath, "conceptnet/conceptnet.db")):
     answer = input("Would you like to download ConceptNet? It might take more than an hour. (Yes/no)")
     if not answer.lower().startswith('n'):
@@ -94,7 +100,8 @@ class KnowledgeNode(str):
             if text_match:
                 return True
             syn_similarity_rate = 0
-            concept_weight = 0 if (self.concept != other.concept or self.concept is None) else 1  # There are no concept edges between the same concepts
+            # There are no concept edges between the same concepts
+            concept_weight = 0 if (self.concept != other.concept or self.concept is None) else 1
             if self.synset is not None and other.synset is not None:
                 syn_similarity_rate = wn.synset(self.synset.name()).wup_similarity(wn.synset(other.synset.name()))
             if self.concept is not None and other.concept is not None:
@@ -109,13 +116,14 @@ class KnowledgeNode(str):
                     concept_weight = len(related) / len(concept_connections)
             return (syn_similarity_rate + concept_weight) / 2 >= 0.5
         elif isinstance(other, str):
+            # If it's a synset name
             if re.match(r'[a-zA-Z_]+\.[arsnv]\.[0-9]{2}', other) is not None and self.synset is not None:
                 try:
                     synset = wn.synset(other)
                     if synset.wup_similarity(wn.synset(self.synset.name())) >= 0.8:
                         return True
-                except ValueError:
-                    print(other)
+                except ValueError as e:
+                    print(e)
                 return False
             return self.reg_match(other)
 
@@ -129,7 +137,8 @@ class KnowledgeNode(str):
         self.lemma = state["lemma"]
         self.synset = None if state["synset"] is None else wn.synset(state["synset"])
         self.antonym = None if state["antonym"] is None else wn.synset(state["antonym"])
-        self.concept = None if state["concept"] is None else [Concept.get_by_id(concept) for concept in state["concept"]]
+        self.concept = None if state["concept"] is None else \
+                       [Concept.get_by_id(concept) for concept in state["concept"]]
         self.pos = None if "pos" not in state else state["pos"]
     
     def __getstate__(self):
@@ -156,51 +165,6 @@ class KnowledgeGraph:
             "graph_match": self.graph_match,
             "ud_match": self.ud_match
         }
-        self.wn_lexnames = ["adj.all", # 	all adjective clusters
-                            "adj.pert", # 	relational adjectives (pertainyms)
-                            "adv.all", #	all adverbs
-                            "noun.Tops", # 	unique beginner for nouns
-                            "noun.act", # 	nouns denoting acts or actions
-                            "noun.animal", # 	nouns denoting animals
-                            "noun.artifact", # 	nouns denoting man-made objects
-                            "noun.attribute", # 	nouns denoting attributes of people and objects
-                            "noun.body", # 	nouns denoting body parts
-                            "noun.cognition", # 	nouns denoting cognitive processes and contents
-                            "noun.communication", # 	nouns denoting communicative processes and contents
-                            "noun.event", # 	nouns denoting natural events
-                            "noun.feeling", # 	nouns denoting feelings and emotions
-                            "noun.food", # 	nouns denoting foods and drinks
-                            "noun.group", # 	nouns denoting groupings of people or objects
-                            "noun.location", # 	nouns denoting spatial position
-                            "noun.motive", # 	nouns denoting goals
-                            "noun.object", # 	nouns denoting natural objects (not man-made)
-                            "noun.person", # 	nouns denoting people
-                            "noun.phenomenon", # 	nouns denoting natural phenomena
-                            "noun.plant", # 	nouns denoting plants
-                            "noun.possession", # 	nouns denoting possession and transfer of possession
-                            "noun.process", # 	nouns denoting natural processes
-                            "noun.quantity", # 	nouns denoting quantities and units of measure
-                            "noun.relation", # 	nouns denoting relations between people or things or ideas
-                            "noun.shape", # 	nouns denoting two and three dimensional shapes
-                            "noun.state", # 	nouns denoting stable states of affairs
-                            "noun.substance", # 	nouns denoting substances
-                            "noun.time", # 	nouns denoting time and temporal relations
-                            "verb.body", # 	verbs of grooming, dressing and bodily care
-                            "verb.change", # 	verbs of size, temperature change, intensifying, etc.
-                            "verb.cognition", # 	verbs of thinking, judging, analyzing, doubting
-                            "verb.communication", # 	verbs of telling, asking, ordering, singing
-                            "verb.competition", # 	verbs of fighting, athletic activities
-                            "verb.consumption", # 	verbs of eating and drinking
-                            "verb.contact", # 	verbs of touching, hitting, tying, digging
-                            "verb.creation", # 	verbs of sewing, baking, painting, performing
-                            "verb.emotion", # 	verbs of feeling
-                            "verb.motion", # 	verbs of walking, flying, swimming
-                            "verb.perception", # 	verbs of seeing, hearing, feeling
-                            "verb.possession", # 	verbs of buying, selling, owning
-                            "verb.social", # 	verbs of political and social activities and events
-                            "verb.stative", # 	verbs of being, having, spatial relations
-                            "verb.weather", # 	verbs of raining, snowing, thawing, thundering
-                            "adj.ppl"] # 	participial adjectives
         self.pos = {'ADJ': wn.ADJ, 'ADV': wn.ADV, 'PART': wn.ADV, 'NOUN': wn.NOUN,
                     'PROPN': wn.NOUN, 'VERB': wn.VERB}
         self.lesk_pos = {'ADJ': 'a', 'ADV': 'r', 'PART': 's', 'NOUN': 'n',
@@ -222,18 +186,22 @@ class KnowledgeGraph:
             ud_parse = self.parser.parse(sentences)
             for sent_id, sent in enumerate(ud_parse.sentences):
                 for word in sent.words:
-                    G.add_node(100 * (sent_id + 1) + word.id, name=KnowledgeNode(word.text, word.lemma, None, None, word.upos))
+                    G.add_node(100 * (sent_id + 1) + word.id, 
+                               name=KnowledgeNode(word.text, word.lemma, None, None, word.upos))
                 for dep in sent.dependencies:
                     if dep[0].id != 0:
-                        G.add_edge(100 * (sent_id + 1) + dep[0].id, 100 * (sent_id + 1) + dep[2].id, color=dep[1])
+                        G.add_edge(100 * (sent_id + 1) + dep[0].id, 
+                                   100 * (sent_id + 1) + dep[2].id, 
+                                   color=dep[1])
         return G, ud_parse
     
     def parse_graph(self, synset_method):
         self.G, self.ud_parse = self.get_ud(self.text)
         for sent_id, sent in enumerate(self.ud_parse.sentences):
                 for word in sent.words:
-                    self.G.nodes[100*(sent_id+1)+word.id]["name"].concept = self.get_concept(word)
-                    self.G.nodes[100*(sent_id+1)+word.id]["name"].synset = self.get_synset(word, sent_id, synset_method)
+                    word_id = 100*(sent_id+1)+word.id
+                    self.G.nodes[word_id]["name"].concept = self.get_concept(word)
+                    self.G.nodes[word_id]["name"].synset = self.get_synset(word, sent_id, synset_method)
 
     def vote_lesk(self, word, synsets, sent_id):
         lesks = [

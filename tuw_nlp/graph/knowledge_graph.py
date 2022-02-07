@@ -4,15 +4,16 @@ import re
 import nltk
 import stanza
 from nltk.corpus import wordnet as wn
+
 from nltk.wsd import lesk
+from pywsd.lesk import simple_lesk, cosine_lesk, adapted_lesk, original_lesk
+
 from tuw_nlp.text.pipeline import CachedStanzaPipeline
 import os
 import conceptnet_lite
 from conceptnet_lite import Label, Concept, edges_between
 from conceptnet_lite.db import RelationName
-from pywsd.lesk import simple_lesk, cosine_lesk, adapted_lesk, original_lesk
 from networkx.algorithms.isomorphism import DiGraphMatcher
-from utils import GraphMatcher
 
 
 basepath = os.path.dirname(__file__)
@@ -98,8 +99,6 @@ class KnowledgeNode(str):
                 syn_similarity_rate = wn.synset(self.synset.name()).wup_similarity(wn.synset(other.synset.name()))
             if self.concept is not None and other.concept is not None:
                 concept_connections = self.concept_connection(other)
-                if len(concept_connections) > 0:
-                    breakpoint()
                 antonyms = [e for e in concept_connections if e.relation.name == "antonym"] + \
                            [e for e in concept_connections if e.relation.name == "distinct_from"]
                 related = [e for e in concept_connections if e.relation.name == "is_a"] + \
@@ -117,6 +116,7 @@ class KnowledgeNode(str):
                         return True
                 except ValueError:
                     print(other)
+                return False
             return self.reg_match(other)
 
     def __hash__(self):
@@ -129,8 +129,8 @@ class KnowledgeNode(str):
         self.lemma = state["lemma"]
         self.synset = None if state["synset"] is None else wn.synset(state["synset"])
         self.antonym = None if state["antonym"] is None else wn.synset(state["antonym"])
-        self.concept = None if state["concept"] is None else [Concept.get_by_id(concept) for concept in state["concept"]],
-        self.pos = state["pos"]
+        self.concept = None if state["concept"] is None else [Concept.get_by_id(concept) for concept in state["concept"]]
+        self.pos = None if "pos" not in state else state["pos"]
     
     def __getstate__(self):
         return {
@@ -144,7 +144,18 @@ class KnowledgeNode(str):
 
 
 class KnowledgeGraph:
-    def __init__(self, graph=None, text=None, pipeline=None, lang="en"):
+    def __init__(self, graph=None, text=None, pipeline=None, lang="en", synset_method="vote_lesk"):
+        self.synset_methods = {
+            "vote_lesk": self.vote_lesk,
+            "first_synset": self.first_synset,
+            "nltk_lesk": self.nltk_lesk,
+            "original_lesk": self.original_lesk,
+            "simple_lesk": self.simple_lesk,
+            "cosine_lesk": self.cosine_lesk,
+            "adapted_lesk": self.adapted_lesk,
+            "graph_match": self.graph_match,
+            "ud_match": self.ud_match
+        }
         self.wn_lexnames = ["adj.all", # 	all adjective clusters
                             "adj.pert", # 	relational adjectives (pertainyms)
                             "adv.all", #	all adverbs
@@ -202,7 +213,7 @@ class KnowledgeGraph:
         self.G = graph
         if self.text is not None and self.G is None:
             self.G = nx.DiGraph()
-            self.parse_graph()
+            self.parse_graph(self.synset_methods[synset_method])
             self.connect_sentence_graphs()
 
     def get_ud(self, sentences):
@@ -211,17 +222,50 @@ class KnowledgeGraph:
             ud_parse = self.parser.parse(sentences)
             for sent_id, sent in enumerate(ud_parse.sentences):
                 for word in sent.words:
-                    concept = Label.get_or_none(text=word.lemma, language=self.lang)
-                    if concept is not None:
-                        concept = concept.concepts
-                        if word.pos in self.concept_pos:
-                            concept = [c for c in concept if
-                                       len(re.findall(f"{self.concept_pos[word.pos]}[/$]*", c.sense_label)) > 0]
-                    G.add_node(100 * (sent_id + 1) + word.id, name=KnowledgeNode(word.text, word.lemma, None, concept, word.upos))
+                    G.add_node(100 * (sent_id + 1) + word.id, name=KnowledgeNode(word.text, word.lemma, None, None, word.upos))
                 for dep in sent.dependencies:
                     if dep[0].id != 0:
                         G.add_edge(100 * (sent_id + 1) + dep[0].id, 100 * (sent_id + 1) + dep[2].id, color=dep[1])
         return G, ud_parse
+    
+    def parse_graph(self, synset_method):
+        self.G, self.ud_parse = self.get_ud(self.text)
+        for sent_id, sent in enumerate(self.ud_parse.sentences):
+                for word in sent.words:
+                    self.G.nodes[100*(sent_id+1)+word.id]["name"].concept = self.get_concept(word)
+                    self.G.nodes[100*(sent_id+1)+word.id]["name"].synset = self.get_synset(word, sent_id, synset_method)
+
+    def vote_lesk(self, word, synsets, sent_id):
+        lesks = [
+            self.first_synset(word, synsets, sent_id), 
+            self.nltk_lesk(word, synsets, sent_id),
+            self.original_lesk(word, synsets, sent_id),
+            self.simple_lesk(word, synsets, sent_id),
+            self.cosine_lesk(word, synsets, sent_id),
+            self.adapted_lesk(word, synsets, sent_id)
+            ]
+        if len(set(lesks)) != 1:
+            return max(Counter(lesks).items(), key=lambda x: x[1])[0]
+        return lesks[0]
+
+    def first_synset(self, word, synsets, sent_id):
+        return synsets[0]
+
+    def nltk_lesk(self, word, synsets, sent_id):
+        return lesk(self.ud_parse.sentences[sent_id].text.split(), word.text, synsets=synsets)
+
+    def original_lesk(self, word, synsets, sent_id):
+        return original_lesk(self.ud_parse.sentences[sent_id].text, word.text)
+    
+    def simple_lesk(self, word, synsets, sent_id):
+        return simple_lesk(self.ud_parse.sentences[sent_id].text, word.text, pos=self.lesk_pos[word.pos])
+    
+    def cosine_lesk(self, word, synsets, sent_id):
+        return cosine_lesk(self.ud_parse.sentences[sent_id].text, word.text, pos=self.lesk_pos[word.pos])
+    
+    def adapted_lesk(self, word, synsets, sent_id):
+        return adapted_lesk(self.ud_parse.sentences[sent_id].text, word.text, pos=self.lesk_pos[word.pos])
+
 
     @staticmethod
     def node_matcher(n1, n2):
@@ -241,8 +285,9 @@ class KnowledgeGraph:
             return True
         return e1['color'].split(':')[0] == e2['color'].split(':')[0]
 
-    def synset_example_overlap(self, sent_graph, synsets):
+    def graph_match(self, word, synsets, sent_id):
         goods = {}
+        sent_graph = nx.subgraph(self.G, [n for n in self.G.nodes if int(n/100) == sent_id+1])
         for ss in synsets:
             for example in ss.examples():
                 ex_graph, _ = self.get_ud(example)
@@ -252,44 +297,60 @@ class KnowledgeGraph:
                         goods[ss] = len(ex_graph.nodes)
                     else:
                         goods[ss] += len(ex_graph.nodes)
-        return goods
-
-    def parse_graph(self):
-        self.G, ud_parse = self.get_ud(self.text)
-        for sent_id, sent in enumerate(ud_parse.sentences):
-            sent_graph = nx.subgraph(self.G, [n for n in self.G.nodes if int(n/100) == sent_id+1])
-            for word in sent.words:
-                synset = None
-                if word.pos in self.pos:
-                    synset = wn.synsets(word.lemma, pos=self.pos[word.pos])
-                    if len(synset) > 1:
-                        goods = self.synset_example_overlap(sent_graph, synset)
-                        if len(goods) > 0:
-                            best = max(goods.items(), key=lambda x: x[1])[0]
-                            synset = best
-                        else:
-                            synset = synset[0]
-                        """
-                        if len(goods) == 1:
-                            synset = goods[0]
-                        else:
-                            ls = lesk(sent.text.split(), word.text, synsets=synset)
-                            ss = simple_lesk(sent.text, word.text, pos=self.lesk_pos[word.pos], from_cache=False)
-                            sso = original_lesk(sent.text, word.text)
-                            ssa = adapted_lesk(sent.text, word.text, pos=self.lesk_pos[word.pos], from_cache=False)
-                            ssc = cosine_lesk(sent.text, word.text, pos=self.lesk_pos[word.pos], from_cache=False)
-                            syns = [ls, ss, sso, ssa, ssc, synset[0]]
-                            if len(set(syns).intersection(goods)) == 1:
-                                synset = list(set(syns).intersection(goods))[0]
-                            elif len(set(syns)) != 1:
-                                best_s = max(Counter(syns).items(), key=lambda x: x[1])[0]
-                                synset = best_s
-                        """
-                    elif len(synset) == 1:
-                        synset = synset[0]
+        if len(goods) > 0:
+            return max(goods.items(), key=lambda x: x[1])[0]
+        return synsets[0]
+    
+    def ud_match(self, word, synsets, sent_id):
+        goods = {}
+        ud_sentence = self.ud_parse.sentences[sent_id]
+        deps = [(dep[0].pos, dep[1], dep[2].pos)for dep in ud_sentence.dependencies if 
+                 dep[0].lemma != word.lemma and dep[2].lemma != word.lemma] + \
+               [(dep[0].lemma, dep[1], dep[2].pos)for dep in ud_sentence.dependencies if 
+                 dep[0].lemma == word.lemma] + \
+               [(dep[0].pos, dep[1], dep[2].lemma)for dep in ud_sentence.dependencies if 
+                 dep[2].lemma == word.lemma]
+        for ss in synsets:
+            for example in ss.examples():
+                if word.lemma in example or word.text in example:
+                    _, ud_parse = self.get_ud(example)
+                    sentence = ud_parse.sentences[0]
+                    example_deps = [
+                        (dep[0].pos, dep[1], dep[2].pos)for dep in sentence.dependencies if 
+                         dep[0].lemma != word.lemma and dep[2].lemma != word.lemma] + \
+                       [(dep[0].lemma, dep[1], dep[2].pos)for dep in sentence.dependencies if
+                         dep[0].lemma == word.lemma] + \
+                       [(dep[0].pos, dep[1], dep[2].lemma)for dep in sentence.dependencies if 
+                         dep[2].lemma == word.lemma
+                         ]
+                    overlap = set(deps).intersection(example_deps)
+                    if ss not in goods:
+                        goods[ss] = len(overlap)
                     else:
-                        synset = None
-                self.G.nodes[100*(sent_id+1)+word.id]["name"].synset = synset
+                        goods[ss] += len(overlap)
+        if len(goods) > 0:
+            return max(goods.items(), key=lambda x: x[1])[0]
+        return synsets[0]
+    
+    def get_synset(self, word, sent_id, method):
+        synset = None
+        if word.pos in self.pos:
+            synsets = wn.synsets(word.lemma, pos=self.pos[word.pos])
+            if synsets is not None:
+                if len(synsets) == 1:
+                    synset = synsets[0]
+                elif len(synsets) > 1:
+                    synset = method(word, synsets, sent_id)
+        return synset
+
+    def get_concept(self, word):
+        concept = Label.get_or_none(text=word.lemma, language=self.lang)
+        if concept is not None:
+            concept = concept.concepts
+            if word.pos in self.concept_pos:
+                concept = [c for c in concept if
+                            len(re.findall(f"{self.concept_pos[word.pos]}[/$]*", c.sense_label)) > 0]
+        return concept
 
     def connect_sentence_graphs(self):
         for node, node_data in self.G.nodes(data=True):

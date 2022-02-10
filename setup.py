@@ -40,7 +40,9 @@ setup(
         'penman',
         'stanza==1.3.0',
         'nltk',
-        "graphviz"
+        "graphviz",
+        "conceptnet-lite",
+        "pywsd"
     ],
     packages=find_packages(),
     include_package_data=True,

@@ -5,6 +5,7 @@ import os
 import nltk
 import stanza
 from tuw_nlp.text.pipeline import CachedStanzaPipeline
+from tuw_nlp.graph.utils import Graph
 
 # Wordnet
 from nltk.corpus import wordnet as wn
@@ -152,8 +153,9 @@ class KnowledgeNode(str):
         }
 
 
-class KnowledgeGraph:
+class KnowledgeGraph(Graph):
     def __init__(self, graph=None, text=None, pipeline=None, lang="en", synset_method="vote_lesk"):
+        super(KnowledgeGraph, self).__init__()
         self.synset_methods = {
             "vote_lesk": self.vote_lesk,
             "first_synset": self.first_synset,
@@ -175,6 +177,7 @@ class KnowledgeGraph:
         self.lang = lang
         self.text = text
         self.G = graph
+        self.ud_parse = None
         if self.text is not None and self.G is None:
             self.G = nx.DiGraph()
             self.parse_graph(self.synset_methods[synset_method])
@@ -198,10 +201,10 @@ class KnowledgeGraph:
     def parse_graph(self, synset_method):
         self.G, self.ud_parse = self.get_ud(self.text)
         for sent_id, sent in enumerate(self.ud_parse.sentences):
-                for word in sent.words:
-                    word_id = 100*(sent_id+1)+word.id
-                    self.G.nodes[word_id]["name"].concept = self.get_concept(word)
-                    self.G.nodes[word_id]["name"].synset = self.get_synset(word, sent_id, synset_method)
+            for word in sent.words:
+                word_id = 100*(sent_id+1)+word.id
+                self.G.nodes[word_id]["name"].concept = self.get_concept(word)
+                self.G.nodes[word_id]["name"].synset = self.get_synset(word, sent_id, synset_method)
 
     def vote_lesk(self, word, synsets, sent_id):
         lesks = [
@@ -233,7 +236,6 @@ class KnowledgeGraph:
     
     def adapted_lesk(self, word, synsets, sent_id):
         return adapted_lesk(self.ud_parse.sentences[sent_id].text, word.text, pos=self.lesk_pos[word.pos])
-
 
     @staticmethod
     def node_matcher(n1, n2):
@@ -272,25 +274,23 @@ class KnowledgeGraph:
     def ud_match(self, word, synsets, sent_id):
         goods = {}
         ud_sentence = self.ud_parse.sentences[sent_id]
-        deps = [(dep[0].pos, dep[1], dep[2].pos)for dep in ud_sentence.dependencies if 
-                 dep[0].lemma != word.lemma and dep[2].lemma != word.lemma] + \
+        deps = [(dep[0].pos, dep[1], dep[2].pos)for dep in ud_sentence.dependencies if
+                dep[0].lemma != word.lemma and dep[2].lemma != word.lemma] + \
                [(dep[0].lemma, dep[1], dep[2].pos)for dep in ud_sentence.dependencies if 
-                 dep[0].lemma == word.lemma] + \
+                dep[0].lemma == word.lemma] + \
                [(dep[0].pos, dep[1], dep[2].lemma)for dep in ud_sentence.dependencies if 
-                 dep[2].lemma == word.lemma]
+                dep[2].lemma == word.lemma]
         for ss in synsets:
             for example in ss.examples():
                 if word.lemma in example or word.text in example:
                     _, ud_parse = self.get_ud(example)
                     sentence = ud_parse.sentences[0]
-                    example_deps = [
-                        (dep[0].pos, dep[1], dep[2].pos)for dep in sentence.dependencies if 
-                         dep[0].lemma != word.lemma and dep[2].lemma != word.lemma] + \
-                       [(dep[0].lemma, dep[1], dep[2].pos)for dep in sentence.dependencies if
-                         dep[0].lemma == word.lemma] + \
-                       [(dep[0].pos, dep[1], dep[2].lemma)for dep in sentence.dependencies if 
-                         dep[2].lemma == word.lemma
-                         ]
+                    example_deps = [(dep[0].pos, dep[1], dep[2].pos)for dep in sentence.dependencies if
+                                    dep[0].lemma != word.lemma and dep[2].lemma != word.lemma] + \
+                                   [(dep[0].lemma, dep[1], dep[2].pos)for dep in sentence.dependencies if
+                                    dep[0].lemma == word.lemma] + \
+                                   [(dep[0].pos, dep[1], dep[2].lemma)for dep in sentence.dependencies if
+                                    dep[2].lemma == word.lemma]
                     overlap = set(deps).intersection(example_deps)
                     if ss not in goods:
                         goods[ss] = len(overlap)
@@ -317,7 +317,7 @@ class KnowledgeGraph:
             concept = concept.concepts
             if word.pos in self.concept_pos:
                 concept = [c for c in concept if
-                            len(re.findall(f"{self.concept_pos[word.pos]}[/$]*", c.sense_label)) > 0]
+                           len(re.findall(f"{self.concept_pos[word.pos]}[/$]*", c.sense_label)) > 0]
         return concept
 
     def connect_sentence_graphs(self):
@@ -341,38 +341,8 @@ class KnowledgeGraph:
                                  data["data"]["rel"]) for (f, t, data) in other.G.edges(data=True)])
             return len(edge_overlap) / len(self.G.edges)
 
-    @staticmethod
-    def d_clean(string):
-        s = string
-        for c in '\\=@-,\'".!:;<>/{}[]()#^?':
-            s = s.replace(c, '_')
-        s = s.replace('$', '_dollars').replace('%', '_percent').replace('|', ' ').replace('*', ' ')
-        if s == '#':
-            s = '_number'
-        keywords = ("graph", "node", "strict", "edge")
-        if re.match('^[0-9]', s) or s in keywords:
-            s = "X" + s
-        return s
-
-    def to_dot(self):
-        conceptnet_relation_names = [v for v in RelationName.__dict__.values()]
-        show_graph = self.G.copy()
-        lines = [u'digraph finite_state_machine {', '\tdpi=70;']
-        node_id = {n: i for (i, n) in enumerate(show_graph.nodes)}
-        node_lines = []
-        for node, n_data in show_graph.nodes(data=True):
-            printname = self.d_clean(str(n_data['name']))
-            node_line = u'\t{0} [shape = circle, label = "{1}"];'.format(node_id[node], printname).replace('-', '_')
-            node_lines.append(node_line)
-        lines += sorted(node_lines)
-        edge_lines = []
-        for u, v, edata in show_graph.edges(data=True):
-            if edata['color'] not in conceptnet_relation_names:
-                edge_lines.append(u'\t{0} -> {1} [ label = "{2}", color = "green"];'.format(node_id[u], node_id[v],
-                                                                                            edata['color']))
-            else:
-                edge_lines.append(u'\t{0} -> {1} [ label = "{2}", color = "blue"];'.format(node_id[u], node_id[v],
-                                                                                           edata['color']))
-        lines += sorted(edge_lines)
-        lines.append('}')
-        return u'\n'.join(lines)
+    def to_dot(self, marked_nodes=set(), edge_color=None):
+        relation_colors = {v: "blue" for v in RelationName.__dict__.values() if isinstance(v, str)}
+        relation_colors.update({v[2]["color"]: "green" for v in self.G.edges(data=True)
+                                if v[2]["color"] not in relation_colors})
+        return Graph.to_dot(self, edge_color=relation_colors)

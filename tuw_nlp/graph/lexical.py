@@ -4,10 +4,12 @@ from networkx.convert import to_dict_of_dicts as tdd
 
 from tuw_nlp.common.vocabulary import Vocabulary
 from tuw_nlp.graph.utils import gen_subgraphs
+from tuw_nlp.graph.utils import Graph
 
 
-class LexGraphs():
+class LexGraphs(Graph):
     def __init__(self):
+        super(LexGraphs, self).__init__()
         self.vocab = Vocabulary()
 
     def from_plain(self, G):

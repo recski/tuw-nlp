@@ -228,30 +228,34 @@ def pn_to_graph(raw_dl, edge_attr='color'):
 
 
 def graph_to_pn(graph):
-    nodes = {}
-    pn_edges, pn_nodes = [], []
+    sub_graphs = [nx.subgraph(graph, sub) for sub in nx.weakly_connected_components(graph)]
+    pn_repr = ""
+    for sub_graph in sub_graphs:
+        nodes = {}
+        pn_edges, pn_nodes = [], []
 
-    for u, v, e in graph.edges(data=True):
-        for node in u, v:
+        for u, v, e in sub_graph.edges(data=True):
+            for node in u, v:
+                if node not in nodes:
+                    name = Graph.d_clean(str(sub_graph.nodes[node]['name']))
+                    pn_id = f'u_{node}'
+                    nodes[node] = (pn_id, name)
+                    pn_nodes.append((pn_id, ':instance', name))
+
+            pn_edges.append((nodes[u][0], f':{e["color"]}', nodes[v][0]))
+
+        for node in sub_graph.nodes():
             if node not in nodes:
-                name = graph.nodes[node]['name']
+                name = str(sub_graph.nodes[node]['name'])
                 pn_id = f'u_{node}'
                 nodes[node] = (pn_id, name)
                 pn_nodes.append((pn_id, ':instance', name))
 
-        pn_edges.append((nodes[u][0], f':{e["color"]}', nodes[v][0]))
+        G = pn.Graph(pn_nodes + pn_edges)
 
-    for node in graph.nodes():
-        if node not in nodes:
-            name = graph.nodes[node]['name']
-            pn_id = f'u_{node}'
-            nodes[node] = (pn_id, name)
-            pn_nodes.append((pn_id, ':instance', name))
-
-    G = pn.Graph(pn_nodes + pn_edges)
-
-    # two spaces before edge name, because alto does it :)
-    return pn.encode(G, indent=0).replace('\n', '  ')
+        # two spaces before edge name, because alto does it :)
+        pn_repr = "\n".join([pn_repr, pn.encode(G, indent=0).replace('\n', '  ')])
+    return pn_repr
 
 
 def read_alto_output(raw_dl):

@@ -229,7 +229,7 @@ def pn_to_graph(raw_dl, edge_attr='color'):
 
 def graph_to_pn(graph):
     sub_graphs = [nx.subgraph(graph, sub) for sub in nx.weakly_connected_components(graph)]
-    pn_repr = ""
+    pn_repr = "(u_000 / sentences "
     for sub_graph in sub_graphs:
         nodes = {}
         pn_edges, pn_nodes = [], []
@@ -246,7 +246,7 @@ def graph_to_pn(graph):
 
         for node in sub_graph.nodes():
             if node not in nodes:
-                name = str(sub_graph.nodes[node]['name'])
+                name = Graph.d_clean(str(sub_graph.nodes[node]['name']))
                 pn_id = f'u_{node}'
                 nodes[node] = (pn_id, name)
                 pn_nodes.append((pn_id, ':instance', name))
@@ -254,8 +254,8 @@ def graph_to_pn(graph):
         G = pn.Graph(pn_nodes + pn_edges)
 
         # two spaces before edge name, because alto does it :)
-        pn_repr = "\n".join([pn_repr, pn.encode(G, indent=0).replace('\n', '  ')])
-    return pn_repr
+        pn_repr = "\n".join([pn_repr, ":sentence " + pn.encode(G, indent=0).replace('\n', '  ')])
+    return pn_repr + ")"
 
 
 def read_alto_output(raw_dl):

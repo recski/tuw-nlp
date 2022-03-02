@@ -160,8 +160,10 @@ class GraphFormulaMatcher():
                     
                     monomorphic_subgraphs = list(matcher.subgraph_monomorphisms_iter())
                     if not len(monomorphic_subgraphs) == 0:
-                        subgraph = monomorphic_subgraphs[0].keys()
-                        subgraphs.append(graph.subgraph(subgraph))
+                        mapping = monomorphic_subgraphs[0]
+                        subgraph = graph.subgraph(mapping.keys())
+                        nx.set_node_attributes(subgraph, mapping, name="mapping")
+                        subgraphs.append(subgraph)
                     else:
                         pos_match = False
                         break

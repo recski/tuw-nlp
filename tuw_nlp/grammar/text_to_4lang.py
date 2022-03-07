@@ -74,6 +74,8 @@ class TextTo4lang:
                             graph, d_node, definition, substitute, strategy)
                         if expand_set:
                             expand_set |= set(definition_nodes)
+                    else:
+                        print('no definition for ' + node)
 
         self.expand(graph, depth-1, substitute=substitute,
                     expand_set=expand_set, strategy=strategy)

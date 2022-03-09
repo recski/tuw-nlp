@@ -1,4 +1,3 @@
-from nis import match
 import re
 from copy import deepcopy
 from itertools import chain

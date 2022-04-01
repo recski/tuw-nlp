@@ -6,7 +6,9 @@ ABBREV = [
     "Kat.G.",
     "lit.",
     "ONr.",
-    'bzw.'
+    'bzw.',
+    'Pkt.',
+    "Dipl.-Ing."
 ]
 
 MONTH = [

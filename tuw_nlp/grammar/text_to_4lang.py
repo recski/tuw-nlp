@@ -90,8 +90,8 @@ class TextTo4lang:
         return relabeled_graph, self.graph_lexical.vocab.get_id(
             graph.nodes[root]["name"])
 
-    def __call__(self, text, depth=0, substitute=False, expand_set=set(), strategy="None"):
-        for sen in self.nlp(text).sentences:
+    def __call__(self, text, depth=0, substitute=False, expand_set=set(), strategy="None", ssplit=True):
+        for sen in self.nlp(text, ssplit=ssplit).sentences:
             graph, root = self.parse(sen)
 
             fourlang = FourLang(graph, root, self.graph_lexical)

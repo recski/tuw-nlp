@@ -137,29 +137,42 @@ class GraphFormulaMatcher():
             neg_graphs = [converter(neg_patt)[0] for neg_patt in negs]
             self.patts.append((pos_patts, neg_graphs, key))
 
-    def match(self, graph):
+    def _neg_match(self, graph, negs):
+        for neg_graph in negs:
+            matcher = DiGraphMatcher(
+                graph, neg_graph, node_match=GraphFormulaMatcher.node_matcher, edge_match=GraphFormulaMatcher.edge_matcher)
+            if matcher.subgraph_is_monomorphic():
+                return True
+        return False
+
+    def match(self, graph, return_subgraphs=False):
         for i, (patt, negs, key) in enumerate(self.patts):
             logger.debug(f'matching this: {self.patts[i]}')
+            neg_match = self._neg_match(graph, negs)
 
-            neg_match = False
-            for neg in negs:
-                matcher = DiGraphMatcher(
-                    graph, neg, node_match=GraphFormulaMatcher.node_matcher, edge_match=GraphFormulaMatcher.edge_matcher)
-                if matcher.subgraph_is_monomorphic():
-                    neg_match = True
-                    break
+            if not neg_match:
+                pos_match = True
+                subgraphs = []
+                for p in patt:
+                    matcher = DiGraphMatcher(
+                        graph, p, node_match=GraphFormulaMatcher.node_matcher, edge_match=GraphFormulaMatcher.edge_matcher)
+                    
+                    monomorphic_subgraphs = list(matcher.subgraph_monomorphisms_iter())
+                    if not len(monomorphic_subgraphs) == 0:
+                        mapping = monomorphic_subgraphs[0]
+                        subgraph = graph.subgraph(mapping.keys())
+                        nx.set_node_attributes(subgraph, mapping, name="mapping")
+                        subgraphs.append(subgraph)
+                    else:
+                        pos_match = False
+                        break
 
-            pos_match = True
-            for p in patt:
-                matcher = DiGraphMatcher(
-                    graph, p, node_match=GraphFormulaMatcher.node_matcher, edge_match=GraphFormulaMatcher.edge_matcher)
-                if not matcher.subgraph_is_monomorphic():
-                    pos_match = False
-                    break
-
-            if pos_match and not neg_match:
-                yield key, i
-
+                if pos_match:
+                    if return_subgraphs:
+                        yield key, i, subgraphs
+                    else:    
+                        yield key, i
+                    
 
 def gen_subgraphs(M, no_edges):
     """M must be dict of dicts, see networkx.convert.to_dict_of_dicts.

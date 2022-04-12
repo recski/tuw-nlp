@@ -46,15 +46,15 @@ class CachedStanzaPipeline:
 
         self.changed = False
 
-    def parse(self, text):
+    def parse(self, text, ssplit):
         if self.nlp is None:
             self.nlp = self.init()
 
-        return self.nlp(text)
+        return self.nlp(text) if ssplit else self.nlp.additional(text)
 
-    def __call__(self, text):
+    def __call__(self, text, ssplit=True):
         if text not in self.parsed:
-            self.parsed[text] = self.parse(text)
+            self.parsed[text] = self.parse(text, ssplit=ssplit)
             self.changed = True
 
         return self.parsed[text]

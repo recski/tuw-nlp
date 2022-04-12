@@ -74,7 +74,7 @@ python services/text_to_4lang/backend/service.py
 Then run the frontend with this command:
 
 ```
-streamlit run services/text_to_4lang/frontend/extract.py
+streamlit run services/text_to_4lang/frontend/demo.py
 ```
 
 In the demo you can parse english and german sentences and you can also try out multiple algorithms our graphs implement, such as `expand`, `substitute` and `append_zero_paths`.

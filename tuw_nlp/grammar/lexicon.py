@@ -508,6 +508,10 @@ class CFLLexicon(BaseLexicon):
             ("VERB", "ADVMOD", "ADV"),
             # nicht staffeln, sample 10
             ("VERB", "ADVMOD", "PART"),
+            # nicht mehr als
+            ("CCONJ", "ADVMOD", "ADV"),
+            # nicht mehr als
+            ("ADV", "ADVMOD", "PART"),
             # sample 112 of sample_10
             ("VERB", "ADVCL", "VERB"),
             # nicht gewaehlt... , weil er gegen die Homo-Ehe... (Germeval '18)

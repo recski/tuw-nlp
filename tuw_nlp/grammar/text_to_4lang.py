@@ -21,10 +21,10 @@ class TextTo4lang:
             nlp = CustomStanzaPipeline(
                 processors='tokenize,mwt,pos,lemma,depparse')
         elif lang == 'en':
-            nlp = stanza.Pipeline(
+            nlp = CustomStanzaPipeline(
                 'en', processors='tokenize,mwt,pos,lemma,depparse')
         elif lang == 'en_bio':
-            nlp = stanza.Pipeline(
+            nlp = CustomStanzaPipeline(
                 'en', package="craft")
         assert lang, "TextTo4lang does not have lang set"
 

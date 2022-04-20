@@ -1,3 +1,4 @@
+import logging
 import re
 from copy import deepcopy
 from itertools import chain
@@ -156,7 +157,7 @@ class GraphFormulaMatcher():
                 for p in patt:
                     matcher = DiGraphMatcher(
                         graph, p, node_match=GraphFormulaMatcher.node_matcher, edge_match=GraphFormulaMatcher.edge_matcher)
-                    
+
                     monomorphic_subgraphs = list(matcher.subgraph_monomorphisms_iter())
                     if not len(monomorphic_subgraphs) == 0:
                         mapping = monomorphic_subgraphs[0]
@@ -170,9 +171,9 @@ class GraphFormulaMatcher():
                 if pos_match:
                     if return_subgraphs:
                         yield key, i, subgraphs
-                    else:    
+                    else:
                         yield key, i
-                    
+
 
 def gen_subgraphs(M, no_edges):
     """M must be dict of dicts, see networkx.convert.to_dict_of_dicts.
@@ -266,11 +267,18 @@ def graph_to_pn(graph):
 
         G = pn.Graph(pn_nodes + pn_edges)
 
+    try:
+    # two spaces before edge name, because alto does it :)
+        return pn.encode(G, indent=0).replace('\n', '  ')
+    except pn.exceptions.LayoutError as e:
+        words = [graph.nodes[node]['name'] for node in graph.nodes()]
+        logging.error(f'pn.encode failed on this graph: {words}')
+        raise e
         # two spaces before edge name, because alto does it :)
         pn_repr = "\n".join([pn_repr, ":sentence " + pn.encode(G, indent=0).replace('\n', '  ')])
     return pn_repr + ")"
 
-
+  
 def read_alto_output(raw_dl):
     id_to_word = {}
 

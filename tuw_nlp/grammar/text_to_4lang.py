@@ -21,10 +21,10 @@ class TextTo4lang:
             nlp = CustomStanzaPipeline(
                 processors='tokenize,mwt,pos,lemma,depparse')
         elif lang == 'en':
-            nlp = stanza.Pipeline(
+            nlp = CustomStanzaPipeline(
                 'en', processors='tokenize,mwt,pos,lemma,depparse')
         elif lang == 'en_bio':
-            nlp = stanza.Pipeline(
+            nlp = CustomStanzaPipeline(
                 'en', package="craft")
         assert lang, "TextTo4lang does not have lang set"
 
@@ -74,6 +74,8 @@ class TextTo4lang:
                             graph, d_node, definition, substitute, strategy)
                         if expand_set:
                             expand_set |= set(definition_nodes)
+                    else:
+                        print('no definition for ' + node)
 
         self.expand(graph, depth-1, substitute=substitute,
                     expand_set=expand_set, strategy=strategy)
@@ -88,8 +90,8 @@ class TextTo4lang:
         return relabeled_graph, self.graph_lexical.vocab.get_id(
             graph.nodes[root]["name"])
 
-    def __call__(self, text, depth=0, substitute=False, expand_set=set(), strategy="None"):
-        for sen in self.nlp(text).sentences:
+    def __call__(self, text, depth=0, substitute=False, expand_set=set(), strategy="None", ssplit=True):
+        for sen in self.nlp(text, ssplit=ssplit).sentences:
             graph, root = self.parse(sen)
 
             fourlang = FourLang(graph, root, self.graph_lexical)

@@ -116,21 +116,57 @@ class GraphMatcher():
 
 
 class GraphFormulaMatcher():
+
     @staticmethod
-    def node_matcher(n1, n2):
+    def node_matcher_case_insensitive(n1, n2):
+        return GraphFormulaMatcher.node_matcher(n1, n2, re.IGNORECASE)
+
+    @staticmethod
+    def node_matcher_case_sensitive(n1, n2):
+        return GraphFormulaMatcher.node_matcher(n1, n2, 0)
+
+    @staticmethod
+    def node_matcher(n1, n2, flags):
         logger.debug(f'matchig these: {n1}, {n2}')
         if n1['name'] is None or n2['name'] is None:
             return True
 
-        return True if (re.match(fr"\b({n2['name']})\b", n1['name'], re.IGNORECASE) or n2['name'] == n1['name']) \
+        return True if (re.match(fr"\b({n2['name']})\b", n1['name'], flags) or n2['name'] == n1['name']) \
             else False
 
     @staticmethod
-    def edge_matcher(e1, e2):
-        logger.debug(f'matchig these: {e1}, {e2}')
-        return True if re.match(fr"\b({str(e2['color'])})\b", str(e1['color']), re.IGNORECASE) else False
+    def edge_matcher_case_insensitive(n1, n2):
+        return GraphFormulaMatcher.edge_matcher(n1, n2, re.IGNORECASE)
 
-    def __init__(self, patterns, converter):
+    @staticmethod
+    def edge_matcher_case_sensitive(n1, n2):
+        return GraphFormulaMatcher.edge_matcher(n1, n2, 0)
+
+    @staticmethod
+    def edge_matcher(e1, e2, flags):
+        logger.debug(f'matchig these: {e1}, {e2}')
+        return True if re.match(fr"\b({str(e2['color'])})\b", str(e1['color']), flags) else False
+
+    @staticmethod
+    def get_matcher(graph, neg_graph, case_sensitive):
+        if case_sensitive:
+            return DiGraphMatcher(
+                graph,
+                neg_graph,
+                node_match=GraphFormulaMatcher.node_matcher_case_sensitive,
+                edge_match=GraphFormulaMatcher.edge_matcher_case_sensitive
+            )
+        else:
+            return DiGraphMatcher(
+                graph,
+                neg_graph,
+                node_match=GraphFormulaMatcher.node_matcher_case_insensitive,
+                edge_match=GraphFormulaMatcher.edge_matcher_case_insensitive
+            )
+
+    def __init__(self, patterns, converter, case_sensitive=False):
+        self.case_sensitive = case_sensitive
+
         self.patts = []
 
         for patts, negs, key in patterns:
@@ -140,8 +176,7 @@ class GraphFormulaMatcher():
 
     def _neg_match(self, graph, negs):
         for neg_graph in negs:
-            matcher = DiGraphMatcher(
-                graph, neg_graph, node_match=GraphFormulaMatcher.node_matcher, edge_match=GraphFormulaMatcher.edge_matcher)
+            matcher = GraphFormulaMatcher.get_matcher(graph, neg_graph, self.case_sensitive)
             if matcher.subgraph_is_monomorphic():
                 return True
         return False
@@ -155,8 +190,8 @@ class GraphFormulaMatcher():
                 pos_match = True
                 subgraphs = []
                 for p in patt:
-                    matcher = DiGraphMatcher(
-                        graph, p, node_match=GraphFormulaMatcher.node_matcher, edge_match=GraphFormulaMatcher.edge_matcher)
+
+                    matcher = GraphFormulaMatcher.get_matcher(graph, p, self.case_sensitive)
 
                     monomorphic_subgraphs = list(matcher.subgraph_monomorphisms_iter())
                     if not len(monomorphic_subgraphs) == 0:

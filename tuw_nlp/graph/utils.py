@@ -116,21 +116,57 @@ class GraphMatcher():
 
 
 class GraphFormulaMatcher():
+
     @staticmethod
-    def node_matcher(n1, n2):
+    def node_matcher_case_insensitive(n1, n2):
+        return GraphFormulaMatcher.node_matcher(n1, n2, re.IGNORECASE)
+
+    @staticmethod
+    def node_matcher_case_sensitive(n1, n2):
+        return GraphFormulaMatcher.node_matcher(n1, n2, 0)
+
+    @staticmethod
+    def node_matcher(n1, n2, flags):
         logger.debug(f'matchig these: {n1}, {n2}')
         if n1['name'] is None or n2['name'] is None:
             return True
 
-        return True if (re.match(fr"\b({n2['name']})\b", n1['name'], re.IGNORECASE) or n2['name'] == n1['name']) \
+        return True if (re.match(fr"\b({n2['name']})\b", n1['name'], flags) or n2['name'] == n1['name']) \
             else False
 
     @staticmethod
-    def edge_matcher(e1, e2):
-        logger.debug(f'matchig these: {e1}, {e2}')
-        return True if re.match(fr"\b({str(e2['color'])})\b", str(e1['color']), re.IGNORECASE) else False
+    def edge_matcher_case_insensitive(n1, n2):
+        return GraphFormulaMatcher.edge_matcher(n1, n2, re.IGNORECASE)
 
-    def __init__(self, patterns, converter):
+    @staticmethod
+    def edge_matcher_case_sensitive(n1, n2):
+        return GraphFormulaMatcher.edge_matcher(n1, n2, 0)
+
+    @staticmethod
+    def edge_matcher(e1, e2, flags):
+        logger.debug(f'matchig these: {e1}, {e2}')
+        return True if re.match(fr"\b({str(e2['color'])})\b", str(e1['color']), flags) else False
+
+    @staticmethod
+    def get_matcher(graph, neg_graph, case_sensitive):
+        if case_sensitive:
+            return DiGraphMatcher(
+                graph,
+                neg_graph,
+                node_match=GraphFormulaMatcher.node_matcher_case_sensitive,
+                edge_match=GraphFormulaMatcher.edge_matcher_case_sensitive
+            )
+        else:
+            return DiGraphMatcher(
+                graph,
+                neg_graph,
+                node_match=GraphFormulaMatcher.node_matcher_case_insensitive,
+                edge_match=GraphFormulaMatcher.edge_matcher_case_insensitive
+            )
+
+    def __init__(self, patterns, converter, case_sensitive=False):
+        self.case_sensitive = case_sensitive
+
         self.patts = []
 
         for patts, negs, key in patterns:
@@ -140,8 +176,7 @@ class GraphFormulaMatcher():
 
     def _neg_match(self, graph, negs):
         for neg_graph in negs:
-            matcher = DiGraphMatcher(
-                graph, neg_graph, node_match=GraphFormulaMatcher.node_matcher, edge_match=GraphFormulaMatcher.edge_matcher)
+            matcher = GraphFormulaMatcher.get_matcher(graph, neg_graph, self.case_sensitive)
             if matcher.subgraph_is_monomorphic():
                 return True
         return False
@@ -155,8 +190,8 @@ class GraphFormulaMatcher():
                 pos_match = True
                 subgraphs = []
                 for p in patt:
-                    matcher = DiGraphMatcher(
-                        graph, p, node_match=GraphFormulaMatcher.node_matcher, edge_match=GraphFormulaMatcher.edge_matcher)
+
+                    matcher = GraphFormulaMatcher.get_matcher(graph, p, self.case_sensitive)
 
                     monomorphic_subgraphs = list(matcher.subgraph_monomorphisms_iter())
                     if not len(monomorphic_subgraphs) == 0:
@@ -242,30 +277,27 @@ def pn_to_graph(raw_dl, edge_attr='color'):
 
 
 def graph_to_pn(graph):
-    sub_graphs = [nx.subgraph(graph, sub) for sub in nx.weakly_connected_components(graph)]
-    pn_repr = "(u_000 / sentences "
-    for sub_graph in sub_graphs:
-        nodes = {}
-        pn_edges, pn_nodes = [], []
+    nodes = {}
+    pn_edges, pn_nodes = [], []
 
-        for u, v, e in sub_graph.edges(data=True):
-            for node in u, v:
-                if node not in nodes:
-                    name = Graph.d_clean(str(sub_graph.nodes[node]['name']))
-                    pn_id = f'u_{node}'
-                    nodes[node] = (pn_id, name)
-                    pn_nodes.append((pn_id, ':instance', name))
-
-            pn_edges.append((nodes[u][0], f':{e["color"]}', nodes[v][0]))
-
-        for node in sub_graph.nodes():
+    for u, v, e in graph.edges(data=True):
+        for node in u, v:
             if node not in nodes:
-                name = Graph.d_clean(str(sub_graph.nodes[node]['name']))
+                name = graph.nodes[node]['name']
                 pn_id = f'u_{node}'
                 nodes[node] = (pn_id, name)
                 pn_nodes.append((pn_id, ':instance', name))
 
-        G = pn.Graph(pn_nodes + pn_edges)
+        pn_edges.append((nodes[u][0], f':{e["color"]}', nodes[v][0]))
+
+    for node in graph.nodes():
+        if node not in nodes:
+            name = graph.nodes[node]['name']
+            pn_id = f'u_{node}'
+            nodes[node] = (pn_id, name)
+            pn_nodes.append((pn_id, ':instance', name))
+
+    G = pn.Graph(pn_nodes + pn_edges)
 
     try:
     # two spaces before edge name, because alto does it :)
@@ -274,11 +306,7 @@ def graph_to_pn(graph):
         words = [graph.nodes[node]['name'] for node in graph.nodes()]
         logging.error(f'pn.encode failed on this graph: {words}')
         raise e
-        # two spaces before edge name, because alto does it :)
-        pn_repr = "\n".join([pn_repr, ":sentence " + pn.encode(G, indent=0).replace('\n', '  ')])
-    return pn_repr + ")"
 
-  
 def read_alto_output(raw_dl):
     id_to_word = {}
 

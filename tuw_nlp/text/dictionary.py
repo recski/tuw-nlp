@@ -5,7 +5,7 @@ from nltk.corpus import stopwords as nltk_stopwords
 from tuw_nlp.graph.utils import preprocess_node_alto
 
 
-class Dictionary():
+class Dictionary:
     def __init__(self, lang):
         self.lexicon = defaultdict(list)
         self.lang_map = {}
@@ -14,14 +14,17 @@ class Dictionary():
 
         self.lang = lang
 
-        definitions_base_fn = os.path.join(os.path.expanduser(
-            "~/tuw_nlp_resources"), "definitions", lang.split("_")[0])
+        definitions_base_fn = os.path.join(
+            os.path.expanduser("~/tuw_nlp_resources"), "definitions", lang.split("_")[0]
+        )
 
         definitions_fn = None
         if os.path.isfile(definitions_base_fn):
             definitions_fn = definitions_base_fn
 
-        assert definitions_fn, 'Definition dictionaries are not downloaded, for setup please use tuw_nlp.download_definitions(), otherwise you will not be able to use expand functionalities'
+        assert (
+            definitions_fn
+        ), "Definition dictionaries are not downloaded, for setup please use tuw_nlp.download_definitions(), otherwise you will not be able to use expand functionalities"
 
         with open(langnames_fn, "r", encoding="utf8") as f:
             for line in f:
@@ -45,36 +48,39 @@ class Dictionary():
                         for def_split in def_splitted:
                             if def_split not in self.lexicon[word]:
                                 self.lexicon[word].append(def_split)
-                                self.lexicon[preprocess_node_alto(word)].append(def_split) 
+                                self.lexicon[preprocess_node_alto(word)].append(
+                                    def_split
+                                )
 
     def parse_definition(self, defi):
-        defi = re.sub(re.escape("#"), " ",  defi).strip()
+        defi = re.sub(re.escape("#"), " ", defi).strip()
 
-        defi = re.sub(r"^A type of", "",  defi)
-        defi = re.sub(r"^Something that", "",  defi)
-        defi = re.sub(r"^Relating to", "",  defi)
-        defi = re.sub(r"^Someone who", "",  defi)
-        defi = re.sub(r"^Of or", "",  defi)
-        defi = re.sub(r"^Any of", "",  defi)
-        defi = re.sub(r"^The act of", "",  defi)
-        defi = re.sub(r"^A group of", "",  defi)
-        defi = re.sub(r"^The part of", "",  defi)
-        defi = re.sub(r"^One of the", "",  defi)
-        defi = re.sub(r"^Used to", "",  defi)
-        defi = re.sub(r"^An attempt to", "",  defi)
+        defi = re.sub(r"^A type of", "", defi)
+        defi = re.sub(r"^Something that", "", defi)
+        defi = re.sub(r"^Relating to", "", defi)
+        defi = re.sub(r"^Someone who", "", defi)
+        defi = re.sub(r"^Of or", "", defi)
+        defi = re.sub(r"^Any of", "", defi)
+        defi = re.sub(r"^The act of", "", defi)
+        defi = re.sub(r"^A group of", "", defi)
+        defi = re.sub(r"^The part of", "", defi)
+        defi = re.sub(r"^One of the", "", defi)
+        defi = re.sub(r"^Used to", "", defi)
+        defi = re.sub(r"^An attempt to", "", defi)
 
-        defi = re.sub(r"^intransitive", "",  defi)
-        defi = re.sub(r"^ditransitive", "",  defi)
-        defi = re.sub(r"^ambitransitive", "",  defi)
-        defi = re.sub(r"^transitive", "",  defi)
-        defi = re.sub(r"^uncountable", "",  defi)
-        defi = re.sub(r"^countable", "",  defi)
-        defi = re.sub(r"^pulative ", "",  defi)
-        defi = re.sub(r"^\. ", "",  defi)
+        defi = re.sub(r"^intransitive", "", defi)
+        defi = re.sub(r"^ditransitive", "", defi)
+        defi = re.sub(r"^ambitransitive", "", defi)
+        defi = re.sub(r"^transitive", "", defi)
+        defi = re.sub(r"^uncountable", "", defi)
+        defi = re.sub(r"^countable", "", defi)
+        defi = re.sub(r"^pulative ", "", defi)
+        defi = re.sub(r"^\. ", "", defi)
         defi_words = defi.split(" ")
-        first_words = defi_words[0].split(',')
-        if len(first_words) > 1 and re.sub("\'s", "", first_words[0].lower()) == \
-                re.sub("\'s", "", first_words[1].lower()):
+        first_words = defi_words[0].split(",")
+        if len(first_words) > 1 and re.sub("'s", "", first_words[0].lower()) == re.sub(
+            "'s", "", first_words[1].lower()
+        ):
             defi = " ".join([first_words[1]] + defi_words[1:])
         return defi
 

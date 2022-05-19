@@ -6,24 +6,26 @@ TWITTER_HASHTAG_PATT = re.compile(r"#(\S+)")
 # based on https://stackoverflow.com/a/49986645
 EMOJI_PATT = re.compile(
     pattern="["
-    u"\U00002600-\U000026FF"  # misc symbols
-    u"\U00002700-\U000027BF"  # dingbats
-    u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
-    u"\U0001F300-\U0001F5FF"  # symbols & pictographs
-    u"\U0001F600-\U0001F64F"  # emoticons
-    u"\U0001F680-\U0001F6FF"  # transport & map symbols
-    u"\U0001F900-\U0001F9FF"  # Supplemental Symbols and Pictographs
-    "]+", flags=re.UNICODE)
+    "\U00002600-\U000026FF"  # misc symbols
+    "\U00002700-\U000027BF"  # dingbats
+    "\U0001F1E0-\U0001F1FF"  # flags (iOS)
+    "\U0001F300-\U0001F5FF"  # symbols & pictographs
+    "\U0001F600-\U0001F64F"  # emoticons
+    "\U0001F680-\U0001F6FF"  # transport & map symbols
+    "\U0001F900-\U0001F9FF"  # Supplemental Symbols and Pictographs
+    "]+",
+    flags=re.UNICODE,
+)
 
-CHAR_PATT = re.compile(r'start_char=([0-9]*)\|end_char=([0-9]*)')
+CHAR_PATT = re.compile(r"start_char=([0-9]*)\|end_char=([0-9]*)")
 
 CHAR_REPLACEMENTS = {
-    "ö": 'oe',
-    "Ö": 'Oe',
-    "ü": 'ue',
-    "Ü": 'Ue',
-    "ä": 'ae',
-    "Ä": 'Ae',
+    "ö": "oe",
+    "Ö": "Oe",
+    "ü": "ue",
+    "Ü": "Ue",
+    "ä": "ae",
+    "Ä": "Ae",
     "ß": "ss",
     "ō": "oe",  # encountered in plandok (OCR err?)
     "ó": "o1",
@@ -33,7 +35,7 @@ CHAR_REPLACEMENTS = {
     "á": "a1",
     "ï": "i2",
     "Ã": "A",
-    "Â²": "A2"
+    "Â²": "A2",
 }
 
 PUNCT_REPLACEMENTS = {
@@ -72,25 +74,25 @@ PUNCT_REPLACEMENTS = {
     "‚": "QUOTE",
     "„": "QUOTE",
     "“": "QUOTE",
-    '”': "QUOTE",
+    "”": "QUOTE",
     "'": "QUOTE",
     '"': "QUOTE",
-    '‘': "QUOTE",
-    '`': "QUOTE",
-    '´': "QUOTE",
-    'ˋ': "QUOTE",
-    '«': "QUOTE",
-    '»': "QUOTE",
-    '²': "SQUARE",
-    '³': "CUBE",
+    "‘": "QUOTE",
+    "`": "QUOTE",
+    "´": "QUOTE",
+    "ˋ": "QUOTE",
+    "«": "QUOTE",
+    "»": "QUOTE",
+    "²": "SQUARE",
+    "³": "CUBE",
     "@": "ATSYMBOL",
     "&": "AMPERSAND",
     "#": "HASHTAG",
     "~": "TILDE",
     "*": "ASTERISK",
     "∞": "INFINITY",
-    "=": "EQUALS"
-    }
+    "=": "EQUALS",
+}
 
 MISC_REPLACEMENTS = {
     "m²": "m2",
@@ -181,5 +183,5 @@ MISC_REPLACEMENTS = {
     "\u0282": "INVALID",
     "\u016f": "INVALID",
     "\u0b9c": "INVALID",
-    "\u2022": "INVALID"
-    }
+    "\u2022": "INVALID",
+}

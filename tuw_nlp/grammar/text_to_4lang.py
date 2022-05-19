@@ -17,15 +17,14 @@ from tuw_nlp.text.preprocessor import Preprocessor
 
 class TextTo4lang:
     def __init__(self, lang, nlp_cache, cache_dir=None):
-        if lang == 'de':
+        if lang == "de":
+            nlp = CustomStanzaPipeline(processors="tokenize,mwt,pos,lemma,depparse")
+        elif lang == "en":
             nlp = CustomStanzaPipeline(
-                processors='tokenize,mwt,pos,lemma,depparse')
-        elif lang == 'en':
-            nlp = CustomStanzaPipeline(
-                'en', processors='tokenize,mwt,pos,lemma,depparse')
-        elif lang == 'en_bio':
-            nlp = CustomStanzaPipeline(
-                'en', package="craft")
+                "en", processors="tokenize,mwt,pos,lemma,depparse"
+            )
+        elif lang == "en_bio":
+            nlp = CustomStanzaPipeline("en", package="craft")
         assert lang, "TextTo4lang does not have lang set"
 
         self.lang = lang
@@ -44,59 +43,81 @@ class TextTo4lang:
         fourlang_graph = FourLang(def_graph, root, self.graph_lexical)
         if len(def_graph.nodes()) > 0:
             if strategy == "None":
-                graph.merge_definition_graph(
-                    fourlang_graph, node, substitute)
+                graph.merge_definition_graph(fourlang_graph, node, substitute)
             elif strategy == "whitelisting":
                 fourlang_graph.whitelisting()
-                graph.merge_definition_graph(
-                    fourlang_graph, node, substitute)
+                graph.merge_definition_graph(fourlang_graph, node, substitute)
 
         return [node[1]["name"] for node in fourlang_graph.G.nodes(data=True)]
 
-    def expand(self, graph, depth=1, substitute=False, expand_set=set(), strategy="None"):
+    def expand(
+        self, graph, depth=1, substitute=False, expand_set=set(), strategy="None"
+    ):
         if depth == 0:
             return
 
         if not expand_set:
             nodes = [node for node in graph.G.nodes(data=True)]
         else:
-            nodes = [node for node in graph.G.nodes(
-                data=True) if node[1]["name"] in expand_set]
+            nodes = [
+                node
+                for node in graph.G.nodes(data=True)
+                if node[1]["name"] in expand_set
+            ]
         for d_node, node_data in nodes:
-            if all(
-                    elem not in node_data
-                    for elem in ["expanded", "substituted"]):
-                node = graph.d_clean(node_data["name"]).split('_')[0]
-                if(node not in self.lexicon.stopwords or d_node == graph.root):
+            if all(elem not in node_data for elem in ["expanded", "substituted"]):
+                node = graph.d_clean(node_data["name"]).split("_")[0]
+                if node not in self.lexicon.stopwords or d_node == graph.root:
                     definition = self.lexicon.get_definition(node)
                     if definition:
                         definition_nodes = self.add_definition(
-                            graph, d_node, definition, substitute, strategy)
+                            graph, d_node, definition, substitute, strategy
+                        )
                         if expand_set:
                             expand_set |= set(definition_nodes)
                     else:
-                        print('no definition for ' + node)
+                        print("no definition for " + node)
 
-        self.expand(graph, depth-1, substitute=substitute,
-                    expand_set=expand_set, strategy=strategy)
+        self.expand(
+            graph,
+            depth - 1,
+            substitute=substitute,
+            expand_set=expand_set,
+            strategy=strategy,
+        )
 
     def parse(self, sen):
-        fl = self.ud_fl.parse(sen, 'ud', "fl", 'amr-sgraph-src')
+        fl = self.ud_fl.parse(sen, "ud", "fl", "amr-sgraph-src")
 
         graph, root = pn_to_graph(fl)
 
         relabeled_graph = self.graph_lexical.from_plain(graph)
 
         return relabeled_graph, self.graph_lexical.vocab.get_id(
-            graph.nodes[root]["name"])
+            graph.nodes[root]["name"]
+        )
 
-    def __call__(self, text, depth=0, substitute=False, expand_set=set(), strategy="None", ssplit=True):
+    def __call__(
+        self,
+        text,
+        depth=0,
+        substitute=False,
+        expand_set=set(),
+        strategy="None",
+        ssplit=True,
+    ):
         for sen in self.nlp(text, ssplit=ssplit).sentences:
             graph, root = self.parse(sen)
 
             fourlang = FourLang(graph, root, self.graph_lexical)
 
-            self.expand(fourlang, depth=depth, substitute=substitute, expand_set=expand_set, strategy=strategy)
+            self.expand(
+                fourlang,
+                depth=depth,
+                substitute=substitute,
+                expand_set=expand_set,
+                strategy=strategy,
+            )
             yield fourlang.G
 
     def __enter__(self):
@@ -120,8 +141,9 @@ def get_args():
 
 def main():
     logging.basicConfig(
-        format="%(asctime)s : " +
-        "%(module)s (%(lineno)s) - %(levelname)s - %(message)s")
+        format="%(asctime)s : "
+        + "%(module)s (%(lineno)s) - %(levelname)s - %(message)s"
+    )
     logging.getLogger().setLevel(logging.WARNING)
     args = get_args()
     preproc = Preprocessor(args.preprocessor)
@@ -131,8 +153,8 @@ def main():
                 fl_graphs = list(tfl(preproc(line.strip())))
             except (TypeError, IndexError, KeyError):
                 traceback.print_exc()
-                sys.stderr.write(f'error on line {i}: {line}')
-                print('ERROR')
+                sys.stderr.write(f"error on line {i}: {line}")
+                print("ERROR")
                 continue
                 # sys.exit(-1)
 

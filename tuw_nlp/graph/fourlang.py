@@ -24,10 +24,10 @@ class FourLang(Graph):
                 F = nx.relabel_nodes(F, {node: graph_root})
                 if node == self.root:
                     self.root = graph_root
-                F.nodes[graph_root]['substituted'] = True
+                F.nodes[graph_root]["substituted"] = True
             else:
                 F.add_edge(node, graph_root, color=0)
-                F.nodes[node]['expanded'] = True
+                F.nodes[node]["expanded"] = True
             self.G = F
 
     def append_zero_paths(self):
@@ -35,7 +35,7 @@ class FourLang(Graph):
         for edge in self.G.edges(data=True):
             X = edge[0]
             Y = edge[1]
-            color = edge[2]['color']
+            color = edge[2]["color"]
 
             zero_graph, nodes_to_append = self.find_zero_paths(Y)
 
@@ -65,11 +65,9 @@ class FourLang(Graph):
         for edge in self.G.edges(data=True):
             if not edge[2]["color"]:
                 if edge[0] not in zero_graph.nodes():
-                    zero_graph.add_node(
-                        edge[0], name=self.G.nodes[edge[0]]["name"])
+                    zero_graph.add_node(edge[0], name=self.G.nodes[edge[0]]["name"])
                 if edge[1] not in zero_graph.nodes():
-                    zero_graph.add_node(
-                        edge[1], name=self.G.nodes[edge[1]]["name"])
+                    zero_graph.add_node(edge[1], name=self.G.nodes[edge[1]]["name"])
                 zero_graph.add_edge(edge[0], edge[1], color=0)
 
         for node in zero_graph.nodes(data=True):

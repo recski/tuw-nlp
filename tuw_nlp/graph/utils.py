@@ -1,7 +1,7 @@
 import logging
 import re
 from copy import deepcopy
-from itertools import chain
+from itertools import chain, product
 
 import networkx as nx
 import penman as pn
@@ -208,6 +208,164 @@ class GraphFormulaMatcher():
                         yield key, i, subgraphs
                     else:
                         yield key, i
+
+
+class GraphFormulaPatternMatcher(GraphFormulaMatcher):
+
+    """
+    Rule examples:
+        1.) 3((u_800 / motion),(u_120 / swift))
+        2.) path((u_120 / person),(u_800 / funny))
+        3.) undirected((u_800 / terrible),(u_120 / friend))
+
+        A rule like 1.) should be used, if the two subgraphs should be close to each other
+        (generally in the same part of the sentence), but there might be some nodes along the way,
+        like in the case of conjunctions.
+
+        Rule 2.) is a more relaxed version of this, we want the second node to be connected to the first one.
+
+        The rule 3.) is the least restrictive, but it could be useful if the graph in question would be disconnected,
+        and we want the two subgraphs in the rule to be connected in some way.
+
+        Note, that all of these rules require that the both of the subgraphs given is present in the main graph.
+
+    Usage if we want to find the subgraphs that matched:
+        gfpm = GraphFromulaPatternMatcher(pattern_list, pn_to_graph_converter, case_sensitive=False)
+        feat_generator = gfpm.match(G, return_subgraphs=True)
+        matches = []
+        for key, feature, sub_graph in feat_generator:
+            matches.append(sub_graph)
+    """
+
+    def __init__(self, patterns, converter, case_sensitive=False):
+        self.case_sensitive = case_sensitive
+        self.reg_patterns = {re.compile(r"^(\d+)\((.*),(.*)\)"): self.max_distance,
+                             re.compile(r"^path\((.*),(.*)\)"): self.path_between,
+                             re.compile(r"^undirected\((.*),(.*)\)"): self.undirected}
+        self.patts = []
+
+        for patts, negs, key in patterns:
+            pos_patts = self.patt_list(patts, converter)
+            neg_graphs = self.patt_list(negs, converter)
+            self.patts.append((pos_patts, neg_graphs, key))
+
+    def patt_list(self, patts, converter):
+        patt_list = []
+        for patt in patts:
+            is_reg = False
+            for p, func in self.reg_patterns.items():
+                match = p.match(patt)
+                if match is not None:
+                    is_reg = True
+                    groups = match.groups()
+                    proc_groups = []
+                    if len(groups) > 2:
+                        proc_groups.append(int(groups[0]))
+                        proc_groups.append(converter(groups[1])[0])
+                        proc_groups.append(converter(groups[2])[0])
+                    else:
+                        proc_groups.append(converter(groups[0])[0])
+                        proc_groups.append(converter(groups[1])[0])
+                    patt_list.append((func, proc_groups))
+                    break
+            if not is_reg:
+                patt_list.append(converter(patt)[0])
+        return patt_list
+
+    def max_distance(self, graph, node_data, subgraphs):
+        max_dist, node1, node2 = node_data[0], node_data[1], node_data[2]
+        node1_matches = []
+        possible = self.digraph_matcher(graph, node1, node1_matches)
+        if not possible:
+            return False
+        node2_matches = []
+        possible = self.digraph_matcher(graph, node2, node2_matches)
+        if not possible:
+            return False
+        for n1, n2 in product(node1_matches, node2_matches):
+            n1_root = [n for n, d in n1.in_degree() if d == 0][0]
+            n2_root = [n for n, d in n2.in_degree() if d == 0][0]
+            try:
+                if nx.shortest_path_length(graph, n1_root, n2_root) <= max_dist:
+                    subgraphs.append(nx.compose(n1, n2))
+                    return True
+            except:
+                continue
+        return False
+
+    def path_between(self, graph, nodes, subgraphs):
+        node1_matches = []
+        possible = self.digraph_matcher(graph, nodes[0], node1_matches)
+        if not possible:
+            return False
+        node2_matches = []
+        possible = self.digraph_matcher(graph, nodes[1], node2_matches)
+        if not possible:
+            return False
+        for n1, n2 in product(node1_matches, node2_matches):
+            n1_root = [n for n, d in n1.in_degree() if d == 0][0]
+            n2_root = [n for n, d in n2.in_degree() if d == 0][0]
+            try:
+                if nx.has_path(graph, n1_root, n2_root):
+                    subgraphs.append(nx.compose(n1, n2))
+                    return True
+            except:
+                continue
+        return False
+
+    def undirected(self, graph, nodes, subgraphs):
+        undirected_graph = graph.to_undirected().to_directed()
+        return self.path_between(undirected_graph, nodes, subgraphs)
+
+    def digraph_matcher(self, graph, pattern, subgraphs):
+        matcher = GraphFormulaMatcher.get_matcher(graph, pattern, self.case_sensitive)
+
+        monomorphic_subgraphs = list(matcher.subgraph_monomorphisms_iter())
+        if not len(monomorphic_subgraphs) == 0:
+            for sub in monomorphic_subgraphs:
+                mapping = sub
+                subgraph = graph.subgraph(mapping.keys())
+                nx.set_node_attributes(subgraph, mapping, name="mapping")
+                subgraphs.append(subgraph)
+            return True
+        return False
+
+    def _neg_match(self, graph, negs):
+        for neg_graph in negs:
+            if isinstance(neg_graph, tuple):
+                if neg_graph[0](graph, neg_graph[1]):
+                    return True
+            else:
+                matcher = DiGraphMatcher(
+                    graph, neg_graph, node_match=GraphFormulaMatcher.node_matcher,
+                    edge_match=GraphFormulaMatcher.edge_matcher)
+                if matcher.subgraph_is_monomorphic():
+                    return True
+        return False
+
+    def match(self, graph, return_subgraphs=False):
+        for i, (patt, negs, key) in enumerate(self.patts):
+            logger.debug(f'matching this: {self.patts[i]}')
+            neg_match = self._neg_match(graph, negs)
+
+            if not neg_match:
+                subgraphs = []
+                for p in patt:
+                    if isinstance(p, tuple):
+                        if p[0](graph, p[1], subgraphs):
+                            if return_subgraphs:
+                                yield key, i, subgraphs
+                            else:
+                                yield key, i
+                    else:
+                        pos_match = self.digraph_matcher(graph, p, subgraphs)
+                        if pos_match:
+                            if return_subgraphs:
+                                yield key, i, subgraphs
+                            else:
+                                yield key, i
+                        else:
+                            break
 
 
 def gen_subgraphs(M, no_edges):

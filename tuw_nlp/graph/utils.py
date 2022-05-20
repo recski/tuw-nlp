@@ -490,8 +490,8 @@ def graph_to_pn(graph):
     for u, v, e in graph.edges(data=True):
         for node in u, v:
             if node not in nodes:
-                name = graph.nodes[node]['name']
-                pn_id = f'u_{node}'
+                name = graph.nodes[node]["name"]
+                pn_id = f"u_{node}"
                 nodes[node] = (pn_id, name)
                 pn_nodes.append((pn_id, ":instance", name))
 
@@ -499,19 +499,19 @@ def graph_to_pn(graph):
 
     for node in graph.nodes():
         if node not in nodes:
-            name = graph.nodes[node]['name']
-            pn_id = f'u_{node}'
+            name = graph.nodes[node]["name"]
+            pn_id = f"u_{node}"
             nodes[node] = (pn_id, name)
-            pn_nodes.append((pn_id, ':instance', name))
+            pn_nodes.append((pn_id, ":instance", name))
 
     G = pn.Graph(pn_nodes + pn_edges)
 
     try:
-    # two spaces before edge name, because alto does it :)
-        return pn.encode(G, indent=0).replace('\n', '  ')
+        # two spaces before edge name, because alto does it :)
+        return pn.encode(G, indent=0).replace("\n", "  ")
     except pn.exceptions.LayoutError as e:
-        words = [graph.nodes[node]['name'] for node in graph.nodes()]
-        logging.error(f'pn.encode failed on this graph: {words}')
+        words = [graph.nodes[node]["name"] for node in graph.nodes()]
+        logging.error(f"pn.encode failed on this graph: {words}")
         raise e
 
 

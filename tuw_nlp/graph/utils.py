@@ -399,22 +399,22 @@ class GraphFormulaPatternMatcher(GraphFormulaMatcher):
 
             if not neg_match:
                 subgraphs = []
+                pos_match = True
                 for p in patt:
                     if isinstance(p, tuple):
-                        if p[0](graph, p[1], subgraphs):
-                            if return_subgraphs:
-                                yield key, i, subgraphs
-                            else:
-                                yield key, i
-                    else:
-                        pos_match = self.digraph_matcher(graph, p, subgraphs)
-                        if pos_match:
-                            if return_subgraphs:
-                                yield key, i, subgraphs
-                            else:
-                                yield key, i
-                        else:
+                        if not p[0](graph, p[1], subgraphs):
+                            pos_match = False
                             break
+                    else:
+                        if not self.digraph_matcher(graph, p, subgraphs):
+                            pos_match = False
+                            break
+
+                if pos_match:
+                    if return_subgraphs:
+                        yield key, i, subgraphs
+                    else:
+                        yield key, i
 
 
 def gen_subgraphs(M, no_edges):

@@ -1,6 +1,8 @@
 import sys
 from collections import Counter, defaultdict
 
+from tabulate import tabulate
+
 
 def avg(seq):
     if len(seq) == 0:
@@ -9,17 +11,21 @@ def avg(seq):
 
 
 def print_cat_stats(
-    cat_stats, max_n=None, out_stream=sys.stdout, print_avgs=False, linesep="\n"
+    cat_stats,
+    max_n=None,
+    out_stream=sys.stdout,
+    print_avgs=False,
+    tablefmt="github",
+    floatfmt=".2%",
+    linesep="\n",  # for backward compatibility, not used
 ):
-    lines = []
+    table = []
     cat_stats = count_p_r_f(cat_stats)
-    cats_sorted = sorted(cat_stats.keys(), key=lambda k: -sum(cat_stats[k].values()))
+    cats_sorted = sorted(cat_stats.keys(), key=lambda k: -cat_stats[k]["gold"])
 
     for cat in cats_sorted:
         s = cat_stats[cat]
-        lines.append(
-            f"{cat:<50}\t{s['gold']:>4}\t{s['pred']:>4}\t{s['P']:>6.2%}\t{s['R']:>6.2%}\t{s['F']:>6.2%}"
-        )  # noqa
+        table.append([cat, s["gold"], s["pred"], s["P"], s["R"], s["F"]])
 
     if print_avgs:
         d = {
@@ -28,11 +34,17 @@ def print_cat_stats(
         }
 
         cat = "macro_avg"
-        lines.append(
-            f"{cat:<50}\t{d['gold']:>4}\t{d['pred']:>4}\t{d['P']:>6.2%}\t{d['R']:>6.2%}\t{d['F']:>6.2%}"
-        )  # noqa
+        table.append([cat, d["gold"], d["pred"], d["P"], d["R"], d["F"]])
 
-    out_stream.write(linesep.join(lines) + linesep)
+    out_stream.write(
+        tabulate(
+            table,
+            headers=["label", "gold", "predicted", "precision", "recall", "F1"],
+            tablefmt=tablefmt,
+            floatfmt=floatfmt,
+        )
+    )
+    out_stream.write("\n")
 
 
 def count_p_r_f(cat_stats):

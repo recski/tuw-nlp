@@ -382,11 +382,8 @@ class GraphFormulaPatternMatcher(GraphFormulaMatcher):
                 if neg_graph[0](graph, neg_graph[1]):
                     return True
             else:
-                matcher = DiGraphMatcher(
-                    graph,
-                    neg_graph,
-                    node_match=GraphFormulaMatcher.node_matcher,
-                    edge_match=GraphFormulaMatcher.edge_matcher,
+                matcher = GraphFormulaMatcher.get_matcher(
+                    graph, neg_graph, case_sensitive=self.case_sensitive
                 )
                 if matcher.subgraph_is_monomorphic():
                     return True

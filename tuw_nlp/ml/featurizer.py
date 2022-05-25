@@ -10,8 +10,8 @@ from tuw_nlp.text.pipeline import CachedStanzaPipeline
 from tuw_nlp.text.preprocessor import Preprocessor
 
 
-class Featurizer():
-    def __init__(self, cache_dir='cache', lang=None, preprocessor=None):
+class Featurizer:
+    def __init__(self, cache_dir="cache", lang=None, preprocessor=None):
         self.feat_names = {}
         self.cache_dir = cache_dir
         self.lang = lang
@@ -29,7 +29,7 @@ class TFLFeaturizer(Featurizer):
         super(TFLFeaturizer, self).__init__(*args, **kwargs)
 
         self.lexgraphs = LexGraphs()
-        self.nlp_cache = os.path.join(self.cache_dir, 'nlp_cache.json')
+        self.nlp_cache = os.path.join(self.cache_dir, "nlp_cache.json")
 
     def get_features(self, fl, tfl):
         features = set()
@@ -40,8 +40,8 @@ class TFLFeaturizer(Featurizer):
 
     def gen_events(self, iterable):
         with TextTo4lang(
-                lang=self.lang, nlp_cache=self.nlp_cache,
-                cache_dir=self.cache_dir) as tfl:
+            lang=self.lang, nlp_cache=self.nlp_cache, cache_dir=self.cache_dir
+        ) as tfl:
 
             for raw_text, label in iterable:
                 text = self.preproc(raw_text)
@@ -50,7 +50,7 @@ class TFLFeaturizer(Featurizer):
                     for fl in tfl(text):
                         features += self.get_features(fl, tfl)
                 except TypeError:
-                    logger.error(f'tfl error on this text: {text}')
+                    logger.error(f"tfl error on this text: {text}")
 
                 yield features, label
 
@@ -58,7 +58,7 @@ class TFLFeaturizer(Featurizer):
 class SimpleFeaturizer(Featurizer):
     def __init__(self, *args, **kwargs):
         super(SimpleFeaturizer, self).__init__(*args, **kwargs)
-        self.nlp_cache = os.path.join(self.cache_dir, 'nlp_cache.json')
+        self.nlp_cache = os.path.join(self.cache_dir, "nlp_cache.json")
         self.nlp_init = lambda: stanza.Pipeline(lang=self.lang)
 
     def get_features(self, raw_text, nlp):
@@ -68,26 +68,24 @@ class SimpleFeaturizer(Featurizer):
         for sen in doc.sentences:
             for tok in sen.words:
                 # feats.append(f'{tok.lemma}_{tok.xpos}')
-                if tok.upos not in ('NOUN', 'PROPN'):
+                if tok.upos not in ("NOUN", "PROPN"):
                     feats.add(tok.lemma)
                 # feats.add(tok.text)
 
         return list(feats)
 
     def gen_events(self, iterable):
-        with CachedStanzaPipeline(
-                None, self.nlp_cache, init=self.nlp_init) as nlp:
+        with CachedStanzaPipeline(None, self.nlp_cache, init=self.nlp_init) as nlp:
             for raw_text, label in iterable:
                 text = self.preproc(raw_text)
                 features = self.get_features(text, nlp)
                 yield features, label
 
 
-def get_featurizer(method, cache_dir='cache', lang=None, preprocessor=None):
-    if method == 'fl':
+def get_featurizer(method, cache_dir="cache", lang=None, preprocessor=None):
+    if method == "fl":
         featurizer_cls = TFLFeaturizer
-    elif method == 'simple':
+    elif method == "simple":
         featurizer_cls = SimpleFeaturizer
 
-    return featurizer_cls(
-        cache_dir=cache_dir, lang=lang, preprocessor=preprocessor)
+    return featurizer_cls(cache_dir=cache_dir, lang=lang, preprocessor=preprocessor)

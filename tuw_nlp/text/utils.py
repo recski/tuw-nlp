@@ -4,7 +4,10 @@ from stanza.models.common.doc import Document as StanzaDocument
 from stanza.utils.conll import CoNLL
 
 from tuw_nlp.text.patterns.misc import (
-    EMOJI_PATT, TWITTER_USERNAME_PATT, TWITTER_HASHTAG_PATT)
+    EMOJI_PATT,
+    TWITTER_USERNAME_PATT,
+    TWITTER_HASHTAG_PATT,
+)
 
 
 def gen_tsv_sens(stream, swaps=()):
@@ -17,7 +20,7 @@ def gen_tsv_sens(stream, swaps=()):
             yield curr_sen
             curr_sen = []
             continue
-        fields = line.split('\t')
+        fields = line.split("\t")
         for i, j in swaps:
             fields[i], fields[j] = fields[j], fields[i]
         curr_sen.append(fields)
@@ -35,11 +38,11 @@ def gen_conll_sens_from_file(fn, swaps=()):
 
 
 def print_conll_sen(sen, sent_id=None, swaps=()):
-    out = f'# sent_id = {sent_id}\n# text = {sen.text}\n'
+    out = f"# sent_id = {sent_id}\n# text = {sen.text}\n"
     for fields in CoNLL.convert_dict([sen.to_dict()])[0]:
         for i, j in swaps:
             fields[i], fields[j] = fields[j], fields[i]
-        out += "\t".join(fields) + '\n'
+        out += "\t".join(fields) + "\n"
     return out
 
 
@@ -54,16 +57,16 @@ def load_parsed(fn):
     with open(fn) as f:
         parsed = json.load(f)
         return {
-            text: StanzaDocument(parse, text=text)
-            for text, parse in parsed.items()}
+            text: StanzaDocument(parse, text=text) for text, parse in parsed.items()
+        }
 
 
 def save_parsed(parsed, fn):
-    with open(fn, 'w') as f:
+    with open(fn, "w") as f:
         json.dump({text: doc.to_dict() for text, doc in parsed.items()}, f)
 
 
-def replace_emojis(text, with_what='EMOJI'):
+def replace_emojis(text, with_what="EMOJI"):
     return EMOJI_PATT.sub(with_what, text)
 
 

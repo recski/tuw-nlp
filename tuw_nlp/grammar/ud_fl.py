@@ -27,8 +27,8 @@ class UD_FL(IRTGGrammar):
         self.input_graph = sen_to_graph(input_sen)
         return graph_to_isi(self.input_graph)
 
-    def gen_terminal_rules(self, lemma, pos, xpos):
-        fss = self.lexicon.get_terminal_rules(lemma, pos, xpos)
+    def gen_terminal_rules(self, lemma, pos, xpos, i):
+        fss = self.lexicon.get_terminal_rules(lemma, pos, xpos, i)
         xpos_print = "None" if xpos is None else preprocess_node_alto(xpos)
         for i, fs in enumerate(fss):
             yield (
@@ -43,7 +43,7 @@ class UD_FL(IRTGGrammar):
         pos = node["upos"]
         # xpos missing in a few rare cases, try 'US-Wirt.Minister:"Bürger, die'
         xpos = node.get("xpos")
-        yield from self.gen_terminal_rules(lemma, pos, xpos)
+        yield from self.gen_terminal_rules(lemma, pos, xpos, i)
         for j, edge in graph[i].items():
             cnode = graph.nodes[j]
             clemma = preprocess_node_alto(graph.nodes[j]["lemma"])

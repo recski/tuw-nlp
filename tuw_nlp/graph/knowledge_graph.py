@@ -5,7 +5,7 @@ import os
 import nltk
 import stanza
 from tuw_nlp.text.pipeline import CachedStanzaPipeline
-from tuw_nlp.graph.utils import Graph
+from tuw_nlp.graph.graph import Graph
 
 # Wordnet
 from nltk.corpus import wordnet as wn

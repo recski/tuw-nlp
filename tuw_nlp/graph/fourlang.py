@@ -1,10 +1,6 @@
-import re
-from collections import defaultdict
-
 import networkx as nx
 from networkx import algorithms
-from networkx.algorithms.shortest_paths.generic import shortest_path_length
-from tuw_nlp.graph.utils import Graph
+from tuw_nlp.graph.graph import Graph
 
 
 class FourLang(Graph):

@@ -1,6 +1,7 @@
 import networkx as nx
 import re
 
+
 class Graph:
     def __init__(self):
         self.G = nx.DiGraph()

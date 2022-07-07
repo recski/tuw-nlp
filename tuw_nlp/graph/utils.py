@@ -415,6 +415,54 @@ def graph_to_pn(graph):
         raise e
 
 
+def postprocess_penman(graph_string):
+    """The IRTG grammar returns labels with the corresponding UD ids.
+    This function removes the UD ids from the labels and replaces penman ids with them.
+    If UD id is not given, the penman ID remains.
+
+    Example input:
+    (u_1<root> / like_4  :2 (u_3 / eat_6  :2 (u_6 / sausage_7))  :1 (u_9 / dog_3  :2-of (u_12 / HAS  :1 (u_13 / Adam_1))))
+
+    Example output:
+    (k_4<root> / like :2 (k_6 / eat :2 (k_7 / sausage)) :1 (k_3 / dog :2-of (u_12 / HAS :1 (k_1 / Adam))))
+
+    Args:
+        graph_string (str): the input graph
+    """
+
+    g = pn.decode(graph_string)
+
+    instances = {}
+    relabel = {}
+
+    for i in g.instances():
+        if i[2] and "_" in i[2]:
+            ud_id = i[2].split("_")[-1]
+            label = "_".join(i[2].split("_")[:-1])
+            if ud_id.isnumeric():
+                new_id = f"k_{ud_id}"
+                if g.top == i[0]:
+                    new_id += "<root>"
+                instances[new_id] = label
+                relabel[i[0]] = new_id
+            else:
+                instances[i[0]] = i[2]
+        else:
+            instances[i[0]] = i[2]
+
+    edges = []
+
+    for edge in g.edges():
+        src = relabel[edge[0]] if edge[0] in relabel else edge[0]
+        tgt = relabel[edge[2]] if edge[2] in relabel else edge[2]
+
+        edges.append((src, edge[1], tgt))
+
+    nodes = [(k, ":instance", v) for k, v in instances.items()]
+
+    return pn.encode(pn.Graph(nodes + edges), indent=0).replace("\n", "  ")
+
+
 def read_alto_output(raw_dl):
     id_to_word = {}
 

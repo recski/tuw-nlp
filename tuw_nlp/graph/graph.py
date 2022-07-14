@@ -3,8 +3,21 @@ import re
 
 
 class Graph:
-    def __init__(self):
-        self.G = nx.DiGraph()
+    def __init__(self, graph=None, text=None, tokens=None):
+        if graph is None:
+            self.G = nx.DiGraph()
+        else:
+            self.G = graph.copy()
+
+        self.text = text
+
+        if tokens is None:
+            self.tokens = []
+        else:
+            self.tokens = tokens
+
+        self.G.graph["tokens"] = self.tokens
+        self.G.graph["text"] = self.text
 
     @staticmethod
     def d_clean(string):

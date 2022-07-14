@@ -109,7 +109,10 @@ class TextTo4lang:
         for sen in self.nlp(text, ssplit=ssplit).sentences:
             graph, root = self.parse(sen)
 
-            fourlang = FourLang(graph, root, self.graph_lexical)
+            tokens = [token.text for token in sen.tokens]
+            fourlang = FourLang(
+                graph, root, self.graph_lexical, ud_graph=sen, text=text, tokens=tokens
+            )
 
             self.expand(
                 fourlang,

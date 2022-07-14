@@ -348,37 +348,56 @@ def gen_subgraphs(M, no_edges):
 
 
 def pn_to_graph(raw_dl, edge_attr="color"):
+    """Convert penman to networkx format
+    raw_dl: raw string of penman format
+    example: (k_4<root> / like :2 (k_6 / eat :2 (k_7 / sausage)) :1 (k_3 / dog :2-of (u_12 / HAS :1 (k_1 / Adam))))
+    edges marked with k_* are mapped to UD nodes, u_* are unknown in UD
+    """
+
     g = pn.decode(raw_dl)
     G = nx.DiGraph()
+    node_to_id = {}
+    root_id = None
 
-    for i, trip in enumerate(g.triples):
+    for i, trip in enumerate(g.instances()):
+        node_id, name = trip[0], trip[2]
+
+        node_to_id[node_id] = i
+
         if i == 0:
-            root_id = int(trip[0].split("_")[1].split("<root>")[0])
-            name = trip[2].split("<root>")[0]
-            G.add_node(root_id, name=name)
+            root_id = i
 
-        if trip[1] == ":instance":
-            i, name = int(trip[0].split("<root>")[0].split("_")[1]), trip[2]
-            G.add_node(i, name=name)
+        indicator = trip[0].split("_")[0]
+        ud_id = trip[0].split("_")[1].split("<root>")[0]
+        if ud_id.isnumeric():
+            ud_id = int(ud_id)
+        else:
+            raise ValueError(f"{ud_id} is not a number")
 
-    for trip in g.triples:
-        if trip[1] != ":instance":
-            edge = trip[1].split(":")[1]
-            if "-" in edge:
-                assert edge.endswith("-of")
-                edge = edge.split("-")[0]
-                src = trip[2]
-                tgt = trip[0]
-            else:
-                src = trip[0]
-                tgt = trip[2]
+        if indicator == "k":
+            G.add_node(i, name=name, token_id=ud_id)
+        elif indicator == "u":
+            G.add_node(i, name=name, token_id=None)
+        else:
+            raise ValueError("Unknown indicator")
 
-            src_id = int(src.split("<root>")[0].split("_")[1])
-            tgt_id = int(tgt.split("<root>")[0].split("_")[1])
+    for trip in g.edges():
+        edge = trip[1].split(":")[1]
+        if "-" in edge:
+            assert edge.endswith("-of")
+            edge = edge.split("-")[0]
+            src = trip[2]
+            tgt = trip[0]
+        else:
+            src = trip[0]
+            tgt = trip[2]
 
-            if edge != "UNKNOWN":
-                G.add_edge(src_id, tgt_id)
-                G[src_id][tgt_id].update({edge_attr: int(edge)})
+        src_id = node_to_id[src]
+        tgt_id = node_to_id[tgt]
+
+        if edge != "UNKNOWN":
+            G.add_edge(src_id, tgt_id)
+            G[src_id][tgt_id].update({edge_attr: int(edge)})
 
     return G, root_id
 

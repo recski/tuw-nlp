@@ -4,10 +4,12 @@ from tuw_nlp.graph.graph import Graph
 
 
 class FourLang(Graph):
-    def __init__(self, graph, root=None, lexical=None):
-        super(FourLang, self).__init__()
+    def __init__(
+        self, graph, root=None, lexical=None, ud_graph=None, text=None, tokens=None
+    ):
+        super(FourLang, self).__init__(graph=graph, text=text, tokens=tokens)
         self.lexical = lexical
-        self.G = graph
+        self.ud_graph = ud_graph
 
         self.root = root
         self.expanded = False

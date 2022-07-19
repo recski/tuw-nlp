@@ -44,6 +44,7 @@ setup(
         "conceptnet-lite",
         "pywsd",
         "tabulate",
+        "ucca @ git+https://github.com/adaamko/ucca.git#egg=ucca",
     ],
     packages=find_packages(),
     include_package_data=True,

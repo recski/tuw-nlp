@@ -69,16 +69,9 @@ def get_cat_stats(preds, golds, labels_to_keep=None, add_missing_labels=False):
         _add_to_stat(stats, "TP", g & p, labels_to_keep)
         _add_to_stat(stats, "FN", g - p, labels_to_keep)
         _add_to_stat(stats, "FP", p - g, labels_to_keep)
-    if add_missing_labels:
-        for label in labels_to_keep:
-            if label not in stats:
-                stats[label] = {
-                    "TP": 0,
-                    "FN": 0,
-                    "FP": 0,
-                }
+    labels = labels_to_keep if add_missing_labels else stats.keys()
     stats["total"] = {
-        stat: sum(s[stat] for s in stats.values()) for stat in ("TP", "FN", "FP")
+        stat: sum(stats[label][stat] for label in labels) for stat in ("TP", "FN", "FP")
     }
     return stats
 

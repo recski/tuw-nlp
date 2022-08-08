@@ -3,13 +3,14 @@ import re
 
 
 class Graph:
-    def __init__(self, graph=None, text=None, tokens=None):
+    def __init__(self, graph=None, text=None, tokens=None, type=None):
         if graph is None:
             self.G = nx.DiGraph()
         else:
             self.G = graph.copy()
 
         self.text = text
+        self.type = type
 
         if tokens is None:
             self.tokens = []
@@ -18,6 +19,21 @@ class Graph:
 
         self.G.graph["tokens"] = self.tokens
         self.G.graph["text"] = self.text
+        self.G.graph["type"] = self.type
+
+    def to_json(self):
+        s = nx.cytoscape_data(self.G)
+        return s
+
+    @staticmethod
+    def from_json(json_str):
+        G = nx.DiGraph()
+        G = nx.cytoscape_graph(json_str)
+        tokens = G.graph["tokens"]
+        text = G.graph["text"]
+        type = G.graph["type"]
+
+        return Graph(G, text, tokens, type)
 
     @staticmethod
     def d_clean(string):

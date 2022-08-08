@@ -121,7 +121,7 @@ class TextTo4lang:
                 expand_set=expand_set,
                 strategy=strategy,
             )
-            yield fourlang.G
+            yield fourlang
 
     def __enter__(self):
         self.nlp.__enter__()

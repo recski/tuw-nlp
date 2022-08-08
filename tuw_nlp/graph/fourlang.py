@@ -7,7 +7,9 @@ class FourLang(Graph):
     def __init__(
         self, graph, root=None, lexical=None, ud_graph=None, text=None, tokens=None
     ):
-        super(FourLang, self).__init__(graph=graph, text=text, tokens=tokens)
+        super(FourLang, self).__init__(
+            graph=graph, text=text, tokens=tokens, type="fourlang"
+        )
         self.lexical = lexical
         self.ud_graph = ud_graph
 

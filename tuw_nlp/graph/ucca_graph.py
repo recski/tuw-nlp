@@ -10,14 +10,14 @@ from ucca.convert import from_standard
 class UCCAGraph(Graph):
     def __init__(self, passage, text, tokens, bilexical=True):
         self.passage = passage
-        graph = self.get_networkx_from_passage(self.passage)
+        graph = self.convert_to_networkx(self.passage)
         self.remove_terminal_nodes(graph)
 
         bilexical_graph = self.get_bilexical_graph(graph)
         if bilexical:
-            super().__init__(bilexical_graph, text, tokens)
+            super().__init__(bilexical_graph, text, tokens, type="ucca")
         else:
-            super().__init__(graph, text, tokens)
+            super().__init__(graph, text, tokens, type="ucca")
 
     def remove_terminal_nodes(self, graph):
         edges_to_remove = []
@@ -45,7 +45,7 @@ class UCCAGraph(Graph):
     def node_label(self, node):
         return re.sub("[^(]*\((.*)\)", "\\1", node.attrib.get("label", ""))
 
-    def get_networkx_from_passage(self, passage):
+    def convert_to_networkx(self, passage):
         g = nx.DiGraph()
 
         for n in passage.layer(layer0.LAYER_ID).all:

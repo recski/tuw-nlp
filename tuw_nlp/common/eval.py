@@ -21,7 +21,7 @@ def print_cat_stats(
 ):
     table = []
     cat_stats = count_p_r_f(cat_stats)
-    cats_sorted = sorted(cat_stats.keys(), key=lambda k: -cat_stats[k]["gold"])
+    cats_sorted = sorted(cat_stats.keys(), key=lambda k: (-cat_stats[k]["gold"], k))
 
     for cat in cats_sorted:
         s = cat_stats[cat]
@@ -60,23 +60,26 @@ def count_p_r_f(cat_stats):
     return cat_stats
 
 
-def get_cat_stats(preds, golds):
+def get_cat_stats(preds, golds, labels_to_keep=None, add_missing_labels=False):
+    assert not (add_missing_labels and labels_to_keep is None)
     stats = defaultdict(Counter)
     for pred, gold in zip(preds, golds):
         p = set(pred)
         g = set(gold)
-        for label in p & g:
-            stats[label]["TP"] += 1
-        for label in g - p:
-            stats[label]["FN"] += 1
-        for label in p - g:
-            stats[label]["FP"] += 1
-
+        _add_to_stat(stats, "TP", g & p, labels_to_keep)
+        _add_to_stat(stats, "FN", g - p, labels_to_keep)
+        _add_to_stat(stats, "FP", p - g, labels_to_keep)
+    labels = labels_to_keep if add_missing_labels else stats.keys()
     stats["total"] = {
-        stat: sum(s[stat] for s in stats.values()) for stat in ("TP", "FN", "FP")
+        stat: sum(stats[label][stat] for label in labels) for stat in ("TP", "FN", "FP")
     }
-
     return stats
+
+
+def _add_to_stat(stats, stat_type, relevant_label_set, labels_to_keep):
+    for label in relevant_label_set:
+        if labels_to_keep is None or label in labels_to_keep:
+            stats[label][stat_type] += 1
 
 
 def get_stats_for_single_label(pred, gold):

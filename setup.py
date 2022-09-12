@@ -25,7 +25,7 @@ class SetupAltoEgg(egg_info):
 
 setup(
     name="tuw-nlp",
-    version="0.0.8",
+    version="0.0.9",
     description="NLP tools at TUW Informatics",
     long_description=open("README.md", "r", encoding="utf-8").read(),
     long_description_content_type="text/markdown",

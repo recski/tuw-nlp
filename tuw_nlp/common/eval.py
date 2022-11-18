@@ -21,7 +21,9 @@ def print_cat_stats(
 ):
     table = []
     cat_stats = count_p_r_f(cat_stats)
-    cats_sorted = sorted(cat_stats.keys(), key=lambda k: (-cat_stats[k]["gold"], str(k)))
+    cats_sorted = sorted(
+        cat_stats.keys(), key=lambda k: (-cat_stats[k]["gold"], str(k))
+    )
 
     for cat in cats_sorted:
         s = cat_stats[cat]

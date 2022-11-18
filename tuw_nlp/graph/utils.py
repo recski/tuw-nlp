@@ -515,6 +515,12 @@ def read_alto_output(raw_dl):
 
     return G, root
 
+def check_if_str_is_penman(string):
+    try:
+        pn.decode(string)
+        return True
+    except Exception:
+        return False
 
 def preprocess_edge_alto(edge):
     if isinstance(edge, int):

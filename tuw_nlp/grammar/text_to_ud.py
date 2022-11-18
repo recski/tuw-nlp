@@ -18,8 +18,8 @@ class TextToUD:
 
         self.nlp = CachedStanzaPipeline(nlp, nlp_cache)
 
-    def __call__(self, text):
-        for sen in self.nlp(text, ssplit=True).sentences:
+    def __call__(self, text, ssplit=True):
+        for sen in self.nlp(text, ssplit=ssplit).sentences:
             tokens = [token.text for token in sen.tokens]
 
             ud_graph = UDGraph(sen, text, tokens)

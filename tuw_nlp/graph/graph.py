@@ -1,5 +1,6 @@
 import networkx as nx
 import re
+from tuw_nlp.graph.utils import pn_to_graph, graph_to_pn
 
 
 class Graph:
@@ -20,11 +21,31 @@ class Graph:
         self.G.graph["tokens"] = self.tokens
         self.G.graph["text"] = self.text
         self.G.graph["type"] = self.type
-
+        
+    def __dict__(self):
+        return self.to_json()
+        
     def to_json(self):
         s = nx.cytoscape_data(self.G)
         return s
+    
+    def to_penman(self):
+        return graph_to_pn(self.G)
 
+    @staticmethod
+    def from_networkx(G):
+        tokens = G.graph["tokens"]
+        text = G.graph["text"]
+        type = G.graph["type"]
+        
+        return Graph(G, text, tokens, type)
+
+    @staticmethod
+    def from_penman(pn_graph):
+        G, _ = pn_to_graph(pn_graph)
+        
+        return Graph(G)
+        
     @staticmethod
     def from_json(json_str):
         G = nx.DiGraph()

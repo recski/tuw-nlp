@@ -16,25 +16,29 @@ def print_cat_stats(
     out_stream=sys.stdout,
     print_avgs=False,
     tablefmt="github",
-    floatfmt=".2%",
+    # floatfmt=".2%",
+    floatfmt=("s", "d", "d", ".2%", ".2%", ".2%"),
     linesep="\n",  # for backward compatibility, not used
 ):
     table = []
     cat_stats = count_p_r_f(cat_stats)
-    cats_sorted = sorted(cat_stats.keys(), key=lambda k: (-cat_stats[k]["gold"], str(k)))
+
+    if print_avgs:
+        cat_stats["macro_avg"] = {
+            metric: avg([s[metric] for s in cat_stats.values()])
+            for metric in ("P", "R", "F")
+        }
+        cat_stats["macro_avg"].update(
+            {"gold": cat_stats["total"]["gold"], "pred": cat_stats["total"]["pred"]}
+        )
+
+    cats_sorted = sorted(
+        cat_stats.keys(), key=lambda k: (-cat_stats[k]["gold"], str(k))
+    )
 
     for cat in cats_sorted:
         s = cat_stats[cat]
         table.append([cat, s["gold"], s["pred"], s["P"], s["R"], s["F"]])
-
-    if print_avgs:
-        d = {
-            metric: avg([s[metric] for s in cat_stats.values()])
-            for metric in ("P", "R", "F", "gold", "pred")
-        }
-
-        cat = "macro_avg"
-        table.append([cat, d["gold"], d["pred"], d["P"], d["R"], d["F"]])
 
     out_stream.write(
         tabulate(

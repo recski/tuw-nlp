@@ -43,6 +43,8 @@ setup(
         "graphviz",
         "conceptnet-lite",
         "pywsd",
+        "supar",
+        "conllu",
         "tabulate",
         "ucca @ git+https://github.com/adaamko/ucca.git#egg=ucca",
     ],

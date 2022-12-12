@@ -33,7 +33,8 @@ class TextToSDP:
 
         dataset = self.sdp.predict(sdp_input, verbose=False)
 
-        sentence = dataset[0]
+        sentence = str(dataset[0])
+        sentence = self.preprocess_conllu(sentence)
 
         conllu_sentence = parse(str(sentence))[0]
 
@@ -42,3 +43,25 @@ class TextToSDP:
         )
 
         yield sdp_graph
+
+    def preprocess_conllu(self, connll_str):
+        newlines = []
+        lines = connll_str.split('\n')
+
+        for line in lines:
+            if line:
+                values = line.split('\t')
+                deps = values[8]
+                if ':' in deps:
+                    deps = deps.replace('_and_c', 'and')
+                    deps = deps.replace('_or_c', 'or')
+                values[8] = deps
+                line = "\t".join(values)
+                
+                newlines.append(line)
+            else:
+                newlines.append(line)
+
+        newconnll_str = "\n".join(newlines)
+
+        return newconnll_str

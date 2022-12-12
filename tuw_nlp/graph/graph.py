@@ -1,4 +1,5 @@
 import networkx as nx
+from networkx.readwrite import json_graph
 import re
 from tuw_nlp.graph.utils import pn_to_graph, graph_to_pn
 
@@ -26,7 +27,7 @@ class Graph:
         return self.to_json()
 
     def to_json(self):
-        s = nx.cytoscape_data(self.G)
+        s = json_graph.adjacency_data(self.G)
         return s
 
     def to_penman(self):
@@ -49,7 +50,7 @@ class Graph:
     @staticmethod
     def from_json(json_str):
         G = nx.DiGraph()
-        G = nx.cytoscape_graph(json_str)
+        G = json_graph.adjacency_graph(json_str)
         tokens = G.graph["tokens"]
         text = G.graph["text"]
         type = G.graph["type"]
@@ -73,6 +74,26 @@ class Graph:
         if re.match("^[0-9]", s) or s in keywords:
             s = "X" + s
         return s
+
+    def prune_graphs(self):
+        """
+        If the graph is not connected, prune it to the largest connected component
+        """
+        g = [
+            c
+            for c in sorted(
+                nx.weakly_connected_components(self.G), key=len, reverse=True
+            )
+        ]
+        if len(g) > 1:
+            print(
+                "WARNING: graph has multiple connected components, taking the largest"
+            )
+            g_pn = self.G.subgraph(g[0].copy())
+        else:
+            g_pn = self.G.copy()
+
+        self.G = g_pn
 
     def to_dot(self, marked_nodes=set(), edge_color=None):
         show_graph = self.G.copy()

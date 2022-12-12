@@ -27,7 +27,7 @@ class SDPGraph(Graph):
         for token in conllu_graph:
             if token["deps"]:
                 for dep in token["deps"]:
-                    if dep[1] != 0:
+                    if len(dep) > 1 and dep[1] != 0:
                         g.add_edge(dep[1], token["id"], color=dep[0])
 
         return g

@@ -1,0 +1,5 @@
+services:
+  web:
+    build: .
+    ports:
+      - "5002:5002"

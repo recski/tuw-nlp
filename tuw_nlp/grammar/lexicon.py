@@ -3,9 +3,9 @@ import os
 from tuw_nlp.text.patterns.misc import CHAR_REPLACEMENTS
 
 
-class IRTGRuleLexicon():
+class IRTGRuleLexicon:
     def __init__(self):
-        self.get_props_from_file('propositions.txt')
+        self.get_props_from_file("propositions.txt")
         self.npos = ("NOUN", "ADJ", "PROPN", "ADV")
         self.get_mod_edges()
         self.get_term_fnc()
@@ -25,8 +25,7 @@ class IRTGRuleLexicon():
 
     def get_props_from_file(self, fn):
         self.prop = set()
-        with open(os.path.join(
-                os.path.dirname(os.path.abspath(__file__)), fn)) as PF:
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), fn)) as PF:
             for line in PF:
                 w = line.strip()
                 for a, b in CHAR_REPLACEMENTS.items():
@@ -57,43 +56,32 @@ class FSLexicon(IRTGRuleLexicon):
             ("ADJ", "NSUBJ", "NOUN"): ["unify(emb_prop(?1), ?2)"],
             ("VERB", "NSUBJ_PASS", "NOUN"): ["unify(emb_obj(?1), ?2)"],
             ("VERB", "NSUBJ", "NOUN"): ["unify(emb_subj(?1), ?2)"],
-            ("VERB", "CONJ", "VERB"): [
-                'unify(emb_coord1(?1), emb_coord2(?2))'],
-            ("NOUN", "CASE", "ADP"): ["emb_prop(unify(?1, emb_mod(?2)))"]
+            ("VERB", "CONJ", "VERB"): ["unify(emb_coord1(?1), emb_coord2(?2))"],
+            ("NOUN", "CASE", "ADP"): ["emb_prop(unify(?1, emb_mod(?2)))"],
         }
 
-        self.bin_fnc.update({
-            edge: ["emb_prop(unify(emb_mod(?1), ?2))"]
-            for edge in self.mod_edges})
+        self.bin_fnc.update(
+            {edge: ["emb_prop(unify(emb_mod(?1), ?2))"] for edge in self.mod_edges}
+        )
 
         # coordination
-        self.bin_fnc.update({
-            (pos1, "CONJ", pos2): ['unify(emb_coord1(?1), emb_coord2(?2))']
-            for pos1 in self.npos for pos2 in self.npos})
+        self.bin_fnc.update(
+            {
+                (pos1, "CONJ", pos2): ["unify(emb_coord1(?1), emb_coord2(?2))"]
+                for pos1 in self.npos
+                for pos2 in self.npos
+            }
+        )
 
     def get_term_fnc(self):
         self.term_fnc = {
-            "nicht": [
-                '"[neg: 1]"'
-            ],
-            "kein": [
-                '"[neg: 1]"'
-            ],
-            "duerfen": [
-                '"[per: 1]"'
-            ],
-            "muessen": [
-                '"[obl: 1]"'
-            ],
-            "zulaessig": [
-                '"[per: 1]"'
-            ],
-            "untersagen": [
-                '"[for: 1]"'
-            ],
-            "unzulaessig": [
-                '"[for: 1]"'
-            ],
+            "nicht": ['"[neg: 1]"'],
+            "kein": ['"[neg: 1]"'],
+            "duerfen": ['"[per: 1]"'],
+            "muessen": ['"[obl: 1]"'],
+            "zulaessig": ['"[per: 1]"'],
+            "untersagen": ['"[for: 1]"'],
+            "unzulaessig": ['"[for: 1]"'],
         }
 
     def get_lexical_terminal(self, word):
@@ -116,23 +104,24 @@ class BaseLexicon(IRTGRuleLexicon):
     def get_term_fnc(self):
         raise NotImplementedError
 
-    def get_terminal_rules(self, word, pos, xpos):
+    def get_terminal_rules(self, word, pos, xpos, i="unknown"):
         """returns a list of interpretations associated with the
         word or word, pos pair. Word-only match takes precedence to discourage
         using it as an elsewhere condition: if POS matters then
         the word should be listed with all possible POS-tags"""
 
-        if xpos == 'VVIZU':
+        if xpos == "VVIZU":
             return [f'"({word}<root> / {word} :0 (OBL / OBL))"']
 
-        return self.term_fnc.get(word, self.term_fnc.get(
-            (word, pos))) or [self.get_default_terminal(word)]
+        return self.term_fnc.get(word, self.term_fnc.get((word, pos))) or [
+            self.get_default_terminal(word, i)
+        ]
 
     def get_lexical_terminal(self, word):
         return self.get_default_terminal(word)
 
-    def get_default_terminal(self, word):
-        return f'"({word}<root> / {word})"'
+    def get_default_terminal(self, word, i="unknown"):
+        return f'"({word}<root> / {word}_{i})"'
 
 
 class ENLexicon(BaseLexicon):
@@ -155,27 +144,21 @@ class ENLexicon(BaseLexicon):
             ("VERB", "ADVMOD", "PART"),
             ("NOUN", "ADVMOD", "PART"),
             ("PRON", "ADVMOD", "PART"),
-
             ("ADJ", "OBL_NPMOD", "NOUN"),
             ("ADV", "OBL_NPMOD", "NOUN"),
             ("VERB", "OBL_NPMOD", "NOUN"),
-
             ("NOUN", "NMOD", "NOUN"),
             ("NOUN", "NMOD", "PROPN"),
             ("PROPN", "NMOD", "PROPN"),
             ("NOUN", "NMOD", "PRON"),
-
             ("NOUN", "AMOD", "ADJ"),
             ("NOUN", "AMOD", "VERB"),
             ("PROPN", "AMOD", "ADJ"),
             ("PRON", "AMOD", "ADJ"),
-
             ("NOUN", "ACL", "VERB"),
-
             ("NOUN", "NUMMOD", "NUM"),
             # Up to 85% of viruses that cause respiratory illness are identified by the technology.
             ("SYM", "NUMMOD", "NUM"),
-
             ("VERB", "ADVCL", "VERB"),
             ("ADJ", "ADVCL", "VERB"),
             ("VERB", "ADVCL", "ADJ"),
@@ -194,8 +177,10 @@ class ENLexicon(BaseLexicon):
 
         self.mod_edges |= {
             (pos1, dep, pos2)
-            for pos1 in self.npos for pos2 in self.npos for dep in (
-                "NMOD", "AMOD")}
+            for pos1 in self.npos
+            for pos2 in self.npos
+            for dep in ("NMOD", "AMOD")
+        }
 
     def get_binary_fnc(self):
         def r(edge):
@@ -207,13 +192,12 @@ class ENLexicon(BaseLexicon):
         csubj = f'f_dep1(merge(merge(?1,"(r<root> :1 (d1<dep1>))"), r_dep1(?2)))'
 
         self.bin_fnc = {
-            ("ADJ", "NSUBJ", "NOUN"): [r('1')],
+            ("ADJ", "NSUBJ", "NOUN"): [r("1")],
             ("VERB", "NSUBJ_PASS", "NOUN"): [r("2")],
             ("VERB", "NSUBJ_PASS", "PRON"): [r("2")],
             ("VERB", "NSUBJ_PASS", "PROPN"): [r("2")],
             # 38% of the world's generated electrical energy is gained from coal.
             ("VERB", "NSUBJ_PASS", "SYM"): [r("2")],
-
             # CCOMP
             ("VERB", "CCOMP", "VERB"): [r("0")],
             ("VERB", "CCOMP", "ADJ"): [r("2")],
@@ -223,7 +207,6 @@ class ENLexicon(BaseLexicon):
             ("VERB", "CCOMP", "NOUN"): [r("2")],
             # It is no accident that the title of the exhibition is a homage to one of the classic figures of contemporaneity, Antoni Tapies, whose work breached all the boundaries imposed on artistic creation by the critics.
             ("NOUN", "CCOMP", "NOUN"): [r("2")],
-
             # OBL
             ("VERB", "OBL", "NOUN"): [r("2")],
             # Show 1 in the series is a documentary detailing the first stages of the celebrity students' conductor training as they enter into a week long 'Baton Camp'.
@@ -234,12 +217,10 @@ class ENLexicon(BaseLexicon):
             ("VERB", "OBL", "SYM"): [r("2")],
             # The film makes the point that decision-making is an important aspect of such an affair of the heart.
             ("VERB", "OBL_TMOD", "NOUN"): [obl_tmod],
-
             # ACL
             # An Afghan handed over innocent people into torture. Afghan ADJ?
             ("PROPN", "ACL", "VERB"): [r("0")],
             ("ADJ", "ACL", "VERB"): [r("0")],
-
             ("NOUN", "ACL", "VERB"): [r("0")],
             ("PROPN", "ACL", "VERB"): [r("0")],
             # The painting was one of the first used as a poster in an advertising campaign for soap powder.
@@ -248,10 +229,8 @@ class ENLexicon(BaseLexicon):
             ("NOUN", "ACL", "ADJ"): [r("0")],
             # It was a dispute discussing the question whether the language of the Greek people (Dimotiki) or a cultivated imitation of Ancient Greek (Katharevousa) should be the official language of the Greek nation.
             ("NOUN", "ACL", "NOUN"): [r("0")],
-
             # FLAT - Andrew -flat> Wakefield
             ("PROPN", "FLAT", "PROPN"): [r("0")],
-
             # Parataxis
             ("VERB", "PARATAXIS", "VERB"): [r("0")],
             ("NOUN", "PARATAXIS", "VERB"): [r("0")],
@@ -266,7 +245,6 @@ class ENLexicon(BaseLexicon):
             ("NOUN", "PARATAXIS", "NOUN"): [r("0")],
             # The image is from the poster 'Selling Counterfeit Products is Illegal'.
             ("NOUN", "PARATAXIS", "PROPN"): [r("0")],
-
             # ACL_RELCL
             ("NOUN", "ACL_RELCL", "VERB"): [r("0")],
             ("PRON", "ACL_RELCL", "VERB"): [r("0")],
@@ -274,7 +252,6 @@ class ENLexicon(BaseLexicon):
             ("PROPN", "ACL_RELCL", "VERB"): [r("0")],
             ("NOUN", "ACL_RELCL", "NOUN"): [r("0")],
             ("PROPN", "ACL_RELCL", "NOUN"): [r("0")],
-
             # NSUBJ
             ("VERB", "NSUBJ", "NOUN"): [r("1")],
             ("VERB", "NSUBJ", "ADJ"): [r("1")],
@@ -300,11 +277,9 @@ class ENLexicon(BaseLexicon):
             ("VERB", "NSUBJ", "DET"): [r("1")],
             # Patient survival one year after transplantation from a living-related donor is 95% and comparably high if the organ comes from a cadaveric donor. - For some reason % is the root
             ("SYM", "NSUBJ", "NOUN"): [r("1")],
-
             # The painting was one of the first used as a poster in an advertising campaign for soap powder.
             ("NUM", "NSUBJ", "NOUN"): [r("1")],
             ("NUM", "NSUBJ", "PROPN"): [r("1")],
-
             # CSUBJ
             ("ADJ", "CSUBJ", "VERB"): [csubj],
             ("NOUN", "CSUBJ", "VERB"): [csubj],
@@ -312,11 +287,8 @@ class ENLexicon(BaseLexicon):
             ("PROPN", "CSUBJ", "VERB"): [csubj],
             # Although big city marathons offer great crowd support and a large camaraderie of runners, running in a big city marathon is not for everyone.
             ("PRON", "CSUBJ", "VERB"): [csubj],
-
-
             ("VERB", "CONJ", "VERB"): [coord],
             ("NOUN", "CASE", "ADP"): [r("0")],
-
             ("VERB", "XCOMP", "VERB"): [r("2")],
             # make sure they have a copy of the invoice
             ("VERB", "XCOMP", "ADJ"): [r("2")],
@@ -325,14 +297,12 @@ class ENLexicon(BaseLexicon):
             ("ADJ", "XCOMP", "VERB"): [r("2")],
             # It's called Symform - a stealthy Seattle outfit founded by a pair of ex-Microsoft employees, Praerit Garg and Bassam Tabbara.
             ("VERB", "XCOMP", "PROPN"): [r("2")],
-
             # poss
             ("NOUN", "NMOD_POSS", "PRON"): [poss],
             ("NOUN", "NMOD_POSS", "PROPN"): [poss],
             ("NOUN", "NMOD_POSS", "NOUN"): [poss],
             ("PROPN", "NMOD_POSS", "PROPN"): [poss],
             ("PROPN", "NMOD_POSS", "PRON"): [poss],
-
             # compound
             ("NOUN", "COMPOUND", "NOUN"): [r("0")],
             ("PROPN", "COMPOUND", "PROPN"): [r("0")],
@@ -341,7 +311,6 @@ class ENLexicon(BaseLexicon):
             # 77793 civilians have arrived into the government controlled areas within the last two days.
             ("VERB", "COMPOUND", "NOUN"): [r("0")],
             ("AUX", "COMPOUND", "NOUN"): [r("0")],
-
             # obj
             ("VERB", "OBJ", "NOUN"): [r("2")],
             ("VERB", "OBJ", "PRON"): [r("2")],
@@ -354,7 +323,6 @@ class ENLexicon(BaseLexicon):
             ("VERB", "OBJ", "DET"): [r("2")],
             # The company has made available its collection of luxurious full black parts.
             ("ADJ", "OBJ", "NOUN"): [r("2")],
-
             # appos
             ("NOUN", "APPOS", "PROPN"): [r("0")],
             ("PROPN", "APPOS", "PROPN"): [r("0")],
@@ -372,71 +340,72 @@ class ENLexicon(BaseLexicon):
         self.bin_fnc.update({edge: [r("0")] for edge in self.mod_edges})
 
         # coordination
-        self.bin_fnc.update(
-            {("VERB", "CONJ", pos): [coord] for pos in self.npos})
+        self.bin_fnc.update({("VERB", "CONJ", pos): [coord] for pos in self.npos})
 
-        self.bin_fnc.update(
-            {(pos, "CONJ", "VERB"): [coord] for pos in self.npos})
+        self.bin_fnc.update({(pos, "CONJ", "VERB"): [coord] for pos in self.npos})
 
         # I am a semi-professional myself and I also have a small hug of teddy bears, but the photos that Marc Hoberman made of these bears are really fantastic.
-        self.bin_fnc.update(
-            {("PRON", "CONJ", "VERB"): [coord]})
+        self.bin_fnc.update({("PRON", "CONJ", "VERB"): [coord]})
 
-        self.bin_fnc.update({
-            (pos1, "CONJ", pos2): [coord]
-            for pos1 in self.npos for pos2 in self.npos})
+        self.bin_fnc.update(
+            {(pos1, "CONJ", pos2): [coord] for pos1 in self.npos for pos2 in self.npos}
+        )
 
     def get_term_fnc(self):
         def n(label):
             return self.get_default_terminal(label)
 
         self.term_fnc = {
-            "not": [
-                n('NEG')
-            ],
-            "none": [
-                n('NEG')
-            ],
-            "no": [
-                n('NEG')
-            ],
-            "non": [
-                n('NEG')
-            ]
+            "not": [n("NEG")],
+            "none": [n("NEG")],
+            "no": [n("NEG")],
+            "non": [n("NEG")],
         }
 
-    def handle_obl_case_mark(self, parent_dep, parent_pos, current_pos, children_pos, i, j, clemma):
+    def handle_obl_case_mark(
+        self, parent_dep, parent_pos, current_pos, children_pos, i, j, clemma
+    ):
         if clemma == "by":
             obl_case = (
                 f"{parent_pos} -> HANDLE_{parent_dep}_CASE_{children_pos}_{i}_{j}({children_pos}, {current_pos}, {parent_pos})",
-                {'ud': f'{parent_pos}_2(_{parent_dep}_1({current_pos}_2(_CASE_1(?1), ?2)),?3)',
-                 'fl': f'f_dep1(merge(merge(?3,"(r<root> :1 (d1<dep1> :0 (r<root>)))"), r_dep1(?2)))'},
-                "nonterminal"
+                {
+                    "ud": f"{parent_pos}_2(_{parent_dep}_1({current_pos}_2(_CASE_1(?1), ?2)),?3)",
+                    "fl": f'f_dep1(merge(merge(?3,"(r<root> :1 (d1<dep1> :0 (r<root>)))"), r_dep1(?2)))',
+                },
+                "nonterminal",
             )
         else:
             obl_case = (
                 f"{parent_pos} -> HANDLE_{parent_dep}_CASE_{children_pos}_{i}_{j}({children_pos}, {current_pos}, {parent_pos})",
-                {'ud': f'{parent_pos}_2(_{parent_dep}_1({current_pos}_2(_CASE_1(?1), ?2)),?3)',
-                 'fl': f'f_dep2(f_dep1(merge(merge(merge(?3,"(d1<dep1> :1 (r<root>) :2 (d2<dep2>))"), r_dep1(?1)), r_dep2(?2))))'},
-                "nonterminal"
+                {
+                    "ud": f"{parent_pos}_2(_{parent_dep}_1({current_pos}_2(_CASE_1(?1), ?2)),?3)",
+                    "fl": f'f_dep2(f_dep1(merge(merge(merge(?3,"(d1<dep1> :1 (r<root>) :2 (d2<dep2>))"), r_dep1(?1)), r_dep2(?2))))',
+                },
+                "nonterminal",
             )
 
         # The opposition leader has gone into hiding.
         obl_mark = (
             f"{parent_pos} -> HANDLE_{parent_dep}_MARK_{children_pos}_{i}_{j}({children_pos}, {current_pos}, {parent_pos})",
-            {'ud': f'{parent_pos}_2(_{parent_dep}_1({current_pos}_2(_MARK_1(?1), ?2)),?3)',
-                'fl': f'f_dep2(f_dep1(merge(merge(merge(?3,"(d1<dep1> :1 (r<root>) :2 (d2<dep2>))"), r_dep1(?1)), r_dep2(?2))))'},
-            "nonterminal"
+            {
+                "ud": f"{parent_pos}_2(_{parent_dep}_1({current_pos}_2(_MARK_1(?1), ?2)),?3)",
+                "fl": f'f_dep2(f_dep1(merge(merge(merge(?3,"(d1<dep1> :1 (r<root>) :2 (d2<dep2>))"), r_dep1(?1)), r_dep2(?2))))',
+            },
+            "nonterminal",
         )
 
         return [obl_case, obl_mark]
 
-    def handle_advcl_mark(self, parent_dep, parent_pos, current_pos, children_pos, i, j, clemma):
+    def handle_advcl_mark(
+        self, parent_dep, parent_pos, current_pos, children_pos, i, j, clemma
+    ):
         advcl_mark = (
             f"{parent_pos} -> HANDLE_{parent_dep}_MARK_{children_pos}_{i}_{j}({children_pos}, {current_pos}, {parent_pos})",
-            {'ud': f'{parent_pos}_2(_{parent_dep}_1({current_pos}_2(_MARK_1(?1), ?2)),?3)',
-                'fl': f'f_dep2(f_dep1(merge(merge(merge(?3,"(d1<dep1> :1 (r<root>) :2 (d2<dep2>))"), r_dep1(?1)), r_dep2(?2))))'},
-            "nonterminal"
+            {
+                "ud": f"{parent_pos}_2(_{parent_dep}_1({current_pos}_2(_MARK_1(?1), ?2)),?3)",
+                "fl": f'f_dep2(f_dep1(merge(merge(merge(?3,"(d1<dep1> :1 (r<root>) :2 (d2<dep2>))"), r_dep1(?1)), r_dep2(?2))))',
+            },
+            "nonterminal",
         )
 
         return [advcl_mark]
@@ -444,16 +413,20 @@ class ENLexicon(BaseLexicon):
     def handle_acl_relcl(self, dep, parent_pos, current_pos, children_pos, i, j):
         acl_relcl = (
             f"{parent_pos} -> HANDLE_ACL_RELCL_NSUBJ_{children_pos}_{i}_{j}({children_pos}, {current_pos}, {parent_pos})",
-            {'ud': f'{parent_pos}_2(_ACL_RELCL_1({current_pos}_2(_NSUBJ_1(?1), ?2)),?3)',
-             'fl': f'f_dep1(merge(merge(?3,"(r<root> :0 (d1<dep1> :1 (r<root>)))"), r_dep1(?2)))'},
-            "nonterminal"
+            {
+                "ud": f"{parent_pos}_2(_ACL_RELCL_1({current_pos}_2(_NSUBJ_1(?1), ?2)),?3)",
+                "fl": f'f_dep1(merge(merge(?3,"(r<root> :0 (d1<dep1> :1 (r<root>)))"), r_dep1(?2)))',
+            },
+            "nonterminal",
         )
 
         acl_relcl2 = (
             f"{parent_pos} -> HANDLE_ACL_RELCL_NSUBJ_PASS_{children_pos}_{i}_{j}({children_pos}, {current_pos}, {parent_pos})",
-            {'ud': f'{parent_pos}_2(_ACL_RELCL_1({current_pos}_2(_NSUBJ_PASS_1(?1), ?2)),?3)',
-             'fl': f'f_dep1(merge(merge(?3,"(r<root> :0 (d1<dep1> :1 (r<root>)))"), r_dep1(?2)))'},
-            "nonterminal"
+            {
+                "ud": f"{parent_pos}_2(_ACL_RELCL_1({current_pos}_2(_NSUBJ_PASS_1(?1), ?2)),?3)",
+                "fl": f'f_dep1(merge(merge(?3,"(r<root> :0 (d1<dep1> :1 (r<root>)))"), r_dep1(?2)))',
+            },
+            "nonterminal",
         )
         return [acl_relcl, acl_relcl2]
 
@@ -463,10 +436,12 @@ class ENLexicon(BaseLexicon):
 
         if parent_dep in ("NMOD", "OBL", "OBL_NPMOD"):
             return self.handle_obl_case_mark(
-                parent_dep, parent_pos, pos, cpos, i, j, clemma)
+                parent_dep, parent_pos, pos, cpos, i, j, clemma
+            )
         if parent_dep in ("ADVCL"):
             return self.handle_advcl_mark(
-                parent_dep, parent_pos, pos, cpos, i, j, clemma)
+                parent_dep, parent_pos, pos, cpos, i, j, clemma
+            )
         if parent_dep == "ACL_RELCL":
             return self.handle_acl_relcl(dep, parent_pos, pos, cpos, i, j)
 
@@ -501,12 +476,17 @@ class CFLLexicon(BaseLexicon):
             ("NOUN", "ACL", "ADJ"),
             ("NOUN", "NUMMOD", "NUM"),
             ("NUM", "ADVMOD", "ADV"),
-            ("NUM", "ADVMOD", "ADV"),
+            # maximal 6,0 m
+            ("NUM", "ADVMOD", "ADJ"),
             ("NUM", "ADVMOD", "NUM"),
             ("VERB", "ADVMOD", "ADJ"),
             ("VERB", "ADVMOD", "ADV"),
             # nicht staffeln, sample 10
             ("VERB", "ADVMOD", "PART"),
+            # nicht mehr als
+            ("CCONJ", "ADVMOD", "ADV"),
+            # nicht mehr als
+            ("ADV", "ADVMOD", "PART"),
             # sample 112 of sample_10
             ("VERB", "ADVCL", "VERB"),
             # nicht gewaehlt... , weil er gegen die Homo-Ehe... (Germeval '18)
@@ -519,8 +499,10 @@ class CFLLexicon(BaseLexicon):
 
         self.mod_edges |= {
             (pos1, dep, pos2)
-            for pos1 in self.npos for pos2 in self.npos for dep in (
-                "NMOD", "AMOD")}
+            for pos1 in self.npos
+            for pos2 in self.npos
+            for dep in ("NMOD", "AMOD")
+        }
 
     def get_binary_fnc(self):
         def r(edge):
@@ -530,11 +512,11 @@ class CFLLexicon(BaseLexicon):
 
         self.bin_fnc = {
             # Errichtung ist untersagt
-            ("ADJ", "NSUBJ", "NOUN"): [r('1')],
+            ("ADJ", "NSUBJ", "NOUN"): [r("1")],
             # Verloren ist die Zeit
-            ("NOUN", "NSUBJ", "NOUN"): [r('1')],
-            ("PROPN", "NSUBJ", "NOUN"): [r('1')],
-            ("NOUN", "NSUBJ", "PROPN"): [r('1')],
+            ("NOUN", "NSUBJ", "NOUN"): [r("1")],
+            ("PROPN", "NSUBJ", "NOUN"): [r("1")],
+            ("NOUN", "NSUBJ", "PROPN"): [r("1")],
             ("VERB", "NSUBJ_PASS", "NOUN"): [r("2")],
             # jeder der ... paktiert, hat ... verschissen
             ("VERB", "CSUBJ", "VERB"): [r("1")],
@@ -543,8 +525,10 @@ class CFLLexicon(BaseLexicon):
             # ...wird bestimmt, dass...
             ("VERB", "CCOMP", "VERB"): [r("2")],
             # ...wird bestimmt: Die Errichtung...zulaesssig (8159_21_0)
-            # erroneously parsed as parataxis
+            # ...wird bestimmt: ...betragen
+            # parsed as parataxis
             ("VERB", "PARATAXIS", "ADJ"): [r("2")],
+            ("VERB", "PARATAXIS", "VERB"): [r("2")],
             # ...so auszubilden, dass...
             ("VERB", "CCOMP", "ADJ"): [r("0")],  # TODO
             # sind Vorkehrungen zu treffen, dass...moeglich
@@ -582,62 +566,46 @@ class CFLLexicon(BaseLexicon):
             ("PROPN", "FLAT", "PROPN"): [r("0")],
             ("NOUN", "COMPOUND", "NOUN"): [r("0")],
             # Rede ... jetzt
-            ("NOUN", "APPOS", "ADV"): [r("0")]
+            ("NOUN", "APPOS", "ADV"): [r("0")],
         }
 
         self.bin_fnc.update({edge: [r("0")] for edge in self.mod_edges})
 
         # coordination
-        self.bin_fnc.update(
-            {("VERB", "CONJ", pos): [coord] for pos in self.npos})
+        self.bin_fnc.update({("VERB", "CONJ", pos): [coord] for pos in self.npos})
+
+        self.bin_fnc.update({(pos, "CONJ", "VERB"): [coord] for pos in self.npos})
 
         self.bin_fnc.update(
-            {(pos, "CONJ", "VERB"): [coord] for pos in self.npos})
-
-        self.bin_fnc.update({
-            (pos1, "CONJ", pos2): [coord]
-            for pos1 in self.npos for pos2 in self.npos})
+            {(pos1, "CONJ", pos2): [coord] for pos1 in self.npos for pos2 in self.npos}
+        )
 
     def get_term_fnc(self):
         def n(label):
             return self.get_default_terminal(label)
 
         self.term_fnc = {
-            "nicht": [
-                n('NEG')
-            ],
-            "kein": [
-                n('NEG')
-            ],
-            "duerfen": [
-                n('PER')
-            ],
-            "muessen": [
-                n('OBL')
-            ],
-            "zulaessig": [
-                n('PER')
-            ],
-            "sofern": [
-                n('EXC')
-            ],
-            "untersagen": [
-                n('FOR')
-            ],
-            "unzulaessig": [
-                n('FOR')
-            ],
-            ("zu", "PART"): [
-                n('OBL')
-            ],
+            "nicht": [n("NEG")],
+            "kein": [n("NEG")],
+            "duerfen": [n("PER")],
+            "muessen": [n("OBL")],
+            "zulaessig": [n("PER")],
+            "sofern": [n("EXC")],
+            "untersagen": [n("FOR")],
+            "unzulaessig": [n("FOR")],
+            ("zu", "PART"): [n("OBL")],
         }
 
-    def handle_obl_case(self, parent_dep, parent_pos, current_pos, children_pos, i, clemma):
+    def handle_obl_case(
+        self, parent_dep, parent_pos, current_pos, children_pos, i, clemma
+    ):
         obl_case = (
             f"{parent_pos} -> HANDLE_{parent_dep}_CASE_{children_pos}_{i}({children_pos}, {current_pos}, {parent_pos})",
-            {'ud': f'{parent_pos}_2(_{parent_dep}_1({current_pos}_2(_CASE_1(?1), ?2)),?3)',
-             'fl': f'f_dep2(f_dep1(merge(merge(merge(?3,"(d1<dep1> :1 (r<root>) :2 (d2<dep2>))"), r_dep1(?1)), r_dep2(?2))))'},
-            "nonterminal"
+            {
+                "ud": f"{parent_pos}_2(_{parent_dep}_1({current_pos}_2(_CASE_1(?1), ?2)),?3)",
+                "fl": f'f_dep2(f_dep1(merge(merge(merge(?3,"(d1<dep1> :1 (r<root>) :2 (d2<dep2>))"), r_dep1(?1)), r_dep2(?2))))',
+            },
+            "nonterminal",
         )
 
         return [obl_case]
@@ -647,7 +615,6 @@ class CFLLexicon(BaseLexicon):
         parent_pos = parent[1]
 
         if parent_dep in ("NMOD", "OBL"):
-            return self.handle_obl_case(
-                parent_dep, parent_pos, pos, cpos, i, clemma)
+            return self.handle_obl_case(parent_dep, parent_pos, pos, cpos, i, clemma)
 
         return

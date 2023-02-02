@@ -2,14 +2,14 @@ from stanza.models.common import doc
 from stanza.pipeline.processor import Processor, register_processor
 
 from tuw_nlp.text.patterns.de import ABBREV, MONTH
-from tuw_nlp.text.patterns.misc import CHAR_PATT
 
 
 @register_processor("fix_ssplit")
 class SsplitFixer(Processor):
-    ''' Fixes erroneous sentence splits of the German Stanza model '''
-    _requires = set(['tokenize'])
-    _provides = set(['fix_ssplit'])
+    """Fixes erroneous sentence splits of the German Stanza model"""
+
+    _requires = set(["tokenize"])
+    _provides = set(["fix_ssplit"])
 
     def __init__(self, config, pipeline, use_gpu):
         pass
@@ -20,11 +20,11 @@ class SsplitFixer(Processor):
     def is_err(self, sen1, sen2):
         """determine if the split between sen1 and sen2 was an error"""
 
-        if sen1.text.endswith(':'):
+        if sen1.text.endswith(":"):
             return True, True
 
         for abbr in ABBREV:
-            if sen1.text.endswith(f' {abbr}'):
+            if sen1.text.endswith(f" {abbr}"):
                 return True, True
 
         for month in MONTH:
@@ -44,23 +44,27 @@ class SsplitFixer(Processor):
                 new_sen = False
             for token in sentence.tokens:
                 if token is sentence.tokens[-1] and not (
-                        sentence is document.sentences[-1]):
+                    sentence is document.sentences[-1]
+                ):
 
                     is_err, requires_space = self.is_err(
-                        sentence, document.sentences[i+1])
+                        sentence, document.sentences[i + 1]
+                    )
                     if not is_err:
                         new_sen = True
                     else:
                         if requires_space is False:
                             char_offset -= 1
 
-                start_char, end_char = (
-                    int(c) + char_offset
-                    for c in CHAR_PATT.match(token.misc).groups())
-
-                sens[-1].append({
-                    doc.ID: (token_id + 1, ), doc.TEXT: token.text,
-                    doc.MISC: f'start_char={start_char}|end_char={end_char}'})
+                sens[-1].append(
+                    {
+                        doc.ID: (token_id + 1,),
+                        doc.TEXT: token.text,
+                        doc.MISC: token.misc,
+                        doc.START_CHAR: token.start_char + char_offset,
+                        doc.END_CHAR: token.end_char + char_offset,
+                    }
+                )
 
                 token_id += 1
 

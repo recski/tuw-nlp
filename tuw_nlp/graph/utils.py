@@ -19,103 +19,6 @@ dummy_isi_graph = "(dummy_0 / dummy_0)"
 dummy_tree = "dummy(dummy)"
 
 
-class Graph:
-    def __init__(self):
-        self.G = nx.DiGraph()
-
-    @staticmethod
-    def d_clean(string):
-        s = string
-        for c in "\\=@-,'\".!:;<>/{}[]()#^?":
-            s = s.replace(c, "_")
-        s = (
-            s.replace("$", "_dollars")
-            .replace("%", "_percent")
-            .replace("|", " ")
-            .replace("*", " ")
-        )
-        if s == "#":
-            s = "_number"
-        keywords = ("graph", "node", "strict", "edge")
-        if re.match("^[0-9]", s) or s in keywords:
-            s = "X" + s
-        return s
-
-    def to_dot(self, marked_nodes=set(), edge_color=None):
-        show_graph = self.G.copy()
-        show_graph.remove_nodes_from(list(nx.isolates(show_graph)))
-        lines = ["digraph finite_state_machine {", "\tdpi=70;"]
-        node_lines = []
-        for node, n_data in show_graph.nodes(data=True):
-            d_node = node
-            if "name" in n_data:
-                printname = self.d_clean(str(n_data["name"]))
-            else:
-                printname = d_node
-            if (
-                "expanded" in n_data
-                and n_data["expanded"]
-                and printname in marked_nodes
-            ):
-                node_line = '\t{0} [shape = circle, label = "{1}", \
-                        style=filled, fillcolor=purple];'.format(
-                    d_node, printname
-                ).replace(
-                    "-", "_"
-                )
-            elif "expanded" in n_data and n_data["expanded"]:
-                node_line = '\t{0} [shape = circle, label = "{1}", \
-                        style="filled"];'.format(
-                    d_node, printname
-                ).replace(
-                    "-", "_"
-                )
-            elif "fourlang" in n_data and n_data["fourlang"]:
-                node_line = '\t{0} [shape = circle, label = "{1}", \
-                        style="filled", fillcolor=red];'.format(
-                    d_node, printname
-                ).replace(
-                    "-", "_"
-                )
-            elif "substituted" in n_data and n_data["substituted"]:
-                node_line = '\t{0} [shape = circle, label = "{1}", \
-                        style="filled"];'.format(
-                    d_node, printname
-                ).replace(
-                    "-", "_"
-                )
-            elif printname in marked_nodes:
-                node_line = '\t{0} [shape = circle, label = "{1}", style=filled, fillcolor=lightblue];'.format(
-                    d_node, printname
-                ).replace(
-                    "-", "_"
-                )
-            else:
-                node_line = '\t{0} [shape = circle, label = "{1}"];'.format(
-                    d_node, printname
-                ).replace("-", "_")
-            node_lines.append(node_line)
-        lines += sorted(node_lines)
-
-        edge_lines = []
-        for u, v, edata in show_graph.edges(data=True):
-            if "color" in edata:
-                if edge_color is None:
-                    edge_lines.append(
-                        '\t{0} -> {1} [ label = "{2}" ];'.format(u, v, edata["color"])
-                    )
-                else:
-                    edge_lines.append(
-                        '\t{0} -> {1} [ label = "{2}", color = "{3}" ];'.format(
-                            u, v, edata["color"], edge_color[edata["color"]]
-                        )
-                    )
-
-        lines += sorted(edge_lines)
-        lines.append("}")
-        return "\n".join(lines)
-
-
 class GraphMatcher:
     @staticmethod
     def node_matcher(n1, n2):
@@ -445,37 +348,56 @@ def gen_subgraphs(M, no_edges):
 
 
 def pn_to_graph(raw_dl, edge_attr="color"):
+    """Convert penman to networkx format
+    raw_dl: raw string of penman format
+    example: (k_4<root> / like :2 (k_6 / eat :2 (k_7 / sausage)) :1 (k_3 / dog :2-of (u_12 / HAS :1 (k_1 / Adam))))
+    edges marked with k_* are mapped to UD nodes, u_* are unknown in UD
+    """
+
     g = pn.decode(raw_dl)
     G = nx.DiGraph()
+    node_to_id = {}
+    root_id = None
 
-    for i, trip in enumerate(g.triples):
+    for i, trip in enumerate(g.instances()):
+        node_id, name = trip[0], trip[2]
+
+        node_to_id[node_id] = i
+
         if i == 0:
-            root_id = int(trip[0].split("_")[1].split("<root>")[0])
-            name = trip[2].split("<root>")[0]
-            G.add_node(root_id, name=name)
+            root_id = i
 
-        if trip[1] == ":instance":
-            i, name = int(trip[0].split("<root>")[0].split("_")[1]), trip[2]
-            G.add_node(i, name=name)
+        indicator = trip[0].split("_")[0]
+        ud_id = trip[0].split("_")[1].split("<root>")[0]
+        if ud_id.isnumeric():
+            ud_id = int(ud_id)
+        else:
+            raise ValueError(f"{ud_id} is not a number")
 
-    for trip in g.triples:
-        if trip[1] != ":instance":
-            edge = trip[1].split(":")[1]
-            if "-" in edge:
-                assert edge.endswith("-of")
-                edge = edge.split("-")[0]
-                src = trip[2]
-                tgt = trip[0]
-            else:
-                src = trip[0]
-                tgt = trip[2]
+        if indicator == "k":
+            G.add_node(i, name=name, token_id=ud_id)
+        elif indicator == "u":
+            G.add_node(i, name=name, token_id=None)
+        else:
+            raise ValueError("Unknown indicator")
 
-            src_id = int(src.split("<root>")[0].split("_")[1])
-            tgt_id = int(tgt.split("<root>")[0].split("_")[1])
+    for trip in g.edges():
+        edge = trip[1].split(":")[1]
+        if "-" in edge:
+            assert edge.endswith("-of")
+            edge = edge.split("-")[0]
+            src = trip[2]
+            tgt = trip[0]
+        else:
+            src = trip[0]
+            tgt = trip[2]
 
-            if edge != "UNKNOWN":
-                G.add_edge(src_id, tgt_id)
-                G[src_id][tgt_id].update({edge_attr: int(edge)})
+        src_id = node_to_id[src]
+        tgt_id = node_to_id[tgt]
+
+        if edge != "UNKNOWN":
+            G.add_edge(src_id, tgt_id)
+            G[src_id][tgt_id].update({edge_attr: int(edge)})
 
     return G, root_id
 
@@ -512,6 +434,54 @@ def graph_to_pn(graph):
         raise e
 
 
+def postprocess_penman(graph_string):
+    """The IRTG grammar returns labels with the corresponding UD ids.
+    This function removes the UD ids from the labels and replaces penman ids with them.
+    If UD id is not given, the penman ID remains.
+
+    Example input:
+    (u_1<root> / like_4  :2 (u_3 / eat_6  :2 (u_6 / sausage_7))  :1 (u_9 / dog_3  :2-of (u_12 / HAS  :1 (u_13 / Adam_1))))
+
+    Example output:
+    (k_4<root> / like :2 (k_6 / eat :2 (k_7 / sausage)) :1 (k_3 / dog :2-of (u_12 / HAS :1 (k_1 / Adam))))
+
+    Args:
+        graph_string (str): the input graph
+    """
+
+    g = pn.decode(graph_string)
+
+    instances = {}
+    relabel = {}
+
+    for i in g.instances():
+        if i[2] and "_" in i[2]:
+            ud_id = i[2].split("_")[-1]
+            label = "_".join(i[2].split("_")[:-1])
+            if ud_id.isnumeric():
+                new_id = f"k_{ud_id}"
+                if g.top == i[0]:
+                    new_id += "<root>"
+                instances[new_id] = label
+                relabel[i[0]] = new_id
+            else:
+                instances[i[0]] = i[2]
+        else:
+            instances[i[0]] = i[2]
+
+    edges = []
+
+    for edge in g.edges():
+        src = relabel[edge[0]] if edge[0] in relabel else edge[0]
+        tgt = relabel[edge[2]] if edge[2] in relabel else edge[2]
+
+        edges.append((src, edge[1], tgt))
+
+    nodes = [(k, ":instance", v) for k, v in instances.items()]
+
+    return pn.encode(pn.Graph(nodes + edges), indent=0).replace("\n", "  ")
+
+
 def read_alto_output(raw_dl):
     id_to_word = {}
 
@@ -544,6 +514,14 @@ def read_alto_output(raw_dl):
         G.add_node(root)
 
     return G, root
+
+
+def check_if_str_is_penman(string):
+    try:
+        pn.decode(string)
+        return True
+    except Exception:
+        return False
 
 
 def preprocess_edge_alto(edge):

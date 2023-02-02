@@ -1,17 +1,17 @@
-import re
-from collections import defaultdict
-
 import networkx as nx
 from networkx import algorithms
-from networkx.algorithms.shortest_paths.generic import shortest_path_length
-from tuw_nlp.graph.utils import Graph
+from tuw_nlp.graph.graph import Graph
 
 
 class FourLang(Graph):
-    def __init__(self, graph, root=None, lexical=None):
-        super(FourLang, self).__init__()
+    def __init__(
+        self, graph, root=None, lexical=None, ud_graph=None, text=None, tokens=None
+    ):
+        super(FourLang, self).__init__(
+            graph=graph, text=text, tokens=tokens, type="fourlang"
+        )
         self.lexical = lexical
-        self.G = graph
+        self.ud_graph = ud_graph
 
         self.root = root
         self.expanded = False

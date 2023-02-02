@@ -10,6 +10,7 @@ from tuw_nlp import logger
 from tuw_nlp.common.utils import ensure_dir
 from tuw_nlp.grammar.alto import get_rule_string, run_alto
 from tuw_nlp.grammar.utils import get_dummy_input
+from tuw_nlp.graph.utils import postprocess_penman
 
 
 class IRTGCache:
@@ -84,7 +85,7 @@ class IRTGGrammar:
         return input_obj
 
     def postprocess_output(self, output_obj, **kwargs):
-        return output_obj
+        return postprocess_penman(output_obj)
 
     def _parse(self, input_obj, input_int, output_int, output_codec, **kwargs):
         output = self.run(input_obj, input_int, output_int, output_codec)

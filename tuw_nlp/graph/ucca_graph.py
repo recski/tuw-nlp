@@ -38,9 +38,15 @@ class UCCAGraph(Graph):
         for e in edges_to_add:
             graph.add_edge(e[0], e[1], **e[2])
 
+        nodes_to_remove = []
+
         for e in edges_to_remove:
             graph.remove_edge(*e[:2])
-            graph.remove_node(e[0])
+            nodes_to_remove.append(e[0])
+        
+        nodes_to_remove = set(nodes_to_remove)
+        for n in nodes_to_remove:
+            graph.remove_node(n)
 
     def node_label(self, node):
         return re.sub("[^(]*\((.*)\)", "\\1", node.attrib.get("label", ""))

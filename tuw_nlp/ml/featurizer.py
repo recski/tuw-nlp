@@ -3,9 +3,9 @@ import os
 import stanza
 
 from tuw_nlp import logger
+from tuw_nlp.grammar.text_to_4lang import TextTo4lang
 from tuw_nlp.graph.lexical import LexGraphs
 from tuw_nlp.graph.utils import graph_to_pn
-from tuw_nlp.grammar.text_to_4lang import TextTo4lang
 from tuw_nlp.text.pipeline import CachedStanzaPipeline
 from tuw_nlp.text.preprocessor import Preprocessor
 

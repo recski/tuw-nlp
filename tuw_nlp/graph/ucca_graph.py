@@ -1,10 +1,11 @@
-from tuw_nlp.graph.graph import Graph
-import networkx as nx
 import re
-from ucca import layer0, layer1
 from xml.etree.ElementTree import fromstring
 
+import networkx as nx
+from ucca import layer0, layer1
 from ucca.convert import from_standard
+
+from tuw_nlp.graph.graph import Graph
 
 
 class UCCAGraph(Graph):
@@ -43,7 +44,7 @@ class UCCAGraph(Graph):
         for e in edges_to_remove:
             graph.remove_edge(*e[:2])
             nodes_to_remove.append(e[0])
-        
+
         nodes_to_remove = set(nodes_to_remove)
         for n in nodes_to_remove:
             graph.remove_node(n)

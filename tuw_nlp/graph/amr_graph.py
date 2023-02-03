@@ -1,12 +1,12 @@
-from importlib_metadata import metadata
-from tuw_nlp.graph.graph import Graph
-from amrlib.graph_processing.annotator import add_lemmas
-from amrlib.alignments.rbw_aligner import RBWAligner
-from penman import surface
-import penman as pn
 import networkx as nx
-
+import penman as pn
+from amrlib.alignments.rbw_aligner import RBWAligner
+from amrlib.graph_processing.annotator import add_lemmas
+from importlib_metadata import metadata
 from nltk.corpus import propbank
+from penman import surface
+
+from tuw_nlp.graph.graph import Graph
 
 
 class AMRGraph(Graph):

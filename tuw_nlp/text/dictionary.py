@@ -1,7 +1,9 @@
 import os
 import re
 from collections import defaultdict
+
 from nltk.corpus import stopwords as nltk_stopwords
+
 from tuw_nlp.graph.utils import preprocess_node_alto
 
 

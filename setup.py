@@ -4,8 +4,8 @@ import sys
 
 from setuptools import find_packages, setup
 from setuptools.command.develop import develop
-from setuptools.command.install import install
 from setuptools.command.egg_info import egg_info
+from setuptools.command.install import install
 
 
 class SetupAltoDevelop(develop):

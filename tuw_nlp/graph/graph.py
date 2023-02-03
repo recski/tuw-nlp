@@ -1,7 +1,9 @@
+import re
+
 import networkx as nx
 from networkx.readwrite import json_graph
-import re
-from tuw_nlp.graph.utils import pn_to_graph, graph_to_pn
+
+from tuw_nlp.graph.utils import graph_to_pn, pn_to_graph
 
 
 class Graph:

@@ -2,7 +2,6 @@ import networkx as nx
 import penman as pn
 from amrlib.alignments.rbw_aligner import RBWAligner
 from amrlib.graph_processing.annotator import add_lemmas
-from importlib_metadata import metadata
 from nltk.corpus import propbank
 from penman import surface
 

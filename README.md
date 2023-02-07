@@ -2,7 +2,17 @@
 
 NLP utilities developed at TUW informatics. 
 
-## Install and Quick Start
+The main goal of the library is to provide a unified interface for working with different semantic graph representations. To represent 
+graphs we use the [networkx](https://networkx.org/) library.
+Currently you can use the following semantic graph representations integrated in the library:
+- [4lang](#4lang)
+- [UD](#ud) (Universal Dependencies)
+- [AMR](#amr) (Abstract Meaning Representation)
+- [SDP](#sdp) (Semantic Dependency Parsing)
+- [UCCA](#ucca) (Universal Conceptual Cognitive Annotation)
+- [DRS](#drs) (Discourse Representation Structure)
+
+## Setup and Usage
 Install the tuw-nlp repository from pip:
 
 ```
@@ -18,11 +28,12 @@ On Windows and Mac, you might also need to install [Graphviz](https://graphviz.o
 
 You will also need some additional steps to use the library:
 
-Download nltk stopwords:
+Download nltk resources:
 
 ```python
 import nltk
 nltk.download('stopwords')
+nltk.download('propbank')
 ```
 
 Download stanza models for UD parsing:
@@ -34,7 +45,12 @@ stanza.download("en")
 stanza.download("de")
 ```
 
-And then finally download ALTO and tuw_nlp dictionaries:
+### 4lang
+
+The [4lang](https://github.com/kornai/4lang) semantic graph representation is implemented in the repository. We use Interpreted Regular Tree Grammars (IRTGs) to build the graphs from UD trees. The grammar can be found in the [lexicon](tuw_nlp/grammar/lexicon.py). It supports English and German.
+
+To use the parser download the [alto](https://github.com/coli-saar/alto) parser and tuw_nlp dictionaries:
+
 ```python
 import tuw_nlp
 
@@ -53,11 +69,86 @@ tfl = TextTo4lang("en", "en_nlp_cache")
 
 fl_graphs = list(tfl("brown dog", depth=1, substitute=False))
 
-# Then the fl_graphs will directly contain a networkx graph object
-fl_graphs[0].nodes(data=True)
+# Then the fl_graphs are the classes that contains the networkx graph object
+fl_graphs[0].G.nodes(data=True)
+
+# Visualize the graph
+fl_graphs[0].to_dot()
 
 ```
-For more examples you can check the jupyter notebook under *notebooks/experiment*
+
+### UD
+To parse [Universal Dependencies](https://universaldependencies.org/)
+into networkx format, we use the [stanza](https://stanfordnlp.github.io/stanza/) library. You can use all the languages supported by stanza:
+https://stanfordnlp.github.io/stanza/models.html
+
+For parsing you can use the snippet above, just use the `TextToUD` class.
+
+### AMR
+For parsing [Abstract Meaning Representation](https://amr.isi.edu/) graphs we use the [amrlib](https://amrlib.readthedocs.io/en/latest/) library. Models are only available for English.
+
+If you want to use AMR parsing, install the [amrlib](https://amrlib.readthedocs.io/en/latest/) package (this is also included in the __setup__ file) and download the models:
+
+```bash
+pip install amrlib
+```
+
+Go to the [amrlib](https://amrlib.readthedocs.io/en/latest/) repository and follow the instructions to download the models. 
+
+Then also download the spacy model for AMR parsing:
+
+```bash
+python -m spacy download en_core_web_sm
+```
+
+To parse AMR, see the `TextToAMR` class.
+
+### SDP
+For parsing [Semantic Dependency Parsing](https://aclanthology.org/S15-2153/) we integrated the Semantic Dependency Parser from the [SuPar](https://github.com/yzhangcs/parser) library. Models are only available for English. 
+
+See the `TextToSDP` class for more information.
+
+### UCCA
+For parsing [UCCA](https://github.com/UniversalConceptualCognitiveAnnotation/tutorial) graphs we integrated the __tupa__ parser. See our fork of the parser [here](https://github.com/adaamko/tupa). Because of the complexity of the parser, we included a docker image that contains the parser and all the necessary dependencies. You can use the docker image to parse UCCA graphs. To see more go to the [services](services/ucca_service/) folder and follow the instructions there.
+
+UCCA parsing is currently supporting English, French, German and Hebrew. The docker service is a REST API that you can use to parse UCCA graphs. To convert the output to networkx graphs, see the `TextToUCCA` class.
+
+### DRS
+The task of __Discourse Representation Structure (DRS) parsing__ is to convert text into formal meaning representations in the style of Discourse Representation Theory (DRT; Kamp and Reyle 1993). 
+
+To make it compatible with our library, we make use of the paper titled [Transparent Semantic Parsing with Universal Dependencies Using Graph Transformations](https://aclanthology.org/2022.coling-1.367/). This work first transformes DRS structures into graphs (DRG). They make use of a rule-based method developed using the [GREW](https://grew.fr) library.
+
+Because of the complexity of the parser, we included a docker image that contains the parser and all the necessary dependencies. You can use the docker image to parse DRS graphs. To see more go to the [services](services/boxer_service/) folder and follow the instructions there. For parsing we our own fork of the [ud-boxer](https://github.com/adaamko/ud-boxer) repository. Currently it supports English, Italian, German and Dutch.
+
+To convert the output of the REST API (from the docker service) to networkx graphs, see the `TextToDRS` class.
+
+For more examples you can check our [experiments](notebooks/experiments.ipynb) jupyter notebook.
+
+### Command line interface
+
+We provide a simple script to parse into any of the supported formats.
+For this you can use the `scripts/semparse.py` script. For usage:
+
+```bash
+usage: semparse.py [-h] [-f FORMAT] [-cd CACHE_DIR] [-cn NLP_CACHE] -l LANG [-d DEPTH] [-s SUBSTITUTE] [-p PREPROCESSOR] [-o OUT_DIR]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -f FORMAT, --format FORMAT
+  -cd CACHE_DIR, --cache-dir CACHE_DIR
+  -cn NLP_CACHE, --nlp-cache NLP_CACHE
+  -l LANG, --lang LANG
+  -d DEPTH, --depth DEPTH
+  -s SUBSTITUTE, --substitute SUBSTITUTE
+  -p PREPROCESSOR, --preprocessor PREPROCESSOR
+  -o OUT_DIR, --out-dir OUT_DIR
+```
+
+For example to parse a sentence into UCCA graph run:
+  
+  ```bash
+  echo "A police statement did not name the man in the boot, but in effect indicated the traveler was State Secretary Samuli Virtanen, who is also the deputy to Foreign Minister Timo Soini." | python scripts/semparse.py -f ucca -l en -cn cache/nlp_cache_en.json
+  ```
 
 ## Services
 

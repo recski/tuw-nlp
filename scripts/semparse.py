@@ -62,7 +62,9 @@ def main():
         text = preproc(line.strip())
         try:
             for j, graph in enumerate(parser(text)):
-                gv = Source(graph.to_dot(), filename=f"{i}_{j}", directory=dirname, format='png')
+                gv = Source(
+                    graph.to_dot(), filename=f"{i}_{j}", directory=dirname, format="png"
+                )
                 gv.render()
         except (TypeError, IndexError, KeyError):
             traceback.print_exc()

@@ -1,6 +1,7 @@
 import networkx as nx
-from tuw_nlp.graph.utils import preprocess_edge_alto
+
 from tuw_nlp.graph.graph import Graph
+from tuw_nlp.graph.utils import preprocess_edge_alto
 
 
 class UDGraph(Graph):

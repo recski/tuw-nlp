@@ -1,7 +1,9 @@
-import requests
-from tuw_nlp.graph.ucca_graph import UCCAGraph
-from ucca.convert import from_standard, to_text, split2sentences
 from xml.etree.ElementTree import fromstring
+
+import requests
+from ucca.convert import from_standard, split2sentences, to_text
+
+from tuw_nlp.graph.ucca_graph import UCCAGraph
 
 HOST = "localhost"
 PORT = 5001

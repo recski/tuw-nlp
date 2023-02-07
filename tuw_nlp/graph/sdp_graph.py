@@ -1,6 +1,6 @@
-from tuw_nlp.graph.graph import Graph
-
 import networkx as nx
+
+from tuw_nlp.graph.graph import Graph
 
 
 class SDPGraph(Graph):

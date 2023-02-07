@@ -1,4 +1,5 @@
 import amrlib
+
 from tuw_nlp.graph.amr_graph import AMRGraph
 
 

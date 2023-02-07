@@ -1,10 +1,13 @@
 import requests
 
+from tuw_nlp.graph.drs_graph import DRSGraph
+
 HOST = "localhost"
 PORT = 5002
 
+
 class TextToDRS:
-    def __init__(self, language='en'):
+    def __init__(self, language="en"):
         self.language = language
 
     def make_request(self, text):
@@ -17,6 +20,17 @@ class TextToDRS:
         if x.status_code != 200:
             raise Exception(f"error {x.status_code}")
         else:
-            return x.graph
+            result = x.json()
 
-    
+            if result["result"]["errors"]:
+                raise Exception(result["result"]["errors"])
+            else:
+                graph = result["result"]["graph"]
+                return graph
+
+    def __call__(self, text):
+        cytoscape_graph = self.make_request(text)
+
+        graph = DRSGraph(cytoscape_graph, text)
+
+        yield graph

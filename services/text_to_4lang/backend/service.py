@@ -4,11 +4,12 @@ import sys
 import traceback
 
 import graphviz
+import networkx as nx
 import stanza
 from flask import Flask, request
 from graphviz import Source
-import networkx as nx
 from networkx.readwrite import json_graph
+
 from tuw_nlp.grammar.text_to_4lang import TextTo4lang
 from tuw_nlp.graph.fourlang import FourLang
 from tuw_nlp.graph.utils import graph_to_pn

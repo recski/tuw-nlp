@@ -1,5 +1,5 @@
-from tuw_nlp.grammar.lexicon import CFLLexicon, ENLexicon
 from tuw_nlp.grammar.irtg import IRTGGrammar
+from tuw_nlp.grammar.lexicon import CFLLexicon, ENLexicon
 from tuw_nlp.graph.utils import (
     get_root_id,
     graph_to_isi,

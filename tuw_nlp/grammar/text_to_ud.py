@@ -1,5 +1,5 @@
-from tuw_nlp.text.pipeline import CachedStanzaPipeline, CustomStanzaPipeline
 from tuw_nlp.graph.ud_graph import UDGraph
+from tuw_nlp.text.pipeline import CachedStanzaPipeline, CustomStanzaPipeline
 
 
 class TextToUD:

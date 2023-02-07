@@ -4,8 +4,8 @@ import sys
 
 import stanza
 
-from tuw_nlp.text.pipeline import CachedStanzaPipeline, CustomStanzaPipeline
 from tuw_nlp.grammar.ud_fl import UD_FL
+from tuw_nlp.text.pipeline import CachedStanzaPipeline, CustomStanzaPipeline
 
 # from tuw_nlp.graph.utils import read_alto_output
 

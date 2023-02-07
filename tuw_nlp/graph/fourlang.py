@@ -1,5 +1,6 @@
 import networkx as nx
 from networkx import algorithms
+
 from tuw_nlp.graph.graph import Graph
 
 

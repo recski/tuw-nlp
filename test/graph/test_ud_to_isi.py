@@ -1,5 +1,5 @@
-from tuw_nlp.text.pipeline import CustomStanzaPipeline
 from tuw_nlp.graph.utils import graph_to_isi, sen_to_graph
+from tuw_nlp.text.pipeline import CustomStanzaPipeline
 
 
 def test_ud_graph_to_isi():

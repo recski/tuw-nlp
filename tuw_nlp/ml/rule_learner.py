@@ -3,8 +3,8 @@ from collections import Counter
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 
-from tuw_nlp.common.vocabulary import Vocabulary
 from tuw_nlp.common.eval import print_cat_stats
+from tuw_nlp.common.vocabulary import Vocabulary
 from tuw_nlp.ml.utils import get_x_y
 
 

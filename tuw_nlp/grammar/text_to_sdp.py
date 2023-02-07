@@ -1,7 +1,8 @@
-from supar import Parser
-from tuw_nlp.text.pipeline import CustomStanzaPipeline
-from tuw_nlp.graph.sdp_graph import SDPGraph
 from conllu import parse
+from supar import Parser
+
+from tuw_nlp.graph.sdp_graph import SDPGraph
+from tuw_nlp.text.pipeline import CustomStanzaPipeline
 
 
 class TextToSDP:
@@ -46,18 +47,18 @@ class TextToSDP:
 
     def preprocess_conllu(self, connll_str):
         newlines = []
-        lines = connll_str.split('\n')
+        lines = connll_str.split("\n")
 
         for line in lines:
             if line:
-                values = line.split('\t')
+                values = line.split("\t")
                 deps = values[8]
-                if ':' in deps:
-                    deps = deps.replace('_and_c', 'and')
-                    deps = deps.replace('_or_c', 'or')
+                if ":" in deps:
+                    deps = deps.replace("_and_c", "and")
+                    deps = deps.replace("_or_c", "or")
                 values[8] = deps
                 line = "\t".join(values)
-                
+
                 newlines.append(line)
             else:
                 newlines.append(line)

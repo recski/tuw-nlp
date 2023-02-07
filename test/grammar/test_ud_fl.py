@@ -1,7 +1,8 @@
 import stanza
-from tuw_nlp.text.pipeline import CustomStanzaPipeline
+
 from tuw_nlp.grammar.ud_fl import UD_FL
 from tuw_nlp.graph.utils import read_alto_output
+from tuw_nlp.text.pipeline import CustomStanzaPipeline
 
 
 def test_ud_fl():

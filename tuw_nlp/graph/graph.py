@@ -35,13 +35,6 @@ class Graph:
     def to_penman(self):
         return graph_to_pn(self.G)
 
-    def subgraph(self, nodes):
-        H = self.G.subgraph(nodes)
-        H.graph["text"] = None
-        H.graph["tokens"] = [self.tokens[n - 1] for n in H.nodes()]
-        sg = Graph.from_networkx(H)
-        return sg
-
     @staticmethod
     def from_networkx(G):
         tokens = G.graph["tokens"]

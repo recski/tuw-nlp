@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 
 from tuw_nlp.sem.semparse import get_parser
-from tuw_nlp.sem.oie_ud import ud_to_triplets
+from tuw_nlp.sem.oie.ud import ud_to_triplets
 from tuw_nlp.text.preprocessor import Preprocessor
 
 

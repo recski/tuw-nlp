@@ -26,11 +26,12 @@ class TextToDRS:
                 raise Exception(result["result"]["errors"])
             else:
                 graph = result["result"]["graph"]
-                return graph
+                tokens_by_id = {int(i): tok for i, tok in result["result"]["tokens"].items()}
+                return graph, tokens_by_id
 
     def __call__(self, text):
-        cytoscape_graph = self.make_request(text)
+        cytoscape_graph, tokens_by_id = self.make_request(text)
 
-        graph = DRSGraph(cytoscape_graph, text)
+        graph = DRSGraph(cytoscape_graph, text, tokens_by_id)
 
         yield graph

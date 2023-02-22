@@ -4,13 +4,16 @@ from tuw_nlp.graph.graph import Graph
 
 
 class DRSGraph(Graph):
-    def __init__(self, json_graph, text, tokens=None, type="drs"):
+    def __init__(self, json_graph, text, tokens_by_id, type="drs"):
         graph = nx.cytoscape_graph(json_graph)
 
         self.counter = 0
         self.name_to_node = {}
 
         converted_graph = self.convert_to_networkx(graph)
+
+        tokens = [tokens_by_id[i + 1] for i in range(len(tokens_by_id))]
+
         super().__init__(converted_graph, text, tokens, type)
 
     def convert_to_networkx(self, drs_graph):
@@ -19,7 +22,13 @@ class DRSGraph(Graph):
         for node, data in drs_graph.nodes(data=True):
             node_id = self.get_uid(node)
             node_name = data["value"]
-            self._add_node(node_id, node_name, g)
+            token_id = data.get("token_id")
+            if token_id is not None:
+                if token_id.startswith('_'):
+                    token_id = None
+                else:
+                    token_id = int(token_id)
+            self._add_node(node_id, node_name, token_id, g)
 
         for source, target, data in drs_graph.edges(data=True):
             edge_color = data["label"]
@@ -39,10 +48,10 @@ class DRSGraph(Graph):
         else:
             return node
 
-    def _add_node(self, node_id, node_label, graph):
+    def _add_node(self, node_id, node_label, token_id, graph):
         label = self._get_name_of_node(node_label)
 
-        graph.add_node(node_id, name=label, orig_name=node_label, token_id=None)
+        graph.add_node(node_id, name=label, orig_name=node_label, token_id=token_id)
 
     def _add_edge(self, source, target, color, graph):
         if color == "":

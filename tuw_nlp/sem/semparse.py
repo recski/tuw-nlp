@@ -10,6 +10,7 @@ from tqdm import tqdm
 from tuw_nlp.common.utils import ensure_dir
 from tuw_nlp.grammar.text_to_4lang import TextTo4lang
 from tuw_nlp.grammar.text_to_amr import TextToAMR
+from tuw_nlp.grammar.text_to_drs import TextToDRS
 from tuw_nlp.grammar.text_to_sdp import TextToSDP
 from tuw_nlp.grammar.text_to_ucca import TextToUCCA
 from tuw_nlp.grammar.text_to_ud import TextToUD
@@ -34,6 +35,8 @@ def get_parser(args):
         parser = TextTo4lang(args.lang, args.nlp_cache, args.cache_dir)
     elif args.format == "amr":
         parser = TextToAMR()
+    elif args.format == "drs":
+        parser = TextToDRS(language=args.lang)
     elif args.format == "sdp":
         parser = TextToSDP(lang=args.lang)
     elif args.format == "ucca":

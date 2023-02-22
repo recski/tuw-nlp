@@ -7,6 +7,8 @@ from tqdm import tqdm
 
 
 from tuw_nlp.sem.semparse import get_parser
+from tuw_nlp.sem.oie.drs import drs_to_triplets
+from tuw_nlp.sem.oie.ucca_oie import ucca_to_triplets
 from tuw_nlp.sem.oie.ud import ud_to_triplets
 from tuw_nlp.text.preprocessor import Preprocessor
 
@@ -18,8 +20,10 @@ class OIE:
         self.preproc = Preprocessor(args.preprocessor)
 
     def graph_to_triplets(self, graph):
+        if self.format == "drs":
+            yield from drs_to_triplets(graph)
         if self.format == "ucca":
-            raise Exception("ucca not yet implemented")
+            yield from ucca_to_triplets(graph)
         if self.format == "ud":
             yield from ud_to_triplets(graph)
 

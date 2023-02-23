@@ -34,6 +34,7 @@ class OIE:
 
 def get_args():
     parser = argparse.ArgumentParser(description="")
+    parser.add_argument("-d", "--debug", action="store_true")
     parser.add_argument("-f", "--format", default=None, type=str)
     parser.add_argument("-cd", "--cache-dir", default="cache", type=str)
     parser.add_argument("-cn", "--nlp-cache", default=None, type=str)
@@ -96,8 +97,11 @@ def main():
         format="%(asctime)s : "
         + "%(module)s (%(lineno)s) - %(levelname)s - %(message)s"
     )
-    logging.getLogger().setLevel(logging.WARNING)
     args = get_args()
+    if args.debug:
+        logging.getLogger().setLevel(logging.DEBUG)
+    else:
+        logging.getLogger().setLevel(logging.WARNING)
 
     oie = OIE(args)
 

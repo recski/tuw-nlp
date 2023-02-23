@@ -23,11 +23,10 @@ class DRSGraph(Graph):
             node_id = self.get_uid(node)
             node_name = data["value"]
             token_id = data.get("token_id")
-            if token_id is not None:
-                if token_id.startswith('_'):
-                    token_id = None
-                else:
-                    token_id = int(token_id)
+            if token_id == 'null' or token_id.startswith('_'):
+                token_id = None
+            else:
+                token_id = int(token_id)
             self._add_node(node_id, node_name, token_id, g)
 
         for source, target, data in drs_graph.edges(data=True):

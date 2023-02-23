@@ -187,13 +187,16 @@ class GraphFormulaPatternMatcher:
         return self.path_between(undirected_graph, nodes, subgraphs)
 
     def digraph_matcher(self, graph, pattern, subgraphs):
-        matcher = GraphFormulaPatternMatcher.get_matcher(graph, pattern, self.case_sensitive)
+        matcher = GraphFormulaPatternMatcher.get_matcher(
+            graph, pattern, self.case_sensitive
+        )
 
         monomorphic_subgraphs = list(matcher.subgraph_monomorphisms_iter())
         if not len(monomorphic_subgraphs) == 0:
             for sub in monomorphic_subgraphs:
                 mapping = sub
-                subgraph = graph.subgraph(mapping.keys())
+                subgraph = graph.subgraph(mapping.keys()).copy()
+                # copying is essential, otherwise mapping gets overwritten if a node occurs in multiple matching subgraphs
                 nx.set_node_attributes(subgraph, mapping, name="mapping")
                 subgraphs.append(subgraph)
             return True

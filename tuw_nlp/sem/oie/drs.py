@@ -1,6 +1,6 @@
 from xpotato.dataset.utils import default_pn_to_graph
 
-from tuw_nlp.graph.utils import GraphFormulaMatcher
+from tuw_nlp.graph.utils import GraphFormulaPatternMatcher
 
 PATTERNS = [
     (
@@ -12,16 +12,12 @@ PATTERNS = [
 
 
 def drs_to_triplets(graph):
-    print(graph.text)
-    print(graph.tokens)
-    print(graph.G.nodes(data=True))
-    print(graph.to_penman())
     for patt, pred_id, args in PATTERNS:
         # print('=====================')
         # print('patt, pred_ids, args:', patt, pred_ids, args)
         # print('=====================')
         patterns = [([patt], [], True)]
-        matcher = GraphFormulaMatcher(
+        matcher = GraphFormulaPatternMatcher(
             patterns, default_pn_to_graph, case_sensitive=False
         )
         for key, patt, subgraphs in matcher.match(graph.G, return_subgraphs=True):

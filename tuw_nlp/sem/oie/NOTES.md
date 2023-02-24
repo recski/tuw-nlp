@@ -84,3 +84,17 @@ triplet is_the_seat_of(Tokyo, Emperor of Japan) but not with is(Tokyo, seat, of 
 Emperor of Japan). Therefore we shall use the WiRE57 dataset to evaluate the recall of
 our method only, and for measuring precision we shall rely on our own manual annotation
 of the triplets output by our system.
+
+
+simple UD baseline's performance on WiRE
+
+2023.02.23 (after fixing GraphFormulaMatcher vs. GraphFormulaPatternMatcher bug):
+
+System sym prec/rec/f1: 44.1% 7.2% 0.124
+
+System sym prec/rec of matches only (non-matches): 71% 86% (29)
+
+1 were exactly correct, out of 47 predicted / the reference 343.
+
+Exact-match prec/rec/f1: 2.1% 0.3% 0.005
+

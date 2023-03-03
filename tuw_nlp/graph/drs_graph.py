@@ -12,7 +12,10 @@ class DRSGraph(Graph):
 
         converted_graph = self.convert_to_networkx(graph)
 
-        tokens = [tokens_by_id[i + 1] for i in range(len(tokens_by_id))]
+        if tokens_by_id is not None:
+            tokens = [tokens_by_id[i + 1] for i in range(len(tokens_by_id))]
+        else:
+            tokens = None
 
         super().__init__(converted_graph, text, tokens, type)
 

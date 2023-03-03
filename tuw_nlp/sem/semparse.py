@@ -11,6 +11,7 @@ from tuw_nlp.common.utils import ensure_dir
 from tuw_nlp.grammar.text_to_4lang import TextTo4lang
 from tuw_nlp.grammar.text_to_amr import TextToAMR
 from tuw_nlp.grammar.text_to_drs import TextToDRS
+from tuw_nlp.grammar.text_to_ndrs import TextToNDRS
 from tuw_nlp.grammar.text_to_sdp import TextToSDP
 from tuw_nlp.grammar.text_to_ucca import TextToUCCA
 from tuw_nlp.grammar.text_to_ud import TextToUD
@@ -35,6 +36,8 @@ def get_parser(args):
         parser = TextTo4lang(args.lang, args.nlp_cache, args.cache_dir)
     elif args.format == "amr":
         parser = TextToAMR()
+    elif args.format == "ndrs":
+        parser = TextToNDRS(language=args.lang)
     elif args.format == "drs":
         parser = TextToDRS(language=args.lang)
     elif args.format == "sdp":
@@ -65,10 +68,16 @@ def main():
         text = preproc(line.strip())
         try:
             for j, graph in enumerate(parser(text)):
-                gv = Source(
-                    graph.to_dot(), filename=f"{i}_{j}", directory=dirname, format="png"
-                )
-                gv.render()
+                if graph is None:
+                    sys.stderr.write(f"no graph returned for line {i}: {line}")
+                else:
+                    gv = Source(
+                        graph.to_dot(),
+                        filename=f"{i}_{j}",
+                        directory=dirname,
+                        format="png",
+                    )
+                    gv.render()
         except (TypeError, IndexError, KeyError):
             traceback.print_exc()
             sys.stderr.write(f"error on line {i}: {line}")

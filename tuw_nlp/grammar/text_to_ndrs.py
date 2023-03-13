@@ -6,9 +6,9 @@ HOST = "localhost"
 PORT = 5002
 
 
-class TextToDRS:
-    def __init__(self, lang="en"):
-        self.lang = lang
+class TextToNDRS:
+    def __init__(self, language="en"):
+        self.language = language
 
     def make_request(self, text):
         x = requests.post(
@@ -23,15 +23,20 @@ class TextToDRS:
             result = x.json()
 
             if result["result"]["errors"]:
-                raise Exception(result["result"]["errors"])
+                if 'graph' in result['result']:
+                    assert result['result']['graph'] is None
+                    return None
+                else:
+                    raise Exception(result["result"]["errors"])
             else:
                 graph = result["result"]["graph"]
-                tokens_by_id = {int(i): tok for i, tok in result["result"]["tokens"].items()}
-                return graph, tokens_by_id
+                return graph
 
     def __call__(self, text):
-        cytoscape_graph, tokens_by_id = self.make_request(text)
+        cytoscape_graph = self.make_request(text)
 
-        graph = DRSGraph(cytoscape_graph, text, tokens_by_id)
-
-        yield graph
+        if cytoscape_graph is None:
+            yield None
+        else:
+            graph = DRSGraph(cytoscape_graph, text, tokens_by_id=None)
+            yield graph

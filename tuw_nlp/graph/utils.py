@@ -320,7 +320,9 @@ def pn_to_graph(raw_dl, edge_attr="color"):
 
         if edge != "UNKNOWN":
             G.add_edge(src_id, tgt_id)
-            G[src_id][tgt_id].update({edge_attr: int(edge)})
+            if edge.isnumeric():
+                edge = int(edge)
+            G[src_id][tgt_id].update({edge_attr: edge})
 
     return G, root_id
 

@@ -37,9 +37,9 @@ def get_parser(args):
     elif args.format == "amr":
         parser = TextToAMR()
     elif args.format == "ndrs":
-        parser = TextToNDRS(language=args.lang)
+        parser = TextToNDRS(lang=args.lang)
     elif args.format == "drs":
-        parser = TextToDRS(language=args.lang)
+        parser = TextToDRS(lang=args.lang)
     elif args.format == "sdp":
         parser = TextToSDP(lang=args.lang)
     elif args.format == "ucca":

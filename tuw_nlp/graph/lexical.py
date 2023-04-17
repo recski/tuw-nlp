@@ -3,8 +3,8 @@ from networkx.convert import from_dict_of_dicts as fdd
 from networkx.convert import to_dict_of_dicts as tdd
 
 from tuw_nlp.common.vocabulary import Vocabulary
+from tuw_nlp.graph.graph import Graph
 from tuw_nlp.graph.utils import gen_subgraphs
-from tuw_nlp.graph.utils import Graph
 
 
 class LexGraphs(Graph):

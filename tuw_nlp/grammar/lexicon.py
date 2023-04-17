@@ -104,7 +104,7 @@ class BaseLexicon(IRTGRuleLexicon):
     def get_term_fnc(self):
         raise NotImplementedError
 
-    def get_terminal_rules(self, word, pos, xpos):
+    def get_terminal_rules(self, word, pos, xpos, i="unknown"):
         """returns a list of interpretations associated with the
         word or word, pos pair. Word-only match takes precedence to discourage
         using it as an elsewhere condition: if POS matters then
@@ -114,14 +114,14 @@ class BaseLexicon(IRTGRuleLexicon):
             return [f'"({word}<root> / {word} :0 (OBL / OBL))"']
 
         return self.term_fnc.get(word, self.term_fnc.get((word, pos))) or [
-            self.get_default_terminal(word)
+            self.get_default_terminal(word, i)
         ]
 
     def get_lexical_terminal(self, word):
         return self.get_default_terminal(word)
 
-    def get_default_terminal(self, word):
-        return f'"({word}<root> / {word})"'
+    def get_default_terminal(self, word, i="unknown"):
+        return f'"({word}<root> / {word}_{i})"'
 
 
 class ENLexicon(BaseLexicon):

@@ -51,15 +51,17 @@ def print_cat_stats(
     out_stream.write("\n")
 
 
+def f1(p, r):
+    return 0.0 if p + r == 0 else (2 * p * r) / (p + r)
+
+
 def count_p_r_f(cat_stats):
     for cat, s in cat_stats.items():
         s["pred"] = s["TP"] + s["FP"]
         s["gold"] = s["TP"] + s["FN"]
         s["P"] = s["TP"] / s["pred"] if s["pred"] > 0 else 1.0
         s["R"] = s["TP"] / s["gold"] if s["gold"] > 0 else 1.0
-        s["F"] = (
-            0.0 if s["P"] + s["R"] == 0 else (2 * s["P"] * s["R"]) / (s["P"] + s["R"])
-        )
+        s["F"] = f1(s["P"], s["R"])
 
     return cat_stats
 

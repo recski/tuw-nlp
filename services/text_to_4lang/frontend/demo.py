@@ -1,8 +1,9 @@
 import json
 import re
-import requests
+
 import networkx
 import networkx as nx
+import requests
 import streamlit as st
 from networkx.readwrite import json_graph
 

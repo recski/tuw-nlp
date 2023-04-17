@@ -4,10 +4,9 @@ import sys
 from tuw_nlp.text.preprocess.germeval import preprocess_germeval
 from tuw_nlp.text.preprocess.hatexplain import preprocess_hatexplain
 
-
 PREPROCESSOR_FUNCTIONS = {
     "germeval": preprocess_germeval,
-    "hatexplain": preprocess_hatexplain
+    "hatexplain": preprocess_hatexplain,
 }
 
 

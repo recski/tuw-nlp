@@ -1,24 +1,25 @@
-from collections import Counter
-import networkx as nx
-import re
 import os
+import re
+from collections import Counter
+
+# Conceptnet
+import conceptnet_lite
+import networkx as nx
 import nltk
 import stanza
-from tuw_nlp.text.pipeline import CachedStanzaPipeline
-from tuw_nlp.graph.utils import Graph
+from conceptnet_lite import Concept, Label, edges_between
+from conceptnet_lite.db import RelationName
+from networkx.algorithms.isomorphism import DiGraphMatcher
 
 # Wordnet
 from nltk.corpus import wordnet as wn
 
-# Conceptnet
-import conceptnet_lite
-from conceptnet_lite import Label, Concept, edges_between
-from conceptnet_lite.db import RelationName
-
 # The lesk algorithms and graph matching
 from nltk.wsd import lesk
-from pywsd.lesk import simple_lesk, cosine_lesk, adapted_lesk, original_lesk
-from networkx.algorithms.isomorphism import DiGraphMatcher
+from pywsd.lesk import adapted_lesk, cosine_lesk, original_lesk, simple_lesk
+
+from tuw_nlp.graph.graph import Graph
+from tuw_nlp.text.pipeline import CachedStanzaPipeline
 
 # Download wordnet
 basepath = os.path.dirname(__file__)

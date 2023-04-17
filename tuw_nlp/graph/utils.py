@@ -15,246 +15,12 @@ from tuw_nlp.text.patterns.misc import (
 )
 from tuw_nlp.text.utils import replace_emojis
 
+
 dummy_isi_graph = "(dummy_0 / dummy_0)"
 dummy_tree = "dummy(dummy)"
 
 
-class Graph:
-    def __init__(self):
-        self.G = nx.DiGraph()
-
-    @staticmethod
-    def d_clean(string):
-        s = string
-        for c in "\\=@-,'\".!:;<>/{}[]()#^?":
-            s = s.replace(c, "_")
-        s = (
-            s.replace("$", "_dollars")
-            .replace("%", "_percent")
-            .replace("|", " ")
-            .replace("*", " ")
-        )
-        if s == "#":
-            s = "_number"
-        keywords = ("graph", "node", "strict", "edge")
-        if re.match("^[0-9]", s) or s in keywords:
-            s = "X" + s
-        return s
-
-    def to_dot(self, marked_nodes=set(), edge_color=None):
-        show_graph = self.G.copy()
-        show_graph.remove_nodes_from(list(nx.isolates(show_graph)))
-        lines = ["digraph finite_state_machine {", "\tdpi=70;"]
-        node_lines = []
-        for node, n_data in show_graph.nodes(data=True):
-            d_node = node
-            if "name" in n_data:
-                printname = self.d_clean(str(n_data["name"]))
-            else:
-                printname = d_node
-            if (
-                "expanded" in n_data
-                and n_data["expanded"]
-                and printname in marked_nodes
-            ):
-                node_line = '\t{0} [shape = circle, label = "{1}", \
-                        style=filled, fillcolor=purple];'.format(
-                    d_node, printname
-                ).replace(
-                    "-", "_"
-                )
-            elif "expanded" in n_data and n_data["expanded"]:
-                node_line = '\t{0} [shape = circle, label = "{1}", \
-                        style="filled"];'.format(
-                    d_node, printname
-                ).replace(
-                    "-", "_"
-                )
-            elif "fourlang" in n_data and n_data["fourlang"]:
-                node_line = '\t{0} [shape = circle, label = "{1}", \
-                        style="filled", fillcolor=red];'.format(
-                    d_node, printname
-                ).replace(
-                    "-", "_"
-                )
-            elif "substituted" in n_data and n_data["substituted"]:
-                node_line = '\t{0} [shape = circle, label = "{1}", \
-                        style="filled"];'.format(
-                    d_node, printname
-                ).replace(
-                    "-", "_"
-                )
-            elif printname in marked_nodes:
-                node_line = '\t{0} [shape = circle, label = "{1}", style=filled, fillcolor=lightblue];'.format(
-                    d_node, printname
-                ).replace(
-                    "-", "_"
-                )
-            else:
-                node_line = '\t{0} [shape = circle, label = "{1}"];'.format(
-                    d_node, printname
-                ).replace("-", "_")
-            node_lines.append(node_line)
-        lines += sorted(node_lines)
-
-        edge_lines = []
-        for u, v, edata in show_graph.edges(data=True):
-            if "color" in edata:
-                if edge_color is None:
-                    edge_lines.append(
-                        '\t{0} -> {1} [ label = "{2}" ];'.format(u, v, edata["color"])
-                    )
-                else:
-                    edge_lines.append(
-                        '\t{0} -> {1} [ label = "{2}", color = "{3}" ];'.format(
-                            u, v, edata["color"], edge_color[edata["color"]]
-                        )
-                    )
-
-        lines += sorted(edge_lines)
-        lines.append("}")
-        return "\n".join(lines)
-
-
-class GraphMatcher:
-    @staticmethod
-    def node_matcher(n1, n2):
-        logger.debug(f"matchig these: {n1}, {n2}")
-        if n1["name"] is None or n2["name"] is None:
-            return True
-        return n1["name"] == n2["name"]
-
-    @staticmethod
-    def edge_matcher(e1, e2):
-        logger.debug(f"matchig these: {e1}, {e2}")
-        return e1["color"] == e2["color"]
-
-    def __init__(self, patterns):
-        self.patts = [(pn_to_graph(patt)[0], key) for patt, key in patterns]
-
-    def match(self, graph):
-        for i, (patt, key) in enumerate(self.patts):
-            logger.debug(f"matching this: {self.patts[i]}")
-            matcher = DiGraphMatcher(
-                graph,
-                patt,
-                node_match=GraphMatcher.node_matcher,
-                edge_match=GraphMatcher.edge_matcher,
-            )
-            if matcher.subgraph_is_monomorphic():
-                logger.debug("MATCH!")
-                yield key
-
-
-class GraphFormulaMatcher:
-    @staticmethod
-    def node_matcher_case_insensitive(n1, n2):
-        return GraphFormulaMatcher.node_matcher(n1, n2, re.IGNORECASE)
-
-    @staticmethod
-    def node_matcher_case_sensitive(n1, n2):
-        return GraphFormulaMatcher.node_matcher(n1, n2, 0)
-
-    @staticmethod
-    def node_matcher(n1, n2, flags):
-        logger.debug(f"matchig these: {n1}, {n2}")
-        if n1["name"] is None or n2["name"] is None:
-            return True
-
-        return (
-            True
-            if (
-                re.match(rf"\b({n2['name']})\b", n1["name"], flags)
-                or n2["name"] == n1["name"]
-            )
-            else False
-        )
-
-    @staticmethod
-    def edge_matcher_case_insensitive(n1, n2):
-        return GraphFormulaMatcher.edge_matcher(n1, n2, re.IGNORECASE)
-
-    @staticmethod
-    def edge_matcher_case_sensitive(n1, n2):
-        return GraphFormulaMatcher.edge_matcher(n1, n2, 0)
-
-    @staticmethod
-    def edge_matcher(e1, e2, flags):
-        logger.debug(f"matchig these: {e1}, {e2}")
-        return (
-            True
-            if re.match(rf"\b({str(e2['color'])})\b", str(e1["color"]), flags)
-            else False
-        )
-
-    @staticmethod
-    def get_matcher(graph, neg_graph, case_sensitive):
-        if case_sensitive:
-            return DiGraphMatcher(
-                graph,
-                neg_graph,
-                node_match=GraphFormulaMatcher.node_matcher_case_sensitive,
-                edge_match=GraphFormulaMatcher.edge_matcher_case_sensitive,
-            )
-        else:
-            return DiGraphMatcher(
-                graph,
-                neg_graph,
-                node_match=GraphFormulaMatcher.node_matcher_case_insensitive,
-                edge_match=GraphFormulaMatcher.edge_matcher_case_insensitive,
-            )
-
-    def __init__(self, patterns, converter, case_sensitive=False):
-        self.case_sensitive = case_sensitive
-
-        self.patts = []
-
-        for patts, negs, key in patterns:
-            pos_patts = [converter(patt)[0] for patt in patts]
-            neg_graphs = [converter(neg_patt)[0] for neg_patt in negs]
-            self.patts.append((pos_patts, neg_graphs, key))
-
-    def _neg_match(self, graph, negs):
-        for neg_graph in negs:
-            matcher = GraphFormulaMatcher.get_matcher(
-                graph, neg_graph, self.case_sensitive
-            )
-            if matcher.subgraph_is_monomorphic():
-                return True
-        return False
-
-    def match(self, graph, return_subgraphs=False):
-        for i, (patt, negs, key) in enumerate(self.patts):
-            logger.debug(f"matching this: {self.patts[i]}")
-            neg_match = self._neg_match(graph, negs)
-
-            if not neg_match:
-                pos_match = True
-                subgraphs = []
-                for p in patt:
-
-                    matcher = GraphFormulaMatcher.get_matcher(
-                        graph, p, self.case_sensitive
-                    )
-
-                    monomorphic_subgraphs = list(matcher.subgraph_monomorphisms_iter())
-                    if not len(monomorphic_subgraphs) == 0:
-                        mapping = monomorphic_subgraphs[0]
-                        subgraph = graph.subgraph(mapping.keys())
-                        nx.set_node_attributes(subgraph, mapping, name="mapping")
-                        subgraphs.append(subgraph)
-                    else:
-                        pos_match = False
-                        break
-
-                if pos_match:
-                    if return_subgraphs:
-                        yield key, i, subgraphs
-                    else:
-                        yield key, i
-
-
-class GraphFormulaPatternMatcher(GraphFormulaMatcher):
+class GraphFormulaPatternMatcher:
 
     """
     Rule examples:
@@ -280,6 +46,63 @@ class GraphFormulaPatternMatcher(GraphFormulaMatcher):
         for key, feature, sub_graph in feat_generator:
             matches.append(sub_graph)
     """
+
+    @staticmethod
+    def node_matcher_case_insensitive(n1, n2):
+        return GraphFormulaPatternMatcher.node_matcher(n1, n2, re.IGNORECASE)
+
+    @staticmethod
+    def node_matcher_case_sensitive(n1, n2):
+        return GraphFormulaPatternMatcher.node_matcher(n1, n2, 0)
+
+    @staticmethod
+    def node_matcher(n1, n2, flags):
+        logger.debug(f"matchig these: {n1}, {n2}")
+        if n1["name"] is None or n2["name"] is None:
+            return True
+
+        return (
+            True
+            if (
+                re.match(rf"\b({n2['name']})\b", n1["name"], flags)
+                or n2["name"] == n1["name"]
+            )
+            else False
+        )
+
+    @staticmethod
+    def edge_matcher_case_insensitive(n1, n2):
+        return GraphFormulaPatternMatcher.edge_matcher(n1, n2, re.IGNORECASE)
+
+    @staticmethod
+    def edge_matcher_case_sensitive(n1, n2):
+        return GraphFormulaPatternMatcher.edge_matcher(n1, n2, 0)
+
+    @staticmethod
+    def edge_matcher(e1, e2, flags):
+        logger.debug(f"matchig these: {e1}, {e2}")
+        return (
+            True
+            if re.match(rf"\b({str(e2['color'])})\b", str(e1["color"]), flags)
+            else False
+        )
+
+    @staticmethod
+    def get_matcher(graph, neg_graph, case_sensitive):
+        if case_sensitive:
+            return DiGraphMatcher(
+                graph,
+                neg_graph,
+                node_match=GraphFormulaPatternMatcher.node_matcher_case_sensitive,
+                edge_match=GraphFormulaPatternMatcher.edge_matcher_case_sensitive,
+            )
+        else:
+            return DiGraphMatcher(
+                graph,
+                neg_graph,
+                node_match=GraphFormulaPatternMatcher.node_matcher_case_insensitive,
+                edge_match=GraphFormulaPatternMatcher.edge_matcher_case_insensitive,
+            )
 
     def __init__(self, patterns, converter, case_sensitive=False):
         self.case_sensitive = case_sensitive
@@ -364,13 +187,16 @@ class GraphFormulaPatternMatcher(GraphFormulaMatcher):
         return self.path_between(undirected_graph, nodes, subgraphs)
 
     def digraph_matcher(self, graph, pattern, subgraphs):
-        matcher = GraphFormulaMatcher.get_matcher(graph, pattern, self.case_sensitive)
+        matcher = GraphFormulaPatternMatcher.get_matcher(
+            graph, pattern, self.case_sensitive
+        )
 
         monomorphic_subgraphs = list(matcher.subgraph_monomorphisms_iter())
         if not len(monomorphic_subgraphs) == 0:
             for sub in monomorphic_subgraphs:
                 mapping = sub
-                subgraph = graph.subgraph(mapping.keys())
+                subgraph = graph.subgraph(mapping.keys()).copy()
+                # copying is essential, otherwise mapping gets overwritten if a node occurs in multiple matching subgraphs
                 nx.set_node_attributes(subgraph, mapping, name="mapping")
                 subgraphs.append(subgraph)
             return True
@@ -382,7 +208,7 @@ class GraphFormulaPatternMatcher(GraphFormulaMatcher):
                 if neg_graph[0](graph, neg_graph[1]):
                     return True
             else:
-                matcher = GraphFormulaMatcher.get_matcher(
+                matcher = GraphFormulaPatternMatcher.get_matcher(
                     graph, neg_graph, case_sensitive=self.case_sensitive
                 )
                 if matcher.subgraph_is_monomorphic():
@@ -445,37 +271,58 @@ def gen_subgraphs(M, no_edges):
 
 
 def pn_to_graph(raw_dl, edge_attr="color"):
+    """Convert penman to networkx format
+    raw_dl: raw string of penman format
+    example: (k_4<root> / like :2 (k_6 / eat :2 (k_7 / sausage)) :1 (k_3 / dog :2-of (u_12 / HAS :1 (k_1 / Adam))))
+    edges marked with k_* are mapped to UD nodes, u_* are unknown in UD
+    """
+
     g = pn.decode(raw_dl)
     G = nx.DiGraph()
+    node_to_id = {}
+    root_id = None
 
-    for i, trip in enumerate(g.triples):
+    for i, trip in enumerate(g.instances()):
+        node_id, name = trip[0], trip[2]
+
+        node_to_id[node_id] = i
+
         if i == 0:
-            root_id = int(trip[0].split("_")[1].split("<root>")[0])
-            name = trip[2].split("<root>")[0]
-            G.add_node(root_id, name=name)
+            root_id = i
 
-        if trip[1] == ":instance":
-            i, name = int(trip[0].split("<root>")[0].split("_")[1]), trip[2]
-            G.add_node(i, name=name)
+        indicator = trip[0].split("_")[0]
+        ud_id = trip[0].split("_")[1].split("<root>")[0]
+        if ud_id.isnumeric():
+            ud_id = int(ud_id)
+        else:
+            raise ValueError(f"{ud_id} is not a number")
 
-    for trip in g.triples:
-        if trip[1] != ":instance":
-            edge = trip[1].split(":")[1]
-            if "-" in edge:
-                assert edge.endswith("-of")
-                edge = edge.split("-")[0]
-                src = trip[2]
-                tgt = trip[0]
-            else:
-                src = trip[0]
-                tgt = trip[2]
+        if indicator == "k":
+            G.add_node(i, name=name, token_id=ud_id)
+        elif indicator == "u":
+            G.add_node(i, name=name, token_id=None)
+        else:
+            raise ValueError("Unknown indicator")
 
-            src_id = int(src.split("<root>")[0].split("_")[1])
-            tgt_id = int(tgt.split("<root>")[0].split("_")[1])
+    for trip in g.edges():
+        edge = trip[1].split(":")[1]
+        if "-" in edge:
+            assert edge.endswith("-of")
+            edge = edge.split("-")[0]
+            src = trip[2]
+            tgt = trip[0]
+        else:
+            src = trip[0]
+            tgt = trip[2]
 
-            if edge != "UNKNOWN":
-                G.add_edge(src_id, tgt_id)
-                G[src_id][tgt_id].update({edge_attr: int(edge)})
+        src_id = node_to_id[src]
+        tgt_id = node_to_id[tgt]
+
+        if edge != "UNKNOWN":
+            G.add_edge(src_id, tgt_id)
+            if edge.isnumeric():
+                edge = int(edge)
+            G[src_id][tgt_id].update({edge_attr: edge})
 
     return G, root_id
 
@@ -512,6 +359,54 @@ def graph_to_pn(graph):
         raise e
 
 
+def postprocess_penman(graph_string):
+    """The IRTG grammar returns labels with the corresponding UD ids.
+    This function removes the UD ids from the labels and replaces penman ids with them.
+    If UD id is not given, the penman ID remains.
+
+    Example input:
+    (u_1<root> / like_4  :2 (u_3 / eat_6  :2 (u_6 / sausage_7))  :1 (u_9 / dog_3  :2-of (u_12 / HAS  :1 (u_13 / Adam_1))))
+
+    Example output:
+    (k_4<root> / like :2 (k_6 / eat :2 (k_7 / sausage)) :1 (k_3 / dog :2-of (u_12 / HAS :1 (k_1 / Adam))))
+
+    Args:
+        graph_string (str): the input graph
+    """
+
+    g = pn.decode(graph_string)
+
+    instances = {}
+    relabel = {}
+
+    for i in g.instances():
+        if i[2] and "_" in i[2]:
+            ud_id = i[2].split("_")[-1]
+            label = "_".join(i[2].split("_")[:-1])
+            if ud_id.isnumeric():
+                new_id = f"k_{ud_id}"
+                if g.top == i[0]:
+                    new_id += "<root>"
+                instances[new_id] = label
+                relabel[i[0]] = new_id
+            else:
+                instances[i[0]] = i[2]
+        else:
+            instances[i[0]] = i[2]
+
+    edges = []
+
+    for edge in g.edges():
+        src = relabel[edge[0]] if edge[0] in relabel else edge[0]
+        tgt = relabel[edge[2]] if edge[2] in relabel else edge[2]
+
+        edges.append((src, edge[1], tgt))
+
+    nodes = [(k, ":instance", v) for k, v in instances.items()]
+
+    return pn.encode(pn.Graph(nodes + edges), indent=0).replace("\n", "  ")
+
+
 def read_alto_output(raw_dl):
     id_to_word = {}
 
@@ -544,6 +439,14 @@ def read_alto_output(raw_dl):
         G.add_node(root)
 
     return G, root
+
+
+def check_if_str_is_penman(string):
+    try:
+        pn.decode(string)
+        return True
+    except Exception:
+        return False
 
 
 def preprocess_edge_alto(edge):

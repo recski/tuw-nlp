@@ -25,7 +25,7 @@ class SetupAltoEgg(egg_info):
 
 setup(
     name="tuw-nlp",
-    version="0.0.9",
+    version="0.1.0",
     description="NLP tools at TUW Informatics",
     long_description=open("README.md", "r", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
@@ -49,7 +49,7 @@ setup(
         "unidecode",
         "conllu",
         "tabulate",
-        "ucca @ git+https://github.com/adaamko/ucca.git#egg=ucca",
+        #"ucca @ git+https://github.com/adaamko/ucca.git#egg=ucca",
     ],
     packages=find_packages(),
     include_package_data=True,

@@ -7,8 +7,8 @@ PORT = 5002
 
 
 class TextToNDRS:
-    def __init__(self, language="en"):
-        self.language = language
+    def __init__(self, lang="en"):
+        self.lang = lang
 
     def make_request(self, text):
         x = requests.post(

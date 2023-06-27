@@ -113,6 +113,12 @@ For parsing [UCCA](https://github.com/UniversalConceptualCognitiveAnnotation/tut
 
 UCCA parsing is currently supporting English, French, German and Hebrew. The docker service is a REST API that you can use to parse UCCA graphs. To convert the output to networkx graphs, see the `TextToUCCA` class.
 
+Additionally, install the `ucca` package to manipulate the UCCA graphs:
+
+```bash
+git+https://github.com/adaamko/ucca.git#egg=ucca
+```
+
 ### DRS
 The task of __Discourse Representation Structure (DRS) parsing__ is to convert text into formal meaning representations in the style of Discourse Representation Theory (DRT; Kamp and Reyle 1993). 
 

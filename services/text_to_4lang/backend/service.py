@@ -60,19 +60,13 @@ def build():
         append_zero_graph = data["append"]
         if lang == "en":
             fl_graphs = list(text_to_4lang_en(text))
-            g = fl_graphs[0]
-            for n in fl_graphs[1:]:
-                g = nx.compose(g, n)
-            fl = FourLang(g, 0)
+            fl = fl_graphs[0]
             if int(depth):
                 text_to_4lang_en.expand(fl, depth=int(depth), substitute=substitute)
             sen = nlp(text).sentences[0]
         elif lang == "de":
             fl_graphs = list(text_to_4lang_de(text))
-            g = fl_graphs[0]
-            for n in fl_graphs[1:]:
-                g = nx.compose(g, n)
-            fl = FourLang(g, 0)
+            fl = fl_graphs[0]
             if int(depth):
                 text_to_4lang_de.expand(fl, depth=int(depth), substitute=substitute)
             sen = nlp_de(text).sentences[0]

@@ -1,5 +1,4 @@
 from collections import Counter
-from heapq import nlargest
 
 
 class Vocabulary:
@@ -11,21 +10,22 @@ class Vocabulary:
                 v.add(line.strip())
         return v
 
-    def __init__(self):
+    def __init__(self, first_id=0):
         self.id_to_word = {}
         self.word_to_id = {}
         self.word_to_freq = Counter()
-        self.next_id = 0
+        self.first_id = first_id
+        self.next_id = first_id
 
     def __contains__(self, item):
         return item in self.word_to_id
 
     def __len__(self):
-        return self.next_id
+        return self.next_id - self.first_id
 
     def to_file(self, fn):
         with open(fn, "w") as f:
-            for i in range(self.next_id):
+            for i in range(self.first_id, self.next_id):
                 f.write(f"{self.id_to_word[i]}\n")
 
     def add(self, word, fail_if_exists=False):

@@ -327,14 +327,38 @@ def pn_to_graph(raw_dl, edge_attr="color"):
     return G, root_id
 
 
-def graph_to_pn(graph):
+def graph_to_bolinas(graph, name_attr="name"):
+    nodes = {}
+    pn_edges = []
+
+    root_nodes, non_root_nodes = set(), set()
+    for u, v, e in graph.edges(data=True):
+
+        if v in root_nodes:
+            root_nodes.remove(v)
+        non_root_nodes.add(v)
+        if u not in non_root_nodes:
+            root_nodes.add(u)
+
+        for node in u, v:
+            if node not in nodes:
+                nodes[node] = f"n{node}."
+        pn_edges.append((nodes[u], f':{e["color"]}', nodes[v]))
+    
+    assert len(root_nodes) == 1, f"graph has no unique root: {root_nodes}"
+    top_node = root_nodes.pop()
+    G = pn.Graph(pn_edges)
+    return pn.encode(G, top=f"n{top_node}.", indent=0).replace("\n", " ")
+
+
+def graph_to_pn(graph, name_attr="name"):
     nodes = {}
     pn_edges, pn_nodes = [], []
 
     for u, v, e in graph.edges(data=True):
         for node in u, v:
             if node not in nodes:
-                name = graph.nodes[node]["name"]
+                name = graph.nodes[node][name_attr]
                 pn_id = f"u_{node}"
                 nodes[node] = (pn_id, name)
                 pn_nodes.append((pn_id, ":instance", name))
@@ -343,7 +367,7 @@ def graph_to_pn(graph):
 
     for node in graph.nodes():
         if node not in nodes:
-            name = graph.nodes[node]["name"]
+            name = graph.nodes[node][name_attr]
             pn_id = f"u_{node}"
             nodes[node] = (pn_id, name)
             pn_nodes.append((pn_id, ":instance", name))
@@ -354,7 +378,7 @@ def graph_to_pn(graph):
         # two spaces before edge name, because alto does it :)
         return pn.encode(G, indent=0).replace("\n", "  ")
     except pn.exceptions.LayoutError as e:
-        words = [graph.nodes[node]["name"] for node in graph.nodes()]
+        words = [graph.nodes[node][name_attr] for node in graph.nodes()]
         logging.error(f"pn.encode failed on this graph: {words}")
         raise e
 

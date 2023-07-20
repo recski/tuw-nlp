@@ -38,7 +38,8 @@ class UDGraph(Graph):
         H = self.G.subgraph(nodes)
         tok_ids_to_keep = {data.get("token_id") for node, data in H.nodes(data=True)}
         new_tokens = [
-            tok if i + 1 in tok_ids_to_keep else None for i, tok in enumerate(self.tokens)
+            tok if i + 1 in tok_ids_to_keep else None
+            for i, tok in enumerate(self.tokens)
         ]
         # print("main tokens:", self.tokens)
         # print("H.nodes:", H.nodes(data=True))
@@ -56,6 +57,17 @@ class UDGraph(Graph):
         # )
         return new_graph
 
+    def pos_edge_graph(self, vocab):
+        H = self.G.copy()
+        for u, v, d in H.edges(data=True):
+            d['color'] = d['color'].lower()
+        for node, data in self.G.nodes(data=True):
+            leaf_node_id = vocab.get_id(data["name"], allow_new=True)
+            H.add_node(leaf_node_id, name=data["name"])
+            H.add_edge(node, leaf_node_id, color=data["upos"])
+            nx.set_node_attributes(H, {node: {"name": ""}})
+        return Graph.from_networkx(H)
+
     def convert_to_networkx(self, sen):
         """convert dependency-parsed stanza Sentence to nx.DiGraph"""
         G = nx.DiGraph()
@@ -63,9 +75,11 @@ class UDGraph(Graph):
             if isinstance(word["id"], (list, tuple)):
                 # token representing an mwe, e.g. "vom" ~ "von dem"
                 continue
-            G.add_node(word["id"], name=word["lemma"], token_id=word["id"])
+            G.add_node(
+                word["id"], name=word["lemma"], token_id=word["id"], upos=word["upos"]
+            )
             if word["deprel"] == "root":
-                G.add_node(word["head"], name="root")
+                G.add_node(word["head"], name="root", upos="ROOT")
             G.add_edge(word["head"], word["id"])
             G[word["head"]][word["id"]].update(
                 {"color": preprocess_edge_alto(word["deprel"])}

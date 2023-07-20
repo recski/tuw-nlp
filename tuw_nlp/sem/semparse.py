@@ -1,4 +1,5 @@
 import argparse
+import json
 import logging
 import os
 import sys
@@ -22,12 +23,13 @@ def get_args():
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("-f", "--format", default=None, type=str)
     parser.add_argument("-cd", "--cache-dir", default="cache", type=str)
-    parser.add_argument("-cn", "--nlp-cache", default=None, type=str)
+    parser.add_argument("-cn", "--nlp-cache", default="nlp_cache.json", type=str)
     parser.add_argument("-l", "--lang", default=None, type=str, required=True)
     parser.add_argument("-d", "--depth", default=0, type=int)
     parser.add_argument("-s", "--substitute", default=False, type=bool)
     parser.add_argument("-p", "--preprocessor", default=None, type=str)
     parser.add_argument("-o", "--out-dir", default="output", type=str)
+    parser.add_argument("-r", "--render", action="store_true")
     return parser.parse_args()
 
 
@@ -71,13 +73,16 @@ def main():
                 if graph is None:
                     sys.stderr.write(f"no graph returned for line {i}: {line}")
                 else:
-                    gv = Source(
-                        graph.to_dot(),
-                        filename=f"{i}_{j}",
-                        directory=dirname,
-                        format="png",
-                    )
-                    gv.render()
+                    with open(os.path.join(dirname, f"{i}_{j}.json"), "w") as f:
+                        json.dump(graph.to_json(), f)
+                    if args.render:
+                        gv = Source(
+                            graph.to_dot(),
+                            filename=f"{i}_{j}",
+                            directory=dirname,
+                            format="png",
+                        )
+                        gv.render()
         except (TypeError, IndexError, KeyError):
             traceback.print_exc()
             sys.stderr.write(f"error on line {i}: {line}")

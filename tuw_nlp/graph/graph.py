@@ -6,6 +6,10 @@ from networkx.readwrite import json_graph
 from tuw_nlp.graph.utils import graph_to_bolinas, graph_to_pn, pn_to_graph
 
 
+class UnconnectedGraphError(Exception):
+    pass
+
+
 class Graph:
     def __init__(self, graph=None, text=None, tokens=None, type=None):
         if graph is None:

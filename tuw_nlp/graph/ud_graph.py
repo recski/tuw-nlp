@@ -1,6 +1,6 @@
 import networkx as nx
 
-from tuw_nlp.graph.graph import Graph
+from tuw_nlp.graph.graph import Graph, UnconnectedGraphError
 from tuw_nlp.graph.utils import preprocess_edge_alto
 
 
@@ -38,7 +38,7 @@ class UDGraph(Graph):
         H = self.G.subgraph(nodes)
         if not nx.is_weakly_connected(H):
             if handle_unconnected is None:
-                raise ValueError(
+                raise UnconnectedGraphError(
                     f"subgraph induced by nodes {nodes} is not connected and handle_unconnected is not specified"
                 )
             elif handle_unconnected == "shortest_path":
@@ -54,7 +54,7 @@ class UDGraph(Graph):
                 )  # an undirected version of G to search for shortest paths
                 for comp in components[1:]:
                     path = nx.shortest_path(G_u, src, comp[0])
-                    print(f'shortest path between {src} and {comp[0]}: {path}')
+                    # print(f'shortest path between {src} and {comp[0]}: {path}')
                     for node in path:
                         if node not in new_nodes:
                             new_nodes.add(node)

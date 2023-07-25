@@ -6,6 +6,7 @@ import stanza
 from stanza.utils.conll import CoNLL
 
 from tuw_nlp.common.vocabulary import Vocabulary
+from tuw_nlp.graph.graph import UnconnectedGraphError
 from tuw_nlp.graph.ud_graph import UDGraph
 from tuw_nlp.text.utils import gen_tsv_sens
 
@@ -15,8 +16,9 @@ def get_pred_graph_bolinas(pred_graph, arg_roots):
     pn_edges = []
     root_nodes, non_root_nodes = set(), set()
     arg_roots_to_i = {node: i for i, node in enumerate(arg_roots)}
+    # print("arg roots:", arg_roots_to_i)
     for u, v, e in pred_graph.G.edges(data=True):
-        print('u, v, e:', u, v, e)
+        # print("u, v, e:", u, v, e)
         if v in root_nodes:
             root_nodes.remove(v)
         non_root_nodes.add(v)
@@ -26,17 +28,22 @@ def get_pred_graph_bolinas(pred_graph, arg_roots):
         for node in u, v:
             if node not in nodes:
                 nodes[node] = f"n{node}."
-        
-        if u in arg_roots_to_i:
-            continue
+
         if v in arg_roots_to_i:
             arg_index = arg_roots_to_i[v]
-            pn_edges.append((nodes[u], e["color"], f"A{arg_index}."))
+            if u in arg_roots_to_i:
+                """This is the case when an argument connects to the predicate through another argument"""
+                pn_edges.append(
+                    (f"A{arg_roots_to_i[u]}.", e["color"], f"A{arg_index}.")
+                )
+            else:
+                pn_edges.append((nodes[u], e["color"], f"A{arg_index}."))
             pn_edges.append((f"A{arg_index}.", "A$", ""))
-        else:
+
+        elif u not in arg_roots_to_i:
             pn_edges.append((nodes[u], e["color"], nodes[v]))
-    
-    print('pn_edges:', pn_edges)
+
+    # print("pn_edges:", pn_edges)
 
     assert len(root_nodes) == 1, f"graph has no unique root: {root_nodes}"
     top_node = root_nodes.pop()
@@ -75,10 +82,18 @@ def main():
 
         agraphs_bolinas, arg_roots = [], []
         for arg, nodes in args.items():
-            agraph = ud_graph.subgraph(nodes).pos_edge_graph(vocab)
+            try:
+                agraph = ud_graph.subgraph(nodes).pos_edge_graph(vocab)
+            except UnconnectedGraphError:
+                print(f'unconnected argument ({nodes}) in sentence {sen_idx}, skipping')
+                continue
             bolinas_str, arg_root = agraph.to_bolinas(return_root=True)
             agraphs_bolinas.append(bolinas_str)
             arg_roots.append(arg_root)
+        
+        if len(agraphs_bolinas) == 0:
+            print(f'sentence {sen_idx} has no arguments, skipping')
+            continue
 
         pred_graph = ud_graph.subgraph(
             pred + arg_roots, handle_unconnected="shortest_path"

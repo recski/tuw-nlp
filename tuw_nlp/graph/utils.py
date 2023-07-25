@@ -327,7 +327,7 @@ def pn_to_graph(raw_dl, edge_attr="color"):
     return G, root_id
 
 
-def graph_to_bolinas(graph, name_attr="name"):
+def graph_to_bolinas(graph, name_attr="name", return_root=False):
     nodes = {}
     pn_edges = []
 
@@ -348,7 +348,11 @@ def graph_to_bolinas(graph, name_attr="name"):
     assert len(root_nodes) == 1, f"graph has no unique root: {root_nodes}"
     top_node = root_nodes.pop()
     G = pn.Graph(pn_edges)
-    return pn.encode(G, top=f"n{top_node}.", indent=0).replace("\n", " ")
+    bolinas_str = pn.encode(G, top=f"n{top_node}.", indent=0).replace("\n", " ")
+    if return_root:
+        return bolinas_str, top_node
+    else:
+        return bolinas_str
 
 
 def graph_to_pn(graph, name_attr="name"):

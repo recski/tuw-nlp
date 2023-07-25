@@ -32,8 +32,8 @@ class Graph:
         s = json_graph.adjacency_data(self.G)
         return s
 
-    def to_bolinas(self, name_attr='name'):
-        return graph_to_bolinas(self.G, name_attr=name_attr)
+    def to_bolinas(self, name_attr='name', return_root=False):
+        return graph_to_bolinas(self.G, name_attr=name_attr, return_root=return_root)
 
     def to_penman(self, name_attr='name'):
         return graph_to_pn(self.G, name_attr=name_attr)

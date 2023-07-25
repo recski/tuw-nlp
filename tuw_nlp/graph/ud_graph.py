@@ -33,9 +33,39 @@ class UDGraph(Graph):
         self.text = None
         self.G.remove_nodes_from(g_to_remove)
 
-    def subgraph(self, nodes):
+    def subgraph(self, nodes, handle_unconnected=None):
         # print("main graph:", self.str_nodes(), "nodes:", nodes)
         H = self.G.subgraph(nodes)
+        if not nx.is_weakly_connected(H):
+            if handle_unconnected is None:
+                raise ValueError(
+                    f"subgraph induced by nodes {nodes} is not connected and handle_unconnected is not specified"
+                )
+            elif handle_unconnected == "shortest_path":
+                new_nodes = set(
+                    nodes
+                )  # a copy of the original nodes parameter to expand
+                components = [
+                    list(node_set) for node_set in nx.weakly_connected_components(H)
+                ]
+                src = components[0][0]  # a dedicated node in a dedicated component
+                G_u = (
+                    self.G.to_undirected()
+                )  # an undirected version of G to search for shortest paths
+                for comp in components[1:]:
+                    path = nx.shortest_path(G_u, src, comp[0])
+                    print(f'shortest path between {src} and {comp[0]}: {path}')
+                    for node in path:
+                        if node not in new_nodes:
+                            new_nodes.add(node)
+
+                return self.subgraph(new_nodes)
+
+            else:
+                raise ValueError(
+                    f"unknown value of handle_unconnected: {handle_unconnected}"
+                )
+
         tok_ids_to_keep = {data.get("token_id") for node, data in H.nodes(data=True)}
         new_tokens = [
             tok if i + 1 in tok_ids_to_keep else None
@@ -60,7 +90,7 @@ class UDGraph(Graph):
     def pos_edge_graph(self, vocab):
         H = self.G.copy()
         for u, v, d in H.edges(data=True):
-            d['color'] = d['color'].lower()
+            d["color"] = d["color"].lower()
         for node, data in self.G.nodes(data=True):
             leaf_node_id = vocab.get_id(data["name"], allow_new=True)
             H.add_node(leaf_node_id, name=data["name"])

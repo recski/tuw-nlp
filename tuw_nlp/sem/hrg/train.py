@@ -12,7 +12,7 @@ from tuw_nlp.graph.ud_graph import UDGraph
 from tuw_nlp.text.utils import gen_tsv_sens
 
 
-def get_pred_graph(ud_graph, pred, args):
+def get_pred_graph(ud_graph, pred, args, log):
 
     G_u = ud_graph.G.to_undirected()
 
@@ -24,28 +24,33 @@ def get_pred_graph(ud_graph, pred, args):
         for arg, nodes in args.items()
     }
 
-    print("closest nodes:", closest_nodes)
+    log.write(f"closest nodes: {closest_nodes}\n")
     pred_graph = ud_graph.subgraph(
         pred + list(closest_nodes.values()), handle_unconnected="shortest_path"
     )
     return pred_graph, closest_nodes
 
 
-def get_pred_graph_bolinas(pred_graph, arg_anchors):
+def get_pred_graph_bolinas(pred_graph, arg_anchors, args, log):
     nodes = {}
     pn_edges = []
     in_degrees, out_degrees = {}, {}
     arg_anchors_to_node = {}
+    arg_anchors_to_arg_nodes = {}
     for arg, node in arg_anchors.items():
         arg_node = f"{arg}."
         arg_anchors_to_node[node] = arg_node
-        pn_edges.append((arg_node, "A$", ""))
         in_degrees[arg_node] = 0
-        out_degrees[arg_node] = 1
+        out_degrees[arg_node] = 0
+        arg_anchors_to_arg_nodes[node] = set(args[node])
 
-    print("arg anchors:", arg_anchors_to_node)
+    log.write(f"arg anchors: {arg_anchors_to_node}\n")
+
+    anchor_nodes_handled = set()
+    tail_anchors = set()
+
     for u, v, e in pred_graph.G.edges(data=True):
-        print("u, v, e:", u, v, e)
+        log.write(f"{u} -{e['color']}-> {v}\n")
 
         # keep track of node labels and degrees
         for node in u, v:
@@ -61,12 +66,38 @@ def get_pred_graph_bolinas(pred_graph, arg_anchors):
         src = arg_anchors_to_node.get(u, nodes[u])
         tgt = arg_anchors_to_node.get(v, nodes[v])
 
-        pn_edges.append((src, e["color"], tgt))
+        if (
+            v in arg_anchors_to_node
+            and v not in anchor_nodes_handled
+            and u not in arg_anchors_to_arg_nodes[v]
+        ):
+            pn_edges.append((tgt, "A$", ""))
+            out_degrees[tgt] += 1
+            anchor_nodes_handled.add(v)
+        
+            pn_edges.append((src, e["color"], tgt))
+            in_degrees[tgt] += 1
+            out_degrees[src] += 1
 
-        in_degrees[tgt] += 1
-        out_degrees[src] += 1
+        elif (
+            u in arg_anchors_to_node
+            and u not in anchor_nodes_handled
+            and v not in arg_anchors_to_arg_nodes[u]
+        ):
+            print("adding reverse arg edge based on this edge:", u, v, e)
+            pn_edges.append((src, "A$", nodes[u]))
+            pn_edges.append((nodes[u], e['color'], tgt))
+            out_degrees[src] += 1
+            in_degrees[tgt] += 1
+            anchor_nodes_handled.add(u)
+            tail_anchors.add(u)
 
-    print("pn_edges:", pn_edges)
+        else:
+            pn_edges.append((src, e["color"], tgt))
+            in_degrees[tgt] += 1
+            out_degrees[src] += 1
+
+    log.write(f"pn_edges: {pn_edges}\n")
 
     # find the unique root node so we can draw the graph
     root_nodes = set(
@@ -78,7 +109,7 @@ def get_pred_graph_bolinas(pred_graph, arg_anchors):
     top_node = root_nodes.pop()
 
     G = pn.Graph(pn_edges)
-    return pn.encode(G, top=top_node, indent=0).replace("\n", " ")
+    return pn.encode(G, top=top_node, indent=0).replace("\n", " "), tail_anchors
 
 
 def main():
@@ -89,6 +120,8 @@ def main():
     )
     vocab = Vocabulary(first_id=1000)
     for sen_idx, sen in enumerate(gen_tsv_sens(sys.stdin)):
+        print(f"processing sentence {sen_idx}, writing to out/test{sen_idx}.log")
+        log = open(f"out/test{sen_idx}.log", "w")
         parsed_doc = nlp(" ".join(t[1] for t in sen))
         parsed_sen = parsed_doc.sentences[0]
         args = defaultdict(list)
@@ -106,39 +139,48 @@ def main():
         # print(ud_graph.to_penman())
         with open(f"out/test{sen_idx}_ud.dot", "w") as f:
             f.write(ud_graph.to_dot())
-        print(f"test{sen_idx} pred: {pred}, args: {args}")
+        log.write(f"test{sen_idx} pred: {pred}, args: {args}\n")
         CoNLL.write_doc2conll(parsed_doc, f"out/test{sen_idx}.conll")
-        print(f"wrote parse to test{sen_idx}.conll")
+        log.write(f"wrote parse to test{sen_idx}.conll\n")
 
-        agraphs_bolinas = []
+        agraphs = {}
         all_args_connected = True
         for arg, nodes in args.items():
             try:
                 agraph_ud = ud_graph.subgraph(nodes)
             except UnconnectedGraphError:
-                print(f"unconnected argument ({nodes}) in sentence {sen_idx}, skipping")
+                log.write(
+                    f"unconnected argument ({nodes}) in sentence {sen_idx}, skipping\n"
+                )
                 all_args_connected = False
                 continue
 
-            agraph = agraph_ud.pos_edge_graph(vocab)
-            agraphs_bolinas.append(agraph.to_bolinas())
+            agraphs[arg] = agraph_ud.pos_edge_graph(vocab)
 
         if not all_args_connected:
-            print(f"sentence {sen_idx} had unconnected arguments, skipping")
+            log.write(f"sentence {sen_idx} had unconnected arguments, skipping\n")
             continue
 
-        pred_graph_ud, arg_anchors = get_pred_graph(ud_graph, pred, args)
+        pred_graph_ud, arg_anchors = get_pred_graph(ud_graph, pred, args, log)
         pred_graph = pred_graph_ud.pos_edge_graph(vocab)
 
         with open(f"out/test{sen_idx}_pred.dot", "w") as f:
             f.write(pred_graph.to_dot())
-        pred_graph_bolinas = get_pred_graph_bolinas(pred_graph, arg_anchors)
+        pred_graph_bolinas, tail_anchors = get_pred_graph_bolinas(
+            pred_graph, arg_anchors, args, log
+        )
+
+        agraphs_bolinas = []
+        for arg, agraph in agraphs.items():
+            anchor = arg_anchors[arg]
+            ext_node = anchor if anchor in tail_anchors else None
+            agraphs_bolinas.append(agraph.to_bolinas(ext_node=ext_node))
 
         with open(f"out/test{sen_idx}.hrg", "w") as f:
             f.write(f"S -> {pred_graph_bolinas}; 1.0 # 1\n")
             for i, agraph_bolinas in enumerate(agraphs_bolinas):
                 f.write(f"A -> {agraph_bolinas}; 1.0 # {i+2}\n")
-        print(f"wrote grammar to test{sen_idx}.hrg")
+        log.write(f"wrote grammar to test{sen_idx}.hrg\n")
 
         idx_to_keep = [n for nodes in args.values() for n in nodes] + pred
         pruned_graph_bolinas = (
@@ -148,7 +190,7 @@ def main():
         )
         with open(f"out/test{sen_idx}.graph", "w") as f:
             f.write(f"{pruned_graph_bolinas}\n")
-        print(f"wrote graph to test{sen_idx}.graph")
+        log.write(f"wrote graph to test{sen_idx}.graph\n")
 
         # print(graph.to_penman(name_attr='upos'))
     vocab_fn = "vocab.txt"

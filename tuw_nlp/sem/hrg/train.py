@@ -88,7 +88,9 @@ def get_pred_graph_bolinas(pred_graph, arg_anchors, args, log):
             pn_edges.append((src, "A$", nodes[u]))
             pn_edges.append((nodes[u], e['color'], tgt))
             out_degrees[src] += 1
+            out_degrees[nodes[u]] += 1
             in_degrees[tgt] += 1
+            in_degrees[nodes[u]] += 1
             anchor_nodes_handled.add(u)
             tail_anchors.add(u)
 
@@ -98,7 +100,7 @@ def get_pred_graph_bolinas(pred_graph, arg_anchors, args, log):
             out_degrees[src] += 1
 
     log.write(f"pn_edges: {pn_edges}\n")
-
+    
     # find the unique root node so we can draw the graph
     root_nodes = set(
         node

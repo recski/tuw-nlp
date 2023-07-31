@@ -1,3 +1,4 @@
+import re
 import sys
 from collections import defaultdict
 
@@ -31,7 +32,7 @@ def get_pred_graph(ud_graph, pred, args, log):
     return pred_graph, closest_nodes
 
 
-def get_pred_graph_bolinas(pred_graph, arg_anchors, args, log):
+def get_pred_graph_bolinas(pred_graph, arg_anchors, args, log, keep_node_labels=True):
     nodes = {}
     pn_edges = []
     in_degrees, out_degrees = {}, {}
@@ -74,7 +75,7 @@ def get_pred_graph_bolinas(pred_graph, arg_anchors, args, log):
             pn_edges.append((tgt, "A$", ""))
             out_degrees[tgt] += 1
             anchor_nodes_handled.add(v)
-        
+
             pn_edges.append((src, e["color"], tgt))
             in_degrees[tgt] += 1
             out_degrees[src] += 1
@@ -100,7 +101,7 @@ def get_pred_graph_bolinas(pred_graph, arg_anchors, args, log):
             out_degrees[src] += 1
 
     log.write(f"pn_edges: {pn_edges}\n")
-    
+
     # find the unique root node so we can draw the graph
     root_nodes = set(
         node
@@ -111,7 +112,12 @@ def get_pred_graph_bolinas(pred_graph, arg_anchors, args, log):
     top_node = root_nodes.pop()
 
     G = pn.Graph(pn_edges)
-    return pn.encode(G, top=top_node, indent=0).replace("\n", " "), tail_anchors
+
+    bolinas_str = pn.encode(G, top=top_node, indent=0).replace("\n", " ")
+
+    if not keep_node_labels:
+        bolinas_str = re.sub(r'n[0-9]*\.', ".", bolinas_str)
+    return bolinas_str, tail_anchors
 
 
 def main():
@@ -169,19 +175,19 @@ def main():
         with open(f"out/test{sen_idx}_pred.dot", "w") as f:
             f.write(pred_graph.to_dot())
         pred_graph_bolinas, tail_anchors = get_pred_graph_bolinas(
-            pred_graph, arg_anchors, args, log
+            pred_graph, arg_anchors, args, log, keep_node_labels=False
         )
 
         agraphs_bolinas = []
         for arg, agraph in agraphs.items():
             anchor = arg_anchors[arg]
             ext_node = anchor if anchor in tail_anchors else None
-            agraphs_bolinas.append(agraph.to_bolinas(ext_node=ext_node))
+            agraphs_bolinas.append(agraph.to_bolinas(ext_node=ext_node, keep_node_labels=False))
 
         with open(f"out/test{sen_idx}.hrg", "w") as f:
-            f.write(f"S -> {pred_graph_bolinas}; 1.0 # 1\n")
+            f.write(f"S -> {pred_graph_bolinas};\n")
             for i, agraph_bolinas in enumerate(agraphs_bolinas):
-                f.write(f"A -> {agraph_bolinas}; 1.0 # {i+2}\n")
+                f.write(f"A -> {agraph_bolinas};\n")
         log.write(f"wrote grammar to test{sen_idx}.hrg\n")
 
         idx_to_keep = [n for nodes in args.values() for n in nodes] + pred

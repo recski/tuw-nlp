@@ -1,0 +1,22 @@
+1	Earlier	early	ADV	RBR	Degree=Cmp	2	advmod	_	start_char=0|end_char=7
+2	today	today	NOUN	NN	Number=Sing	11	obl:tmod	_	start_char=8|end_char=13
+3	,	,	PUNCT	,	_	11	punct	_	start_char=14|end_char=15
+4	Thailand	Thailand	PROPN	NNP	Number=Sing	7	nmod:poss	_	start_char=16|end_char=24
+5	's	's	PART	POS	_	4	case	_	start_char=25|end_char=27
+6	Prime	Prime	ADJ	NNP	Degree=Pos	7	amod	_	start_char=28|end_char=33
+7	Minister	Minister	PROPN	NNP	Number=Sing	11	nsubj	_	start_char=34|end_char=42
+8	Yingluck	Yingluck	PROPN	NNP	Number=Sing	7	flat	_	start_char=43|end_char=51
+9	Shinawatra	Shinawatra	PROPN	NNP	Number=Sing	7	flat	_	start_char=52|end_char=62
+10	formally	formally	ADV	RB	_	11	advmod	_	start_char=63|end_char=71
+11	dissolved	dissolve	VERB	VBD	Mood=Ind|Tense=Past|VerbForm=Fin	0	root	_	start_char=72|end_char=81
+12	the	the	DET	DT	Definite=Def|PronType=Art	13	det	_	start_char=82|end_char=85
+13	country	country	NOUN	NN	Number=Sing	15	nmod:poss	_	start_char=86|end_char=93
+14	's	's	PART	POS	_	13	case	_	start_char=94|end_char=96
+15	parliament	parliament	NOUN	NN	Number=Sing	11	obj	_	start_char=97|end_char=107
+16	and	and	CCONJ	CC	_	17	cc	_	start_char=108|end_char=111
+17	called	call	VERB	VBD	Mood=Ind|Tense=Past|VerbForm=Fin	11	conj	_	start_char=112|end_char=118
+18	for	for	ADP	IN	_	20	case	_	start_char=119|end_char=122
+19	new	new	ADJ	JJ	Degree=Pos	20	amod	_	start_char=123|end_char=126
+20	elections	election	NOUN	NNS	Number=Plur	17	obl	_	start_char=127|end_char=136
+21	.	.	PUNCT	.	_	11	punct	_	start_char=137|end_char=138
+

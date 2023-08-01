@@ -129,9 +129,8 @@ def gen_arg_rules(G, pred_edges, arg_words):
             elif v >= 1000:
                 root_pos = e['color']
         
-        yield f'(. :{deprel} (. ' + ' '.join(':A$' for edge in pred_edges) + f' :{root_pos} .))'
+        yield f'(. :{deprel} (. ' + ' '.join(':A$' for edge in kept_edges) + f' :{root_pos} .))'
         yield from gen_arg_rules(G, kept_edges, arg_words)
-    print('============')
 
 
 def create_rules_and_graph(sen_idx, ud_graph, pred, args, agraphs, vocab, log):
@@ -146,14 +145,14 @@ def create_rules_and_graph(sen_idx, ud_graph, pred, args, agraphs, vocab, log):
             pred_edges.append((e['color'], v))
         elif v >= 1000:
             root_pos = e['color']
-    print('S -> (. ' + ' '.join(':A$' for edge in pred_edges) + f' :{root_pos} .);')
-    # print('pred_edges:', pred_edges)
-    print('============')
+    
+    with open(f"out/test{sen_idx}.hrg", "w") as f:
+        f.write('S -> (. ' + ' '.join(':A$' for edge in pred_edges) + f' :{root_pos} .);\n')
+        for arg_rhs in gen_arg_rules(graph.G, pred_edges, arg_words):
+            f.write(f'A -> {arg_rhs};\n')
+    log.write(f"wrote grammar to test{sen_idx}.hrg\n")
 
-    for arg_rhs in gen_arg_rules(graph.G, pred_edges, arg_words):
-        print(f'A -> {arg_rhs};')
-
-    # print(node)
+    write_graph(sen_idx, ud_graph, pred, args, vocab, log)
 
 
 def create_rules_and_graph_old(sen_idx, ud_graph, pred, args, agraphs, vocab, log):
@@ -181,6 +180,10 @@ def create_rules_and_graph_old(sen_idx, ud_graph, pred, args, agraphs, vocab, lo
             f.write(f"A -> {agraph_bolinas};\n")
     log.write(f"wrote grammar to test{sen_idx}.hrg\n")
 
+    write_graph(sen_idx, ud_graph, pred, args, vocab, log)
+
+
+def write_graph(sen_idx, ud_graph, pred, args, vocab, log):
     idx_to_keep = [n for nodes in args.values() for n in nodes] + pred
     pruned_graph_bolinas = (
         ud_graph.subgraph(idx_to_keep, handle_unconnected="shortest_path")

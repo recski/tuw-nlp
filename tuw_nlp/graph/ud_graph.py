@@ -1,6 +1,6 @@
 import networkx as nx
 
-from tuw_nlp.graph.graph import Graph
+from tuw_nlp.graph.graph import Graph, UnconnectedGraphError
 from tuw_nlp.graph.utils import preprocess_edge_alto
 
 
@@ -33,12 +33,43 @@ class UDGraph(Graph):
         self.text = None
         self.G.remove_nodes_from(g_to_remove)
 
-    def subgraph(self, nodes):
+    def subgraph(self, nodes, handle_unconnected=None):
         # print("main graph:", self.str_nodes(), "nodes:", nodes)
         H = self.G.subgraph(nodes)
+        if not nx.is_weakly_connected(H):
+            if handle_unconnected is None:
+                raise UnconnectedGraphError(
+                    f"subgraph induced by nodes {nodes} is not connected and handle_unconnected is not specified"
+                )
+            elif handle_unconnected == "shortest_path":
+                new_nodes = set(
+                    nodes
+                )  # a copy of the original nodes parameter to expand
+                components = [
+                    list(node_set) for node_set in nx.weakly_connected_components(H)
+                ]
+                src = components[0][0]  # a dedicated node in a dedicated component
+                G_u = (
+                    self.G.to_undirected()
+                )  # an undirected version of G to search for shortest paths
+                for comp in components[1:]:
+                    path = nx.shortest_path(G_u, src, comp[0])
+                    # print(f'shortest path between {src} and {comp[0]}: {path}')
+                    for node in path:
+                        if node not in new_nodes:
+                            new_nodes.add(node)
+
+                return self.subgraph(new_nodes)
+
+            else:
+                raise ValueError(
+                    f"unknown value of handle_unconnected: {handle_unconnected}"
+                )
+
         tok_ids_to_keep = {data.get("token_id") for node, data in H.nodes(data=True)}
         new_tokens = [
-            tok if i + 1 in tok_ids_to_keep else None for i, tok in enumerate(self.tokens)
+            tok if i + 1 in tok_ids_to_keep else None
+            for i, tok in enumerate(self.tokens)
         ]
         # print("main tokens:", self.tokens)
         # print("H.nodes:", H.nodes(data=True))
@@ -56,6 +87,22 @@ class UDGraph(Graph):
         # )
         return new_graph
 
+    def pos_edge_graph(self, vocab):
+        H = self.G.copy()
+        words = set()
+        for u, v, d in H.edges(data=True):
+            d["color"] = d["color"].lower()
+        for node, data in self.G.nodes(data=True):
+            word = data['name']
+            if word in words:
+                word = f"{word}_"
+            words.add(word)
+            leaf_node_id = vocab.get_id(word, allow_new=True)
+            H.add_node(leaf_node_id, name=word)
+            H.add_edge(node, leaf_node_id, color=data["upos"])
+            nx.set_node_attributes(H, {node: {"name": ""}})
+        return Graph.from_networkx(H)
+
     def convert_to_networkx(self, sen):
         """convert dependency-parsed stanza Sentence to nx.DiGraph"""
         G = nx.DiGraph()
@@ -63,9 +110,11 @@ class UDGraph(Graph):
             if isinstance(word["id"], (list, tuple)):
                 # token representing an mwe, e.g. "vom" ~ "von dem"
                 continue
-            G.add_node(word["id"], name=word["lemma"], token_id=word["id"])
+            G.add_node(
+                word["id"], name=word["lemma"], token_id=word["id"], upos=word["upos"]
+            )
             if word["deprel"] == "root":
-                G.add_node(word["head"], name="root")
+                G.add_node(word["head"], name="root", upos="ROOT")
             G.add_edge(word["head"], word["id"])
             G[word["head"]][word["id"]].update(
                 {"color": preprocess_edge_alto(word["deprel"])}

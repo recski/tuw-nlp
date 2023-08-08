@@ -1,0 +1,1 @@
+(n11. :obl_tmod (n2. :advmod (n1. :ADV n1000.) :NOUN n1001.) :nsubj (n7. :nmod_poss (n4. :case (n5. :PART n1003.) :PROPN n1002.) :amod (n6. :ADJ n1004.) :flat (n8. :PROPN n1006.) :flat (n9. :PROPN n1007.) :PROPN n1005.) :conj (n17. :obl (n20. :amod (n19. :ADJ n1014.) :NOUN n1015.) :VERB n1016.) :VERB n1012.)

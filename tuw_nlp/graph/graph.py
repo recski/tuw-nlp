@@ -3,7 +3,11 @@ import re
 import networkx as nx
 from networkx.readwrite import json_graph
 
-from tuw_nlp.graph.utils import graph_to_pn, pn_to_graph
+from tuw_nlp.graph.utils import graph_to_bolinas, graph_to_pn, pn_to_graph
+
+
+class UnconnectedGraphError(Exception):
+    pass
 
 
 class Graph:
@@ -32,8 +36,13 @@ class Graph:
         s = json_graph.adjacency_data(self.G)
         return s
 
-    def to_penman(self):
-        return graph_to_pn(self.G)
+    def to_bolinas(self, name_attr="name", return_root=False, ext_node=None, keep_node_labels=True):
+        return graph_to_bolinas(
+            self.G, name_attr=name_attr, return_root=return_root, ext_node=ext_node, keep_node_labels=keep_node_labels
+        )
+
+    def to_penman(self, name_attr="name"):
+        return graph_to_pn(self.G, name_attr=name_attr)
 
     @staticmethod
     def from_networkx(G):

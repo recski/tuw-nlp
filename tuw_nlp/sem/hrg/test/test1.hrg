@@ -1,0 +1,4 @@
+S -> (. :obl_tmod (A1. :A$) :nsubj (A0. :A$) :conj (. :obl (A2. :A$) :VERB .) :VERB .);
+A -> (. :advmod (. :ADV .) :NOUN .);
+A -> (. :nmod_poss (. :case (. :PART .) :PROPN .) :amod (. :ADJ .) :flat (. :PROPN .) :flat (. :PROPN .) :PROPN .);
+A -> (. :amod (. :ADJ .) :NOUN .);

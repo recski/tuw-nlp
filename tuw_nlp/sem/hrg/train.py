@@ -46,6 +46,7 @@ def get_pred_graph_bolinas(pred_graph, arg_anchors, args, log, keep_node_labels=
         arg_anchors_to_arg_nodes[node] = set(args[node])
 
     log.write(f"arg anchors: {arg_anchors_to_node}\n")
+    log.write(f"arg_anchors_to_arg_nodes: {arg_anchors_to_arg_nodes}\n")
 
     anchor_nodes_handled = set()
     tail_anchors = set()
@@ -85,7 +86,7 @@ def get_pred_graph_bolinas(pred_graph, arg_anchors, args, log, keep_node_labels=
             and u not in anchor_nodes_handled
             and v not in arg_anchors_to_arg_nodes[u]
         ):
-            print("adding reverse arg edge based on this edge:", u, v, e)
+            log.write(f"adding reverse arg edge based on this edge: {u}, {v}, {e}\n")
             pn_edges.append((src, "A$", nodes[u]))
             pn_edges.append((nodes[u], e["color"], tgt))
             out_degrees[src] += 1
@@ -120,22 +121,28 @@ def get_pred_graph_bolinas(pred_graph, arg_anchors, args, log, keep_node_labels=
     return bolinas_str, tail_anchors
 
 
-def gen_arg_rules(G, pred_edges, arg_words):
+def gen_subseq_rules(G, pred_edges, arg_words, pred, lhs='A'):
     for deprel, node in pred_edges:
-        kept_edges = []
+        kept_arg_edges = []
+        kept_pred_edges = []
         for _, v, e in G.edges(node, data=True):
             if v in arg_words:
-                kept_edges.append((e['color'], v))
+                kept_arg_edges.append((e['color'], v))
+            elif v in pred:
+                kept_pred_edges.append((e['color'], v))
             elif v >= 1000:
                 root_pos = e['color']
         
-        yield f'(. :{deprel} (. ' + ' '.join(':A$' for edge in kept_edges) + f' :{root_pos} .))'
-        yield from gen_arg_rules(G, kept_edges, arg_words)
+        yield f'{lhs} -> (. :{deprel} (. ' + ' '.join(':A$' for _ in kept_arg_edges) + ' ' + \
+              ' '.join(':P$' for _ in kept_pred_edges) + f' :{root_pos} .));\n'
+        yield from gen_subseq_rules(G, kept_arg_edges, arg_words, pred)
+        yield from gen_subseq_rules(G, kept_pred_edges, arg_words, pred, 'P')
 
 
-def create_rules_and_graph(sen_idx, ud_graph, pred, args, agraphs, vocab, log):
+def create_rules_and_graph(sen_idx, ud_graph, pred, args, vocab, log):
     graph = ud_graph.pos_edge_graph(vocab)
     root_words = set(v for _, v in graph.G.edges(0) if v < 1000)
+    log.write(f"root words: {root_words}\n")
     assert len(root_words) == 1, f"sentence has no unique root: {root_words}"
     root_word = root_words.pop()
     arg_words = set(w for nodes in args.values() for w in nodes)
@@ -145,14 +152,19 @@ def create_rules_and_graph(sen_idx, ud_graph, pred, args, agraphs, vocab, log):
             pred_edges.append((e['color'], v))
         elif v >= 1000:
             root_pos = e['color']
+    log.write(f"pred_edges: {pred_edges}\n")
     
     with open(f"out/test{sen_idx}.hrg", "w") as f:
-        f.write('S -> (. ' + ' '.join(':A$' for edge in pred_edges) + f' :{root_pos} .);\n')
-        for arg_rhs in gen_arg_rules(graph.G, pred_edges, arg_words):
-            f.write(f'A -> {arg_rhs};\n')
+        f.write(get_initial_rule(pred_edges, root_pos))
+        for rule in gen_subseq_rules(graph.G, pred_edges, arg_words, pred):
+            f.write(f'{rule}')
     log.write(f"wrote grammar to test{sen_idx}.hrg\n")
 
     write_graph(sen_idx, ud_graph, pred, args, vocab, log)
+
+
+def get_initial_rule(pred_edges, root_pos):
+    return 'S -> (. ' + ' '.join(':A$' for _ in pred_edges) + f' :{root_pos} .);\n'
 
 
 def create_rules_and_graph_old(sen_idx, ud_graph, pred, args, agraphs, vocab, log):
@@ -165,6 +177,10 @@ def create_rules_and_graph_old(sen_idx, ud_graph, pred, args, agraphs, vocab, lo
     pred_graph_bolinas, tail_anchors = get_pred_graph_bolinas(
         pred_graph, arg_anchors, args, log, keep_node_labels=False
     )
+    log.write(f"tail_anchors: {tail_anchors}\n")
+    
+    if len(tail_anchors) != 0:
+        print("tail_anchors:", tail_anchors)
 
     agraphs_bolinas = []
     for arg, agraph in agraphs.items():
@@ -185,11 +201,11 @@ def create_rules_and_graph_old(sen_idx, ud_graph, pred, args, agraphs, vocab, lo
 
 def write_graph(sen_idx, ud_graph, pred, args, vocab, log):
     idx_to_keep = [n for nodes in args.values() for n in nodes] + pred
-    pruned_graph_bolinas = (
-        ud_graph.subgraph(idx_to_keep, handle_unconnected="shortest_path")
-        .pos_edge_graph(vocab)
-        .to_bolinas()
-    )
+    log.write(f"idx_to_keep: {idx_to_keep}\n")
+    pruned_graph = ud_graph.subgraph(idx_to_keep, handle_unconnected="shortest_path").pos_edge_graph(vocab)
+    pruned_graph_bolinas = pruned_graph.to_bolinas()
+    with open(f"out/test{sen_idx}_graph.dot", "w") as f:
+        f.write(pruned_graph.to_dot())
     with open(f"out/test{sen_idx}.graph", "w") as f:
         f.write(f"{pruned_graph_bolinas}\n")
     log.write(f"wrote graph to test{sen_idx}.graph\n")
@@ -245,7 +261,7 @@ def main():
             continue
 
         # create_rules_and_graph_old(sen_idx, ud_graph, pred, args, agraphs, vocab, log)
-        create_rules_and_graph(sen_idx, ud_graph, pred, args, agraphs, vocab, log)
+        create_rules_and_graph(sen_idx, ud_graph, pred, args, vocab, log)
 
     vocab_fn = "vocab.txt"
     vocab.to_file(f"{vocab_fn}")

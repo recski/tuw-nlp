@@ -134,3 +134,10 @@ notebooks/cache/UD_FL.json
 tuw_nlp/text/definitions/de
 tuw_nlp/text/definitions/en
 tuw_nlp/text/definitions/it
+
+.idea/
+
+tuw_nlp/sem/hrg/out_new/
+tuw_nlp/sem/hrg/out_old/
+tuw_nlp/sem/hrg/out/
+tuw_nlp/sem/hrg/in/

@@ -140,11 +140,12 @@ def gen_subseq_rules(G, pred_edges, arg_words, pred, lhs='A'):
 
 
 def create_rules_and_graph(sen_idx, ud_graph, pred, args, vocab, log):
-    graph = ud_graph.pos_edge_graph(vocab)
-    root_words = set(v for _, v in graph.G.edges(0) if v < 1000)
-    log.write(f"root words: {root_words}\n")
-    assert len(root_words) == 1, f"sentence has no unique root: {root_words}"
-    root_word = root_words.pop()
+    graph = get_pred_arg_subgraph(ud_graph, pred, args, vocab, log)
+    write_graph(sen_idx, graph, log)
+    
+    root_word = next(nx.topological_sort(graph.G))
+    log.write(f"root word: {root_word}\n")
+    
     arg_words = set(w for nodes in args.values() for w in nodes)
     pred_edges = []
     for _, v, e in graph.G.edges(root_word, data=True):
@@ -160,7 +161,6 @@ def create_rules_and_graph(sen_idx, ud_graph, pred, args, vocab, log):
             f.write(f'{rule}')
     log.write(f"wrote grammar to test{sen_idx}.hrg\n")
 
-    write_graph(sen_idx, ud_graph, pred, args, vocab, log)
 
 
 def get_initial_rule(pred_edges, root_pos):
@@ -196,19 +196,22 @@ def create_rules_and_graph_old(sen_idx, ud_graph, pred, args, agraphs, vocab, lo
             f.write(f"A -> {agraph_bolinas};\n")
     log.write(f"wrote grammar to test{sen_idx}.hrg\n")
 
-    write_graph(sen_idx, ud_graph, pred, args, vocab, log)
+    write_graph(sen_idx, get_pred_arg_subgraph(ud_graph, pred, args, vocab, log), log)
 
 
-def write_graph(sen_idx, ud_graph, pred, args, vocab, log):
-    idx_to_keep = [n for nodes in args.values() for n in nodes] + pred
-    log.write(f"idx_to_keep: {idx_to_keep}\n")
-    pruned_graph = ud_graph.subgraph(idx_to_keep, handle_unconnected="shortest_path").pos_edge_graph(vocab)
-    pruned_graph_bolinas = pruned_graph.to_bolinas()
+def write_graph(sen_idx, pred_arg_graph, log):
+    pruned_graph_bolinas = pred_arg_graph.to_bolinas()
     with open(f"out/test{sen_idx}_graph.dot", "w") as f:
-        f.write(pruned_graph.to_dot())
+        f.write(pred_arg_graph.to_dot())
     with open(f"out/test{sen_idx}.graph", "w") as f:
         f.write(f"{pruned_graph_bolinas}\n")
     log.write(f"wrote graph to test{sen_idx}.graph\n")
+
+
+def get_pred_arg_subgraph(ud_graph, pred, args, vocab, log):
+    idx_to_keep = [n for nodes in args.values() for n in nodes] + pred
+    log.write(f"idx_to_keep: {idx_to_keep}\n")
+    return ud_graph.subgraph(idx_to_keep, handle_unconnected="shortest_path").pos_edge_graph(vocab)
 
 
 def main():

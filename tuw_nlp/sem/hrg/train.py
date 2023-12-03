@@ -121,50 +121,57 @@ def get_pred_graph_bolinas(pred_graph, arg_anchors, args, log, keep_node_labels=
     return bolinas_str, tail_anchors
 
 
-def gen_subseq_rules(G, pred_edges, arg_words, pred, lhs='A'):
-    for deprel, node in pred_edges:
-        kept_arg_edges = []
-        kept_pred_edges = []
-        for _, v, e in G.edges(node, data=True):
-            if v in arg_words:
-                kept_arg_edges.append((e['color'], v))
-            elif v in pred:
-                kept_pred_edges.append((e['color'], v))
-            elif v >= 1000:
-                root_pos = e['color']
-        
-        yield f'{lhs} -> (. :{deprel} (. ' + ' '.join(':A$' for _ in kept_arg_edges) + ' ' + \
-              ' '.join(':P$' for _ in kept_pred_edges) + f' :{root_pos} .));\n'
-        yield from gen_subseq_rules(G, kept_arg_edges, arg_words, pred)
-        yield from gen_subseq_rules(G, kept_pred_edges, arg_words, pred, 'P')
+def get_next_edges(G, root_word, pred, arg_words, log):
+    next_edges = defaultdict(list)
+    for _, v, e in G.edges(root_word, data=True):
+        if v in pred:
+            next_edges['P'].append((e['color'], v))
+        elif v in arg_words:
+            next_edges['A'].append((e['color'], v))
+        elif v >= 1000:
+            root_pos = e['color']
+        else:
+            next_edges['X'].append((e['color'], v))
+    log.write(f"next_edges: {next_edges}\n")
+    return next_edges, root_pos
+
+
+def gen_subseq_rules(G, pred_edges, arg_words, pred, log):
+    for lhs, edges in pred_edges.items():
+        for deprel, node in edges:
+            next_edges, root_pos = get_next_edges(G, node, pred, arg_words, log)
+            
+            rule = f'{lhs} -> (. :{deprel} (.'
+            for non_term in next_edges:
+                rule += ' ' + ' '.join(f':{non_term}$' for _ in next_edges[non_term])
+            rule += f' :{root_pos} .));\n'
+            yield rule
+            
+            yield from gen_subseq_rules(G, next_edges, arg_words, pred, log)
+
+
+def get_initial_rule(next_edges, root_pos):
+    rule = 'S -> (.'
+    for lhs in next_edges:
+        rule += ' ' + ' '.join(f':{lhs}$' for _ in next_edges[lhs])
+    rule += f' :{root_pos} .);\n'
+    return rule
 
 
 def create_rules_and_graph(sen_idx, ud_graph, pred, args, vocab, log):
     graph = get_pred_arg_subgraph(ud_graph, pred, args, vocab, log)
     write_graph(sen_idx, graph, log)
-    
     root_word = next(nx.topological_sort(graph.G))
     log.write(f"root word: {root_word}\n")
-    
     arg_words = set(w for nodes in args.values() for w in nodes)
-    pred_edges = []
-    for _, v, e in graph.G.edges(root_word, data=True):
-        if v in pred or v in arg_words:
-            pred_edges.append((e['color'], v))
-        elif v >= 1000:
-            root_pos = e['color']
-    log.write(f"pred_edges: {pred_edges}\n")
-    
+
+    next_edges, root_pos = get_next_edges(graph.G, root_word, pred, arg_words, log)
+
     with open(f"out/test{sen_idx}.hrg", "w") as f:
-        f.write(get_initial_rule(pred_edges, root_pos))
-        for rule in gen_subseq_rules(graph.G, pred_edges, arg_words, pred):
+        f.write(get_initial_rule(next_edges, root_pos))
+        for rule in gen_subseq_rules(graph.G, next_edges, arg_words, pred, log):
             f.write(f'{rule}')
     log.write(f"wrote grammar to test{sen_idx}.hrg\n")
-
-
-
-def get_initial_rule(pred_edges, root_pos):
-    return 'S -> (. ' + ' '.join(':A$' for _ in pred_edges) + f' :{root_pos} .);\n'
 
 
 def create_rules_and_graph_old(sen_idx, ud_graph, pred, args, agraphs, vocab, log):

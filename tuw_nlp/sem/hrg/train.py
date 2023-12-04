@@ -1,3 +1,4 @@
+import argparse
 import re
 import sys
 from collections import defaultdict
@@ -221,7 +222,14 @@ def get_pred_arg_subgraph(ud_graph, pred, args, vocab, log):
     return ud_graph.subgraph(idx_to_keep, handle_unconnected="shortest_path").pos_edge_graph(vocab)
 
 
-def main():
+def get_args():
+    parser = argparse.ArgumentParser(description="")
+    parser.add_argument("-f", "--first", type=int)
+    parser.add_argument("-l", "--last", type=int)
+    return parser.parse_args()
+
+
+def main(first=None, last=None):
     nlp = stanza.Pipeline(
         lang="en",
         processors="tokenize,mwt,pos,lemma,depparse",
@@ -229,6 +237,10 @@ def main():
     )
     vocab = Vocabulary(first_id=1000)
     for sen_idx, sen in enumerate(gen_tsv_sens(sys.stdin)):
+        if first is not None and sen_idx < first:
+            continue
+        if last is not None and last < sen_idx:
+            break
         print(f"processing sentence {sen_idx}, writing to out/test{sen_idx}.log")
         log = open(f"out/test{sen_idx}.log", "w")
         parsed_doc = nlp(" ".join(t[1] for t in sen))
@@ -279,4 +291,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    args = get_args()
+    main(args.first, args.last)

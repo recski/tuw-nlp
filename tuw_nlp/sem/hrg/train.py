@@ -141,13 +141,13 @@ def gen_subseq_rules(G, pred_edges, arg_words, pred, log):
     for lhs, edges in pred_edges.items():
         for deprel, node in edges:
             next_edges, root_pos = get_next_edges(G, node, pred, arg_words, log)
-            
+
             rule = f'{lhs} -> (. :{deprel} (.'
             for non_term in next_edges:
                 rule += ' ' + ' '.join(f':{non_term}$' for _ in next_edges[non_term])
             rule += f' :{root_pos} .));\n'
             yield rule
-            
+
             yield from gen_subseq_rules(G, next_edges, arg_words, pred, log)
 
 
@@ -186,7 +186,7 @@ def create_rules_and_graph_old(sen_idx, ud_graph, pred, args, agraphs, vocab, lo
         pred_graph, arg_anchors, args, log, keep_node_labels=False
     )
     log.write(f"tail_anchors: {tail_anchors}\n")
-    
+
     if len(tail_anchors) != 0:
         print("tail_anchors:", tail_anchors)
 

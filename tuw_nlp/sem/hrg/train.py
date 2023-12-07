@@ -16,10 +16,11 @@ def get_args():
     parser.add_argument("-f", "--first", type=int)
     parser.add_argument("-l", "--last", type=int)
     parser.add_argument("-m", "--method", default="per_word", type=str)
+    parser.add_argument("-o", "--out-dir", default="out", type=str)
     return parser.parse_args()
 
 
-def main(first=None, last=None, method="per_word"):
+def main(first=None, last=None, method="per_word", out_dir="out"):
     nlp = stanza.Pipeline(
         lang="en",
         processors="tokenize,mwt,pos,lemma,depparse",
@@ -31,8 +32,8 @@ def main(first=None, last=None, method="per_word"):
             continue
         if last is not None and last < sen_idx:
             break
-        print(f"processing sentence {sen_idx}, writing to out/test{sen_idx}.log")
-        log = open(f"out/test{sen_idx}.log", "w")
+        print(f"processing sentence {sen_idx}, writing to {out_dir}/test{sen_idx}.log")
+        log = open(f"{out_dir}/test{sen_idx}.log", "w")
         parsed_doc = nlp(" ".join(t[1] for t in sen))
         parsed_sen = parsed_doc.sentences[0]
         args = defaultdict(list)
@@ -47,11 +48,10 @@ def main(first=None, last=None, method="per_word"):
             args[label].append(i + 1)
 
         ud_graph = UDGraph(parsed_sen)
-        # print(ud_graph.to_penman())
-        with open(f"out/test{sen_idx}_ud.dot", "w") as f:
+        with open(f"{out_dir}/test{sen_idx}_ud.dot", "w") as f:
             f.write(ud_graph.to_dot())
         log.write(f"test{sen_idx} pred: {pred}, args: {args}\n")
-        CoNLL.write_doc2conll(parsed_doc, f"out/test{sen_idx}.conll")
+        CoNLL.write_doc2conll(parsed_doc, f"{out_dir}/test{sen_idx}.conll")
         log.write(f"wrote parse to test{sen_idx}.conll\n")
 
         agraphs = {}
@@ -74,10 +74,10 @@ def main(first=None, last=None, method="per_word"):
 
         if method == "per_word":
             from tuw_nlp.sem.hrg.rule_gen.per_word import create_rules_and_graph
-            create_rules_and_graph(sen_idx, ud_graph, pred, args, vocab, log)
+            create_rules_and_graph(sen_idx, ud_graph, pred, args, vocab, log, out_dir)
         elif method == "per_arg":
             from tuw_nlp.sem.hrg.rule_gen.per_arg import create_rules_and_graph
-            create_rules_and_graph(sen_idx, ud_graph, pred, args, agraphs, vocab, log)
+            create_rules_and_graph(sen_idx, ud_graph, pred, args, agraphs, vocab, log, out_dir)
 
     vocab_fn = "vocab.txt"
     vocab.to_file(f"{vocab_fn}")
@@ -86,4 +86,4 @@ def main(first=None, last=None, method="per_word"):
 
 if __name__ == "__main__":
     args = get_args()
-    main(args.first, args.last, args.method)
+    main(args.first, args.last, args.method, args.out_dir)

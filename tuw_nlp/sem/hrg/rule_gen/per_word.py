@@ -42,9 +42,9 @@ def get_initial_rule(next_edges, root_pos):
     return rule
 
 
-def create_rules_and_graph(sen_idx, ud_graph, pred, args, vocab, log):
+def create_rules_and_graph(sen_idx, ud_graph, pred, args, vocab, log, out_dir):
     graph = get_pred_arg_subgraph(ud_graph, pred, args, vocab, log)
-    write_graph(sen_idx, graph, log)
+    write_graph(sen_idx, graph, log, out_dir)
     root_word = next(nx.topological_sort(graph.G))
     log.write(f"root word: {root_word}\n")
     arg_words = set(w for nodes in args.values() for w in nodes)
@@ -55,7 +55,7 @@ def create_rules_and_graph(sen_idx, ud_graph, pred, args, vocab, log):
     for rule in gen_subseq_rules(graph.G, next_edges, arg_words, pred, log):
         rules.add(rule)
 
-    with open(f"out/test{sen_idx}.hrg", "w") as f:
+    with open(f"{out_dir}/test{sen_idx}.hrg", "w") as f:
         f.write(f"{initial_rule}")
         for rule in rules:
             f.write(f"{rule}")

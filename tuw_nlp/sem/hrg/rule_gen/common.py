@@ -1,8 +1,8 @@
-def write_graph(sen_idx, pred_arg_graph, log):
+def write_graph(sen_idx, pred_arg_graph, log, out_dir):
     pruned_graph_bolinas = pred_arg_graph.to_bolinas()
-    with open(f"out/test{sen_idx}_graph.dot", "w") as f:
+    with open(f"{out_dir}/test{sen_idx}_graph.dot", "w") as f:
         f.write(pred_arg_graph.to_dot())
-    with open(f"out/test{sen_idx}.graph", "w") as f:
+    with open(f"{out_dir}/test{sen_idx}.graph", "w") as f:
         f.write(f"{pruned_graph_bolinas}\n")
     log.write(f"wrote graph to test{sen_idx}.graph\n")
 

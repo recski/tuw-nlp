@@ -114,7 +114,7 @@ def get_pred_graph_bolinas(pred_graph, arg_anchors, args, log, keep_node_labels=
     return bolinas_str, tail_anchors
 
 
-def create_rules_and_graph(sen_idx, ud_graph, pred, args, agraphs, vocab, log):
+def create_rules_and_graph(sen_idx, ud_graph, pred, args, agraphs, vocab, log, out_dir):
 
     pred_graph_ud, arg_anchors = get_pred_graph(ud_graph, pred, args, log)
     pred_graph = pred_graph_ud.pos_edge_graph(vocab)
@@ -137,10 +137,10 @@ def create_rules_and_graph(sen_idx, ud_graph, pred, args, agraphs, vocab, log):
             agraph.to_bolinas(ext_node=ext_node, keep_node_labels=False)
         )
 
-    with open(f"out/test{sen_idx}.hrg", "w") as f:
+    with open(f"{out_dir}/test{sen_idx}.hrg", "w") as f:
         f.write(f"S -> {pred_graph_bolinas};\n")
         for i, agraph_bolinas in enumerate(agraphs_bolinas):
             f.write(f"A -> {agraph_bolinas};\n")
     log.write(f"wrote grammar to test{sen_idx}.hrg\n")
 
-    write_graph(sen_idx, get_pred_arg_subgraph(ud_graph, pred, args, vocab, log), log)
+    write_graph(sen_idx, get_pred_arg_subgraph(ud_graph, pred, args, vocab, log), log, out_dir)

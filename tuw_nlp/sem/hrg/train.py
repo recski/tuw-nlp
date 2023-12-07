@@ -15,7 +15,7 @@ def get_args():
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("-f", "--first", type=int)
     parser.add_argument("-l", "--last", type=int)
-    parser.add_argument("-m", "--method", default="one_per_word", type=str)
+    parser.add_argument("-m", "--method", default="per_word", type=str)
     return parser.parse_args()
 
 

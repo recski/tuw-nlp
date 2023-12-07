@@ -50,9 +50,13 @@ def create_rules_and_graph(sen_idx, ud_graph, pred, args, vocab, log):
     arg_words = set(w for nodes in args.values() for w in nodes)
 
     next_edges, root_pos = get_next_edges(graph.G, root_word, pred, arg_words, log)
+    initial_rule = get_initial_rule(next_edges, root_pos)
+    rules = set()
+    for rule in gen_subseq_rules(graph.G, next_edges, arg_words, pred, log):
+        rules.add(rule)
 
     with open(f"out/test{sen_idx}.hrg", "w") as f:
-        f.write(get_initial_rule(next_edges, root_pos))
-        for rule in gen_subseq_rules(graph.G, next_edges, arg_words, pred, log):
-            f.write(f'{rule}')
+        f.write(f"{initial_rule}")
+        for rule in rules:
+            f.write(f"{rule}")
     log.write(f"wrote grammar to test{sen_idx}.hrg\n")

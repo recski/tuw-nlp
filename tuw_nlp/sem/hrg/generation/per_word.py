@@ -2,7 +2,7 @@ from collections import defaultdict
 
 import networkx as nx
 
-from tuw_nlp.sem.hrg.rule_gen.common import get_pred_arg_subgraph, write_graph
+from tuw_nlp.sem.hrg.utils.common import get_pred_arg_subgraph, write_bolinas_graph
 
 
 def get_next_edges(G, root_word, pred, arg_words, log):
@@ -44,7 +44,7 @@ def get_initial_rule(next_edges, root_pos):
 
 def create_rules_and_graph(sen_idx, ud_graph, pred, args, vocab, log, out_dir):
     graph = get_pred_arg_subgraph(ud_graph, pred, args, vocab, log)
-    write_graph(sen_idx, graph, log, out_dir)
+    write_bolinas_graph(sen_idx, graph, log, out_dir)
     root_word = next(nx.topological_sort(graph.G))
     log.write(f"root word: {root_word}\n")
     arg_words = set(w for nodes in args.values() for w in nodes)

@@ -3,7 +3,7 @@ import re
 import networkx as nx
 import penman as pn
 
-from tuw_nlp.sem.hrg.rule_gen.common import write_graph, get_pred_arg_subgraph
+from tuw_nlp.sem.hrg.utils.common import write_bolinas_graph, get_pred_arg_subgraph
 
 
 def get_pred_graph(ud_graph, pred, args, log):
@@ -114,7 +114,7 @@ def get_pred_graph_bolinas(pred_graph, arg_anchors, args, log, keep_node_labels=
     return bolinas_str, tail_anchors
 
 
-def create_rules_and_graph(sen_idx, ud_graph, pred, args, agraphs, vocab, log, out_dir):
+def create_rules_and_graph(sen_idx, ud_graph, pred, args, arg_graphs, vocab, log, out_dir):
 
     pred_graph_ud, arg_anchors = get_pred_graph(ud_graph, pred, args, log)
     pred_graph = pred_graph_ud.pos_edge_graph(vocab)
@@ -130,7 +130,7 @@ def create_rules_and_graph(sen_idx, ud_graph, pred, args, agraphs, vocab, log, o
         print("tail_anchors:", tail_anchors)
 
     agraphs_bolinas = []
-    for arg, agraph in agraphs.items():
+    for arg, agraph in arg_graphs.items():
         anchor = arg_anchors[arg]
         ext_node = anchor if anchor in tail_anchors else None
         agraphs_bolinas.append(
@@ -143,4 +143,4 @@ def create_rules_and_graph(sen_idx, ud_graph, pred, args, agraphs, vocab, log, o
             f.write(f"A -> {agraph_bolinas};\n")
     log.write(f"wrote grammar to test{sen_idx}.hrg\n")
 
-    write_graph(sen_idx, get_pred_arg_subgraph(ud_graph, pred, args, vocab, log), log, out_dir)
+    write_bolinas_graph(sen_idx, get_pred_arg_subgraph(ud_graph, pred, args, vocab, log), log, out_dir)

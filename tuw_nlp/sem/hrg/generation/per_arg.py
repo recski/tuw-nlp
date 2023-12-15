@@ -3,7 +3,7 @@ import re
 import networkx as nx
 import penman as pn
 
-from tuw_nlp.sem.hrg.utils.common import write_bolinas_graph, get_pred_arg_subgraph
+from tuw_nlp.sem.hrg.common.utils import write_bolinas_graph, get_pred_arg_subgraph
 
 
 def get_pred_graph(ud_graph, pred, args, log):
@@ -137,7 +137,7 @@ def create_rules_and_graph(sen_idx, ud_graph, pred, args, arg_graphs, vocab, log
             agraph.to_bolinas(ext_node=ext_node, keep_node_labels=False)
         )
 
-    with open(f"{out_dir}/test{sen_idx}.hrg", "w") as f:
+    with open(f"{out_dir}/sen{sen_idx}.hrg", "w") as f:
         f.write(f"S -> {pred_graph_bolinas};\n")
         for i, agraph_bolinas in enumerate(agraphs_bolinas):
             f.write(f"A -> {agraph_bolinas};\n")

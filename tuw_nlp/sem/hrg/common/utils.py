@@ -1,3 +1,4 @@
+import os.path
 from collections import defaultdict
 
 from stanza.utils.conll import CoNLL
@@ -6,9 +7,16 @@ from tuw_nlp.graph.graph import UnconnectedGraphError
 from tuw_nlp.graph.ud_graph import UDGraph
 
 
+def create_sen_dir(out_dir, sen_id):
+    sen_dir = os.path.join(out_dir, str(sen_id))
+    if not os.path.exists(sen_dir):
+        os.makedirs(sen_dir)
+    return sen_dir
+
+
 def parse_doc(nlp, sen, sen_idx, out_dir, log):
     parsed_doc = nlp(" ".join(t[1] for t in sen))
-    CoNLL.write_doc2conll(parsed_doc, f"{out_dir}/test{sen_idx}.conll")
+    CoNLL.write_doc2conll(parsed_doc, f"{out_dir}/sen{sen_idx}.conll")
     log.write(f"wrote parse to test{sen_idx}.conll\n")
     return parsed_doc
 
@@ -16,7 +24,7 @@ def parse_doc(nlp, sen, sen_idx, out_dir, log):
 def get_ud_graph(parsed_doc, sen_idx, out_dir):
     parsed_sen = parsed_doc.sentences[0]
     ud_graph = UDGraph(parsed_sen)
-    with open(f"{out_dir}/test{sen_idx}_ud.dot", "w") as f:
+    with open(f"{out_dir}/sen{sen_idx}_ud.dot", "w") as f:
         f.write(ud_graph.to_dot())
     return ud_graph
 
@@ -32,17 +40,17 @@ def get_pred_and_args(sen, sen_idx, log):
             pred.append(i + 1)
             continue
         args[label].append(i + 1)
-    log.write(f"test{sen_idx} pred: {pred}, args: {args}\n")
+    log.write(f"sen{sen_idx} pred: {pred}, args: {args}\n")
     return args, pred
 
 
-def write_bolinas_graph(sen_idx, graph, log, out_dir):
+def write_bolinas_graph(sen_idx, graph, log, out_dir, name=""):
     pruned_graph_bolinas = graph.to_bolinas()
-    with open(f"{out_dir}/test{sen_idx}_graph.dot", "w") as f:
+    with open(f"{out_dir}/sen{sen_idx}{name}_graph.dot", "w") as f:
         f.write(graph.to_dot())
-    with open(f"{out_dir}/test{sen_idx}.graph", "w") as f:
+    with open(f"{out_dir}/sen{sen_idx}{name}.graph", "w") as f:
         f.write(f"{pruned_graph_bolinas}\n")
-    log.write(f"wrote graph to test{sen_idx}.graph\n")
+    log.write(f"wrote graph to test{sen_idx}{name}.graph\n")
 
 
 def get_pred_arg_subgraph(ud_graph, pred, args, vocab, log):

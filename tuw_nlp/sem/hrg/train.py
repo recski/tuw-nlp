@@ -4,7 +4,7 @@ import sys
 import stanza
 
 from tuw_nlp.common.vocabulary import Vocabulary
-from tuw_nlp.sem.hrg.utils.common import parse_doc, get_ud_graph, get_pred_and_args, check_args
+from tuw_nlp.sem.hrg.common.utils import parse_doc, get_ud_graph, get_pred_and_args, check_args
 from tuw_nlp.text.utils import gen_tsv_sens
 
 
@@ -29,8 +29,8 @@ def main(first=None, last=None, method="per_word", out_dir="out"):
             continue
         if last is not None and last < sen_idx:
             break
-        print(f"processing sentence {sen_idx}, writing to {out_dir}/test{sen_idx}.log")
-        log = open(f"{out_dir}/test{sen_idx}.log", "w")
+        print(f"processing sentence {sen_idx}, writing to {out_dir}/sen{sen_idx}.log")
+        log = open(f"{out_dir}/sen{sen_idx}.log", "w")
 
         parsed_doc = parse_doc(nlp, sen, sen_idx, out_dir, log)
         ud_graph = get_ud_graph(parsed_doc, sen_idx, out_dir)

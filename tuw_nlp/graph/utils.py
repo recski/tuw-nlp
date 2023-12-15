@@ -270,7 +270,7 @@ def gen_subgraphs(M, no_edges):
                 yield new_graph
 
 
-def pn_to_graph(raw_dl, edge_attr="color"):
+def pn_to_graph(raw_dl, edge_attr="color", require_ids=True):
     """Convert penman to networkx format
     raw_dl: raw string of penman format
     example: (k_4<root> / like :2 (k_6 / eat :2 (k_7 / sausage)) :1 (k_3 / dog :2-of (u_12 / HAS :1 (k_1 / Adam))))
@@ -285,24 +285,30 @@ def pn_to_graph(raw_dl, edge_attr="color"):
     for i, trip in enumerate(g.instances()):
         node_id, name = trip[0], trip[2]
 
+        if name is None:
+            name = ""
+
         node_to_id[node_id] = i
 
         if i == 0:
             root_id = i
 
-        indicator = trip[0].split("_")[0]
-        ud_id = trip[0].split("_")[1].split("<root>")[0]
-        if ud_id.isnumeric():
-            ud_id = int(ud_id)
+        if require_ids:
+            indicator = trip[0].split("_")[0]
+            ud_id = trip[0].split("_")[1].split("<root>")[0]
+            if ud_id.isnumeric():
+                ud_id = int(ud_id)
+            else:
+                raise ValueError(f"{ud_id} is not a number")
+    
+            if indicator == "k":
+                G.add_node(i, name=name, token_id=ud_id)
+            elif indicator == "u":
+                G.add_node(i, name=name, token_id=None)
+            else:
+                raise ValueError("Unknown indicator")
         else:
-            raise ValueError(f"{ud_id} is not a number")
-
-        if indicator == "k":
-            G.add_node(i, name=name, token_id=ud_id)
-        elif indicator == "u":
             G.add_node(i, name=name, token_id=None)
-        else:
-            raise ValueError("Unknown indicator")
 
     for trip in g.edges():
         edge = trip[1].split(":")[1]

@@ -3,10 +3,7 @@ import sys
 
 import stanza
 
-import penman as pn
-
 from tuw_nlp.common.vocabulary import Vocabulary
-from tuw_nlp.graph.utils import graph_to_pn
 
 from tuw_nlp.sem.hrg.common.utils import get_ud_graph, parse_doc, write_bolinas_graph, get_pred_and_args, \
     get_pred_arg_subgraph, create_sen_dir
@@ -19,13 +16,6 @@ def get_args():
     parser.add_argument("-l", "--last", type=int)
     parser.add_argument("-o", "--out-dir", default="out", type=str)
     return parser.parse_args()
-
-
-def write_pa_graph(out_dir, sen_idx, graph):
-    with open(f"{out_dir}/sen{sen_idx}_pa_graph.dot", "w") as f:
-        f.write(graph.to_dot())
-    with open(f"{out_dir}/sen{sen_idx}_pa.graph", "w") as f:
-        f.write(f"{graph_to_pn(graph.G)}\n")
 
 
 def main(first=None, last=None, out_dir="out"):
@@ -50,8 +40,7 @@ def main(first=None, last=None, out_dir="out"):
 
         args, pred = get_pred_and_args(sen, sen_idx, log)
         pred_arg_subgraph = get_pred_arg_subgraph(ud_graph, pred, args, vocab, log)
-        write_pa_graph(sen_dir, sen_idx, pred_arg_subgraph)
-        # write_bolinas_graph(sen_idx, pred_arg_subgraph, log, sen_dir, name="_pa")
+        write_bolinas_graph(sen_idx, pred_arg_subgraph, log, sen_dir, name="_pa")
 
 
 if __name__ == "__main__":

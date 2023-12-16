@@ -3,7 +3,7 @@ import re
 import networkx as nx
 from networkx.readwrite import json_graph
 
-from tuw_nlp.graph.utils import graph_to_bolinas, graph_to_pn, pn_to_graph
+from tuw_nlp.graph.utils import graph_to_bolinas, graph_to_pn, pn_to_graph, bolinas_to_graph
 
 
 class UnconnectedGraphError(Exception):
@@ -55,6 +55,12 @@ class Graph:
     @staticmethod
     def from_penman(pn_graph,  require_ids=True):
         G, _ = pn_to_graph(pn_graph, require_ids=require_ids)
+
+        return Graph(G)
+
+    @staticmethod
+    def from_bolinas(bolinas_str):
+        G, _ = bolinas_to_graph(bolinas_str)
 
         return Graph(G)
 

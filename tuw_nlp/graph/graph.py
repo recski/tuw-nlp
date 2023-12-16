@@ -53,8 +53,8 @@ class Graph:
         return Graph(G, text, tokens, type)
 
     @staticmethod
-    def from_penman(pn_graph,  require_ids=True):
-        G, _ = pn_to_graph(pn_graph, require_ids=require_ids)
+    def from_penman(pn_graph):
+        G, _ = pn_to_graph(pn_graph)
 
         return Graph(G)
 

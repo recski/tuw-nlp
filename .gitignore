@@ -140,5 +140,4 @@ tuw_nlp/text/definitions/it
 tuw_nlp/sem/hrg/out_new/
 tuw_nlp/sem/hrg/out_old/
 tuw_nlp/sem/hrg/out/
-tuw_nlp/sem/hrg/test_out/
-tuw_nlp/sem/hrg/in/
+tuw_nlp/sem/hrg/data/

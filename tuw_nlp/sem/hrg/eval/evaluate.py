@@ -6,7 +6,7 @@ from tuw_nlp.graph.graph import Graph
 
 def get_args():
     parser = argparse.ArgumentParser(description="")
-    parser.add_argument("-i", "--in-dir", default="in", type=str)
+    parser.add_argument("-i", "--in-dir", type=str)
     return parser.parse_args()
 
 

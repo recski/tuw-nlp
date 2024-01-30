@@ -18,8 +18,8 @@ def main(out_dir="out"):
         line = raw_line.strip()
         if line.startswith("Sentence"):
             sen_idx = int(line.split(' ')[-1])
-        elif line.endswith("#1"):
-            matches[sen_idx].append(line[:-2].strip())
+        elif line.startswith("(n"):
+            matches[sen_idx].append(line.strip())
     for sen_idx, matches_for_sen in matches.items():
         sen_dir = create_sen_dir(out_dir, sen_idx)
         with open(f"{sen_dir}/sen{sen_idx}_matches.graph", "w") as f:

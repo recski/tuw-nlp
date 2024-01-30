@@ -36,7 +36,7 @@ def main(in_dir):
         for i, match_str in enumerate(matches):
             match_graph = Graph.from_bolinas(match_str)
 
-            with open(f"{out_dir}/match{i}_graph.dot", "w") as f:
+            with open(f"{out_dir}/match_{i}_graph.dot", "w") as f:
                 f.write(match_graph.to_dot())
 
             match_graph_nodes = set([n for n in match_graph.G.nodes])

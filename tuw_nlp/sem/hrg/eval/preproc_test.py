@@ -6,7 +6,7 @@ import stanza
 from tuw_nlp.common.vocabulary import Vocabulary
 
 from tuw_nlp.sem.hrg.common.utils import get_ud_graph, parse_doc, write_bolinas_graph, get_pred_and_args, \
-    get_pred_arg_subgraph, create_sen_dir
+    get_pred_arg_subgraph, create_sen_dir, add_oie_data_to_parsed_doc
 from tuw_nlp.text.utils import gen_tsv_sens
 
 
@@ -35,6 +35,7 @@ def main(first=None, last=None, out_dir="out"):
         log = open(f"{sen_dir}/sen{sen_idx}.log", "w")
 
         parsed_doc = parse_doc(nlp, sen, sen_idx, sen_dir, log)
+        add_oie_data_to_parsed_doc(sen, parsed_doc)
         ud_graph = get_ud_graph(parsed_doc, sen_idx, sen_dir)
         write_bolinas_graph(sen_idx, ud_graph.pos_edge_graph(vocab), log, sen_dir)
 

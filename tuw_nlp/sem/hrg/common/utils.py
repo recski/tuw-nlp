@@ -74,3 +74,11 @@ def check_args(args, log, sen_idx, ud_graph, vocab):
 
         agraphs[arg] = agraph_ud.pos_edge_graph(vocab)
     return agraphs, all_args_connected
+
+
+def add_oie_data_to_parsed_doc(sen, parsed_doc):
+    assert len(sen) == len(parsed_doc.sentences[0].tokens)
+    for i, token in enumerate(parsed_doc.sentences[0].tokens):
+        label = sen[i][7].split("-")[0]
+        if label.startswith("A") or label.startswith("P"):
+            token.words[0].lemma += f"\n{label}"

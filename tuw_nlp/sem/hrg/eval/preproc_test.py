@@ -5,8 +5,8 @@ import stanza
 
 from tuw_nlp.common.vocabulary import Vocabulary
 
-from tuw_nlp.sem.hrg.common.utils import get_ud_graph, parse_doc, write_bolinas_graph, get_pred_and_args, \
-    get_pred_arg_subgraph, create_sen_dir, add_oie_data_to_parsed_doc
+from tuw_nlp.sem.hrg.common.utils import get_ud_graph, parse_doc, save_bolinas_str, get_pred_and_args, \
+    get_pred_arg_subgraph, create_sen_dir, save_as_dot, add_oie_data_to_nodes
 from tuw_nlp.text.utils import gen_tsv_sens
 
 
@@ -34,14 +34,22 @@ def main(first=None, last=None, out_dir="out"):
         print(f"processing sentence {sen_idx}, writing to {sen_dir}/sen{sen_idx}.log")
         log = open(f"{sen_dir}/sen{sen_idx}.log", "w")
 
-        parsed_doc = parse_doc(nlp, sen, sen_idx, sen_dir, log)
-        add_oie_data_to_parsed_doc(sen, parsed_doc)
-        ud_graph = get_ud_graph(parsed_doc, sen_idx, sen_dir)
-        write_bolinas_graph(sen_idx, ud_graph.pos_edge_graph(vocab), log, sen_dir)
+        args, pred, node_to_label = get_pred_and_args(sen, sen_idx, log)
 
-        args, pred = get_pred_and_args(sen, sen_idx, log)
+        parsed_doc = parse_doc(nlp, sen, sen_idx, sen_dir, log)
+
+        ud_graph = get_ud_graph(parsed_doc, node_to_label)
+
+        bolinas_graph = ud_graph.pos_edge_graph(vocab)
+        save_as_dot(f"{sen_dir}/sen{sen_idx}_graph.dot", bolinas_graph, log)
+        save_bolinas_str(f"{sen_dir}/sen{sen_idx}.graph", bolinas_graph, log)
+
         pred_arg_subgraph = get_pred_arg_subgraph(ud_graph, pred, args, vocab, log)
-        write_bolinas_graph(sen_idx, pred_arg_subgraph, log, sen_dir, name="_pa")
+        save_as_dot(f"{sen_dir}/sen{sen_idx}_pa_graph.dot", pred_arg_subgraph, log)
+        save_bolinas_str(f"{sen_dir}/sen{sen_idx}_pa.graph", pred_arg_subgraph, log)
+
+        add_oie_data_to_nodes(ud_graph, node_to_label)
+        save_as_dot(f"{sen_dir}/sen{sen_idx}_ud.dot", ud_graph, log)
 
 
 if __name__ == "__main__":

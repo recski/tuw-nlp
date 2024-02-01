@@ -36,9 +36,9 @@ class Graph:
         s = json_graph.adjacency_data(self.G)
         return s
 
-    def to_bolinas(self, name_attr="name", return_root=False, ext_node=None, keep_node_labels=True):
+    def to_bolinas(self, name_attr="name", return_root=False, ext_node=None, keep_node_ids=True):
         return graph_to_bolinas(
-            self.G, name_attr=name_attr, return_root=return_root, ext_node=ext_node, keep_node_labels=keep_node_labels
+            self.G, name_attr=name_attr, return_root=return_root, ext_node=ext_node, keep_node_ids=keep_node_ids
         )
 
     def to_penman(self, name_attr="name"):

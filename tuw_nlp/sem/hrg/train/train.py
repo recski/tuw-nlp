@@ -4,7 +4,8 @@ import sys
 import stanza
 
 from tuw_nlp.common.vocabulary import Vocabulary
-from tuw_nlp.sem.hrg.common.utils import parse_doc, get_ud_graph, get_pred_and_args, check_args, create_sen_dir
+from tuw_nlp.sem.hrg.common.utils import parse_doc, get_ud_graph, get_pred_and_args, check_args, create_sen_dir, \
+    save_as_dot
 from tuw_nlp.text.utils import gen_tsv_sens
 
 
@@ -34,8 +35,10 @@ def main(first=None, last=None, method="per_word", out_dir="out"):
         log = open(f"{sen_dir}/sen{sen_idx}.log", "w")
 
         parsed_doc = parse_doc(nlp, sen, sen_idx, sen_dir, log)
-        ud_graph = get_ud_graph(parsed_doc, sen_idx, sen_dir)
-        args, pred = get_pred_and_args(sen, sen_idx, log)
+        ud_graph = get_ud_graph(parsed_doc)
+        save_as_dot(f"{sen_dir}/sen{sen_idx}_ud.dot", ud_graph, log)
+
+        args, pred, _ = get_pred_and_args(sen, sen_idx, log)
         arg_graphs, all_args_connected = check_args(args, log, sen_idx, ud_graph, vocab)
 
         if not all_args_connected:

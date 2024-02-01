@@ -357,7 +357,7 @@ def bolinas_to_graph(bolinas_str, edge_attr="color"):
     return G, root_id
 
 
-def graph_to_bolinas(graph, name_attr="name", return_root=False, ext_node=None, keep_node_labels=True):
+def graph_to_bolinas(graph, name_attr="name", return_root=False, ext_node=None, keep_node_ids=True):
     nodes = {}
     pn_edges = []
 
@@ -380,7 +380,7 @@ def graph_to_bolinas(graph, name_attr="name", return_root=False, ext_node=None, 
     top_node = root_nodes.pop()
     G = pn.Graph(pn_edges)
     bolinas_str = pn.encode(G, top=nodes[top_node], indent=0).replace("\n", " ")
-    if not keep_node_labels:
+    if not keep_node_ids:
         bolinas_str = re.sub(r'n[0-9]*\.', ".", bolinas_str)
     if return_root:
         return bolinas_str, top_node

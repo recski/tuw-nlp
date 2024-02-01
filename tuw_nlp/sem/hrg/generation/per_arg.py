@@ -3,7 +3,7 @@ import re
 import networkx as nx
 import penman as pn
 
-from tuw_nlp.sem.hrg.common.utils import write_bolinas_graph, get_pred_arg_subgraph
+from tuw_nlp.sem.hrg.common.utils import save_bolinas_str, get_pred_arg_subgraph, save_as_dot
 
 
 def get_pred_graph(ud_graph, pred, args, log):
@@ -134,7 +134,7 @@ def create_rules_and_graph(sen_idx, ud_graph, pred, args, arg_graphs, vocab, log
         anchor = arg_anchors[arg]
         ext_node = anchor if anchor in tail_anchors else None
         agraphs_bolinas.append(
-            agraph.to_bolinas(ext_node=ext_node, keep_node_labels=False)
+            agraph.to_bolinas(ext_node=ext_node, keep_node_ids=False)
         )
 
     with open(f"{out_dir}/sen{sen_idx}.hrg", "w") as f:
@@ -143,4 +143,6 @@ def create_rules_and_graph(sen_idx, ud_graph, pred, args, arg_graphs, vocab, log
             f.write(f"A -> {agraph_bolinas};\n")
     log.write(f"wrote grammar to test{sen_idx}.hrg\n")
 
-    write_bolinas_graph(sen_idx, get_pred_arg_subgraph(ud_graph, pred, args, vocab, log), log, out_dir)
+    bolinas_graph = get_pred_arg_subgraph(ud_graph, pred, args, vocab, log)
+    save_as_dot(f"{out_dir}/sen{sen_idx}_graph.dot", bolinas_graph, log)
+    save_bolinas_str(f"{out_dir}/sen{sen_idx}.graph", bolinas_graph, log)

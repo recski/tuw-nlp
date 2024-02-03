@@ -45,8 +45,8 @@ def get_pred_and_args(sen, sen_idx, log):
     return args, pred, node_to_label
 
 
-def save_bolinas_str(fn, graph, log):
-    bolinas_graph = graph.to_bolinas()
+def save_bolinas_str(fn, graph, log, add_names=False):
+    bolinas_graph = graph.to_bolinas(add_names=add_names)
     with open(fn, "w") as f:
         f.write(f"{bolinas_graph}\n")
     log.write(f"wrote graph to {fn}\n")
@@ -81,8 +81,14 @@ def check_args(args, log, sen_idx, ud_graph, vocab):
     return agraphs, all_args_connected
 
 
-def add_oie_data_to_nodes(graph, node_to_label):
-    if node_to_label:
-        for n in graph.G.nodes:
-            if n in node_to_label:
-                graph.G.nodes[n]["name"] += f"\n{node_to_label[n]}"
+def add_oie_data_to_nodes(graph, node_to_label, node_prefix=""):
+    for n in graph.G.nodes:
+        key = n
+        if node_prefix:
+            key = n.split(node_prefix)[1]
+        if key in node_to_label:
+            new_name = graph.G.nodes[n]["name"]
+            if new_name:
+                new_name += "\n"
+            new_name += f"{node_to_label[key]}"
+            graph.G.nodes[n]["name"] = new_name

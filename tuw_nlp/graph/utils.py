@@ -333,18 +333,19 @@ def bolinas_to_graph(bolinas_str, edge_attr="color"):
     example: (n19. :obj (n21. :amod (n20. :ADJ n1020.) :NOUN n1021.) :VERB n1002.)
     """
 
-    pn_str = re.sub(r"(n\d+\.)\)", r"(\1))", bolinas_str)
+    pn_str = re.sub(r" (n\d+\.\S*)\)", r" (\1))", bolinas_str)
     g = pn.decode(pn_str)
     G = nx.DiGraph()
     root_id = None
 
     for i, trip in enumerate(g.instances()):
         node_id = trip[0].split(".")[0]
+        name = trip[0].split(".")[1].split("*")[0]
 
         if i == 0:
             root_id = node_id
 
-        G.add_node(node_id)
+        G.add_node(node_id, name=name)
 
     for trip in g.edges():
         edge = trip[1].split(":")[1]
@@ -357,7 +358,7 @@ def bolinas_to_graph(bolinas_str, edge_attr="color"):
     return G, root_id
 
 
-def graph_to_bolinas(graph, name_attr="name", return_root=False, ext_node=None, keep_node_ids=True):
+def graph_to_bolinas(graph, name_attr="name", return_root=False, ext_node=None, keep_node_ids=True, add_names=False):
     nodes = {}
     pn_edges = []
 
@@ -372,7 +373,10 @@ def graph_to_bolinas(graph, name_attr="name", return_root=False, ext_node=None, 
 
         for node in u, v:
             if node not in nodes:
-                nodes[node] = f"n{node}." if node != ext_node else f"n{node}.*"
+                label = ""
+                if add_names and name_attr in graph.nodes[node]:
+                    label = graph.nodes[node][name_attr]
+                nodes[node] = f"n{node}.{label}" if node != ext_node else f"n{node}.{label}*"
 
         pn_edges.append((nodes[u], f':{e["color"]}', nodes[v]))
 

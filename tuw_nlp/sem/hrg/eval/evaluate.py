@@ -1,7 +1,9 @@
 import argparse
+import json
 import os
 
 from tuw_nlp.graph.graph import Graph
+from tuw_nlp.sem.hrg.common.utils import add_oie_data_to_nodes
 
 
 def get_args():
@@ -25,6 +27,8 @@ def main(in_dir):
         assert len(pa_graph_file) == 1
         matches_file = [file for file in files if file.endswith("_matches.graph")]
         assert len(matches_file) == 1
+        node_to_label_file = [file for file in files if file.endswith("node_to_label.json")]
+        assert len(node_to_label_file) == 1
 
         with open(os.path.join(in_dir, sen_dir, graph_file[0])) as f:
             lines = f.readlines()
@@ -32,6 +36,11 @@ def main(in_dir):
             graph_str = lines[0].strip()
 
         graph = Graph.from_bolinas(graph_str)
+
+        with open(os.path.join(in_dir, sen_dir, node_to_label_file[0])) as f:
+            node_to_label = json.load(f)
+
+        add_oie_data_to_nodes(graph, node_to_label, node_prefix="n")
 
         with open(os.path.join(in_dir, sen_dir, pa_graph_file[0])) as f:
             lines = f.readlines()

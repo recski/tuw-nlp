@@ -36,9 +36,14 @@ class Graph:
         s = json_graph.adjacency_data(self.G)
         return s
 
-    def to_bolinas(self, name_attr="name", return_root=False, ext_node=None, keep_node_ids=True):
+    def to_bolinas(self, name_attr="name", return_root=False, ext_node=None, keep_node_ids=True, add_names=False):
         return graph_to_bolinas(
-            self.G, name_attr=name_attr, return_root=return_root, ext_node=ext_node, keep_node_ids=keep_node_ids
+            self.G, 
+            name_attr=name_attr,
+            return_root=return_root,
+            ext_node=ext_node,
+            keep_node_ids=keep_node_ids,
+            add_names=add_names
         )
 
     def to_penman(self, name_attr="name"):
@@ -155,7 +160,7 @@ class Graph:
                 ).replace(
                     "-", "_"
                 )
-            elif printname in marked_nodes:
+            elif printname in marked_nodes or node in marked_nodes:
                 node_line = '\t{0} [shape = circle, label = "{1}", style=filled, fillcolor=lightblue];'.format(
                     d_node, printname
                 ).replace(

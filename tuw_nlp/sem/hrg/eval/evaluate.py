@@ -9,13 +9,25 @@ from tuw_nlp.sem.hrg.common.utils import add_oie_data_to_nodes
 def get_args():
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("-i", "--in-dir", type=str)
+    parser.add_argument("-f", "--first", type=int)
+    parser.add_argument("-l", "--last", type=int)
     return parser.parse_args()
 
 
-def main(in_dir):
-    for sen_dir in os.listdir(in_dir):
-        print(f"\nProcessing sentence {sen_dir}")
+def get_range(in_dir, first, last):
+    sen_dirs = sorted([int(d) for d in os.listdir(in_dir)])
+    if first is None or first < sen_dirs[0]:
+        first = sen_dirs[0]
+    if last is None or last > sen_dirs[-1]:
+        last = sen_dirs[-1]
+    return range(first,  last + 1)
 
+
+def main(in_dir, first, last):
+    for sen_dir in get_range(in_dir, first, last):
+        print(f"\nProcessing sentence {sen_dir}")
+        
+        sen_dir = str(sen_dir)
         out_dir = os.path.join(in_dir, sen_dir, "matches")
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
@@ -71,4 +83,4 @@ def main(in_dir):
 
 if __name__ == "__main__":
     args = get_args()
-    main(args.in_dir)
+    main(args.in_dir, args.first, args.last)

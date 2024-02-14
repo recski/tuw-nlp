@@ -43,7 +43,8 @@ def main(first=None, last=None, out_dir="out"):
 
         bolinas_graph = ud_graph.pos_edge_graph(vocab)
         save_as_dot(f"{sen_dir}/sen{sen_idx}_graph.dot", bolinas_graph, log)
-        save_bolinas_str(f"{sen_dir}/sen{sen_idx}.graph", bolinas_graph, log, add_names=True)
+        save_bolinas_str(f"{sen_dir}/sen{sen_idx}.graph", bolinas_graph, log)
+        save_bolinas_str(f"{sen_dir}/sen{sen_idx}_labels.graph", bolinas_graph, log, add_names=True)
 
         pred_arg_subgraph = get_pred_arg_subgraph(ud_graph, pred, args, vocab, log)
         save_as_dot(f"{sen_dir}/sen{sen_idx}_pa_graph.dot", pred_arg_subgraph, log)

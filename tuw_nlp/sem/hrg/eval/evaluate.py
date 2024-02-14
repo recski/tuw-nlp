@@ -33,7 +33,7 @@ def main(in_dir, first, last):
             os.makedirs(out_dir)
 
         files = os.listdir(os.path.join(in_dir, sen_dir))
-        graph_file = [file for file in files if file.endswith(f"sen{sen_dir}.graph")]
+        graph_file = [file for file in files if file.endswith(f"sen{sen_dir}_labels.graph")]
         assert len(graph_file) == 1
         pa_graph_file = [file for file in files if file.endswith("_pa.graph")]
         assert len(pa_graph_file) == 1
@@ -66,7 +66,7 @@ def main(in_dir, first, last):
         for i, match_str in enumerate(matches):
             match_graph = Graph.from_bolinas(match_str)
 
-            with open(f"{out_dir}/match_{i}.dot", "w") as f:
+            with open(f"{out_dir}/sen_{sen_dir}_match_{i}.dot", "w") as f:
                 f.write(match_graph.to_dot())
 
             match_graph_nodes = set([n for n in match_graph.G.nodes])
@@ -77,7 +77,7 @@ def main(in_dir, first, last):
             print(f"Node matches: {len(match_graph_nodes & pa_graph_nodes)}/{len(pa_graph_nodes)}")
             print(f"Edge matches: {len(match_graph_edges & pa_graph_edges)}/{len(pa_graph_edges)}")
 
-            with open(f"{out_dir}/match_{i}_graph.dot", "w") as f:
+            with open(f"{out_dir}/sen{sen_dir}_match_{i}_graph.dot", "w") as f:
                 f.write(graph.to_dot(marked_nodes=match_graph_nodes))
 
 

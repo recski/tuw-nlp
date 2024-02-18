@@ -1,0 +1,41 @@
+Sentence 0
+[32mLoaded hypergraph grammar with 2 rules.[0m
+[32mPrinting derivation trees for HRG.[0m
+[32moutput type: derivation[0m
+[32mNo derivations.[0m
+
+Sentence 1
+[32mLoaded hypergraph grammar with 12 rules.[0m
+[32mPrinting derivation trees for HRG.[0m
+[32moutput type: derivation[0m
+1(A$_1(4(A$_1(12) A$_2(9) A$_0(5(A$_0(6))) A$_3(9))) A$_2(2(A$_0(3))) P$_0(10(A$_0(11(A$_0(12))))))	#1
+
+Sentence 2
+[32mLoaded hypergraph grammar with 10 rules.[0m
+[32mPrinting derivation trees for HRG.[0m
+[32moutput type: derivation[0m
+1(A$_1(2(A$_1(3) A$_0(4))) A$_0(5(A$_1(7) A$_2(6) A$_0(8(A$_1(9) A$_0(10))))))	#1
+
+Sentence 3
+[32mLoaded hypergraph grammar with 12 rules.[0m
+[32mPrinting derivation trees for HRG.[0m
+[32moutput type: derivation[0m
+1(A$_1(5(A$_1(7) A$_2(6) A$_0(8(A$_0(9(A$_0(10(A$_1(11) A$_0(12))))))))) A$_0(2(A$_1(3) A$_0(12))))	#1
+
+Sentence 4
+[32mLoaded hypergraph grammar with 12 rules.[0m
+[32mPrinting derivation trees for HRG.[0m
+[32moutput type: derivation[0m
+1(A$_1(2(A$_1(3) A$_0(12))) P$_0(5(A$_1(6) A$_0(7(A$_1(11) A$_0(9(A$_0(10(A$_1(11) A$_0(12))))))))))	#1
+
+Sentence 5
+Traceback (most recent call last):
+  File "bolinas.py", line 120, in <module>
+    with open(config.grammar_file,'ra') as grammar_file:
+IOError: [Errno 2] No such file or directory: '/home/eszter/research/tuw-nlp/tuw_nlp/sem/hrg/out/test5.hrg'
+Sentence 6
+[32mLoaded hypergraph grammar with 18 rules.[0m
+[32mPrinting derivation trees for HRG.[0m
+[32moutput type: derivation[0m
+1(X$_1(2(A$_0(3(A$_1(4(A$_0(5(A$_0(12))))) P$_0(7))))) X$_0(8(A$_0(9(A$_1(11(A$_0(12))) A$_2(10) A$_0(13(A$_1(18) A$_2(14) A$_0(15(A$_0(16(A$_0(17))))))))))))	#1
+

@@ -3,7 +3,7 @@ import re
 import networkx as nx
 from networkx.readwrite import json_graph
 
-from tuw_nlp.graph.utils import graph_to_bolinas, graph_to_pn, pn_to_graph
+from tuw_nlp.graph.utils import graph_to_bolinas, graph_to_pn, pn_to_graph, bolinas_to_graph
 
 
 class UnconnectedGraphError(Exception):
@@ -36,9 +36,14 @@ class Graph:
         s = json_graph.adjacency_data(self.G)
         return s
 
-    def to_bolinas(self, name_attr="name", return_root=False, ext_node=None, keep_node_labels=True):
+    def to_bolinas(self, name_attr="name", return_root=False, ext_node=None, keep_node_ids=True, add_names=False):
         return graph_to_bolinas(
-            self.G, name_attr=name_attr, return_root=return_root, ext_node=ext_node, keep_node_labels=keep_node_labels
+            self.G, 
+            name_attr=name_attr,
+            return_root=return_root,
+            ext_node=ext_node,
+            keep_node_ids=keep_node_ids,
+            add_names=add_names
         )
 
     def to_penman(self, name_attr="name"):
@@ -55,6 +60,12 @@ class Graph:
     @staticmethod
     def from_penman(pn_graph):
         G, _ = pn_to_graph(pn_graph)
+
+        return Graph(G)
+
+    @staticmethod
+    def from_bolinas(bolinas_str):
+        G, _ = bolinas_to_graph(bolinas_str)
 
         return Graph(G)
 
@@ -149,7 +160,7 @@ class Graph:
                 ).replace(
                     "-", "_"
                 )
-            elif printname in marked_nodes:
+            elif printname in marked_nodes or node in marked_nodes:
                 node_line = '\t{0} [shape = circle, label = "{1}", style=filled, fillcolor=lightblue];'.format(
                     d_node, printname
                 ).replace(

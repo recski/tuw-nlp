@@ -327,7 +327,38 @@ def pn_to_graph(raw_dl, edge_attr="color"):
     return G, root_id
 
 
-def graph_to_bolinas(graph, name_attr="name", return_root=False, ext_node=None, keep_node_labels=True):
+def bolinas_to_graph(bolinas_str, edge_attr="color"):
+    """Convert bolinas to networkx format
+    bolinas_str: raw string of bolinas format
+    example: (n19. :obj (n21. :amod (n20. :ADJ n1020.) :NOUN n1021.) :VERB n1002.)
+    """
+
+    pn_str = re.sub(r" (n\d+\.\S*)\)", r" (\1))", bolinas_str)
+    g = pn.decode(pn_str)
+    G = nx.DiGraph()
+    root_id = None
+
+    for i, trip in enumerate(g.instances()):
+        node_id = trip[0].split(".")[0]
+        name = trip[0].split(".")[1].split("*")[0]
+
+        if i == 0:
+            root_id = node_id
+
+        G.add_node(node_id, name=name)
+
+    for trip in g.edges():
+        edge = trip[1].split(":")[1]
+        src = trip[0].split(".")[0]
+        tgt = trip[2].split(".")[0]
+
+        G.add_edge(src, tgt)
+        G[src][tgt].update({edge_attr: edge})
+
+    return G, root_id
+
+
+def graph_to_bolinas(graph, name_attr="name", return_root=False, ext_node=None, keep_node_ids=True, add_names=False):
     nodes = {}
     pn_edges = []
 
@@ -342,7 +373,10 @@ def graph_to_bolinas(graph, name_attr="name", return_root=False, ext_node=None, 
 
         for node in u, v:
             if node not in nodes:
-                nodes[node] = f"n{node}." if node != ext_node else f"n{node}.*"
+                label = ""
+                if add_names and name_attr in graph.nodes[node]:
+                    label = graph.nodes[node][name_attr]
+                nodes[node] = f"n{node}.{label}" if node != ext_node else f"n{node}.{label}*"
 
         pn_edges.append((nodes[u], f':{e["color"]}', nodes[v]))
 
@@ -350,7 +384,7 @@ def graph_to_bolinas(graph, name_attr="name", return_root=False, ext_node=None, 
     top_node = root_nodes.pop()
     G = pn.Graph(pn_edges)
     bolinas_str = pn.encode(G, top=nodes[top_node], indent=0).replace("\n", " ")
-    if not keep_node_labels:
+    if not keep_node_ids:
         bolinas_str = re.sub(r'n[0-9]*\.', ".", bolinas_str)
     if return_root:
         return bolinas_str, top_node

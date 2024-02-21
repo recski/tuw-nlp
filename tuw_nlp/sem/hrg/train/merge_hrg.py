@@ -26,14 +26,15 @@ def main(input_dir, out_dir, size):
         write_rule(f, grammar, "weight", size)
     with open(os.path.join(out_dir, "grammar_stat"), "w") as f:
         write_rule(f, grammar, "cnt", size)
+    print(f"Unique rules: {get_total(grammar)}")
+    for nt, prods in grammar.items():
+        print(f"{nt}: {len(prods)}")
 
 
 def write_rule(f, grammar, numeric_info=None, size=None):
     factor = 1
     if size:
-        all_prods = 0
-        for nt, prods in grammar.items():
-            all_prods += len(prods)
+        all_prods = get_total(grammar)
         factor = size / all_prods
     for prod, cnt in grammar["S"].most_common(n=int(round(factor*len(grammar["S"])))):
         if not numeric_info:
@@ -58,6 +59,13 @@ def write_rule(f, grammar, numeric_info=None, size=None):
                 if w < 0.01:
                     w = 0.01
                 f.write(f"{prod}\t{w}\n")
+
+
+def get_total(grammar):
+    all_prods = 0
+    for nt, prods in grammar.items():
+        all_prods += len(prods)
+    return all_prods
 
 
 if __name__ == "__main__":

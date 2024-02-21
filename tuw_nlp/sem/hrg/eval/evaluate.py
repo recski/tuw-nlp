@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 import os
 
 from tuw_nlp.graph.graph import Graph
@@ -74,6 +75,7 @@ def main(in_dir, first, last):
             pa_graph_nodes = set([n for n in pa_graph.G.nodes])
             pa_graph_edges = set([(u, v, d["color"]) for (u, v, d) in pa_graph.G.edges(data=True)])
 
+            print(f"Match {i}")
             print(f"Node matches: {len(match_graph_nodes & pa_graph_nodes)}/{len(pa_graph_nodes)}")
             print(f"Edge matches: {len(match_graph_edges & pa_graph_edges)}/{len(pa_graph_edges)}")
 
@@ -82,5 +84,7 @@ def main(in_dir, first, last):
 
 
 if __name__ == "__main__":
+    logging.getLogger('penman').setLevel(logging.ERROR)
+
     args = get_args()
     main(args.in_dir, args.first, args.last)

@@ -18,6 +18,7 @@ def main(out_dir="out"):
         line = raw_line.strip()
         if line.startswith("Sentence"):
             sen_idx = int(line.split(' ')[-1])
+            print(f"Processing sentence {sen_idx}")
         elif line.startswith("(n"):
             matches[sen_idx].append(line.strip())
     for sen_idx, matches_for_sen in matches.items():

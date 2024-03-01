@@ -64,10 +64,17 @@ def main(in_dir, first, last):
 
         with open(os.path.join(in_dir, sen_dir, matches_file[0])) as f:
             matches = f.readlines()
-        for i, match_str in enumerate(matches):
+        state = None
+        i = 0
+        for match_str in matches:
+            if match_str.strip() in ["max", "prec", "rec"]:
+                state = match_str.strip()
+                i = 0
+                continue
+
             match_graph = Graph.from_bolinas(match_str)
 
-            with open(f"{out_dir}/sen_{sen_dir}_match_{i}.dot", "w") as f:
+            with open(f"{out_dir}/sen{sen_dir}_match_{state}_{i}.dot", "w") as f:
                 f.write(match_graph.to_dot())
 
             match_graph_nodes = set([n for n in match_graph.G.nodes])
@@ -75,12 +82,14 @@ def main(in_dir, first, last):
             pa_graph_nodes = set([n for n in pa_graph.G.nodes])
             pa_graph_edges = set([(u, v, d["color"]) for (u, v, d) in pa_graph.G.edges(data=True)])
 
-            print(f"Match {i}")
+            print(f"Match {state} {i}")
             print(f"Node matches: {len(match_graph_nodes & pa_graph_nodes)}/{len(pa_graph_nodes)}")
             print(f"Edge matches: {len(match_graph_edges & pa_graph_edges)}/{len(pa_graph_edges)}")
 
-            with open(f"{out_dir}/sen{sen_dir}_match_{i}_graph.dot", "w") as f:
+            with open(f"{out_dir}/sen{sen_dir}_match_{state}_{i}_graph.dot", "w") as f:
                 f.write(graph.to_dot(marked_nodes=match_graph_nodes))
+
+            i += 1
 
 
 if __name__ == "__main__":

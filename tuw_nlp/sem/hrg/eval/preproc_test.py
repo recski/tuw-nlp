@@ -49,6 +49,8 @@ def main(first=None, last=None, out_dir="out"):
         pred_arg_subgraph = get_pred_arg_subgraph(ud_graph, pred, args, vocab, log)
         save_as_dot(f"{sen_dir}/sen{sen_idx}_pa_graph.dot", pred_arg_subgraph, log)
         save_bolinas_str(f"{sen_dir}/sen{sen_idx}_pa.graph", pred_arg_subgraph, log)
+        with open(f"{sen_dir}/sen{sen_idx}_pa_nodes.json", "w") as f:
+            json.dump([f"n{n}" for n in pred_arg_subgraph.G.nodes()], f)
 
         add_oie_data_to_nodes(ud_graph, node_to_label)
         save_as_dot(f"{sen_dir}/sen{sen_idx}_ud.dot", ud_graph, log)

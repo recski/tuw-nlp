@@ -16,7 +16,7 @@ def create_sen_dir(out_dir, sen_id):
 
 def parse_doc(nlp, sen, sen_idx, out_dir, log):
     parsed_doc = nlp(" ".join(t[1] for t in sen))
-    fn = f"{out_dir}/sen{sen_idx}_ud.dot"
+    fn = f"{out_dir}/sen{sen_idx}.conll"
     CoNLL.write_doc2conll(parsed_doc, fn)
     log.write(f"wrote parse to {fn}\n")
     return parsed_doc
@@ -41,7 +41,7 @@ def get_pred_and_args(sen, sen_idx, log):
             continue
         args[label].append(i + 1)
         node_to_label[i + 1] = label
-    log.write(f"sen{sen_idx} pred: {pred}, args: {args}, node_to_label: {node_to_label}\n")
+    log.write(f"sen{sen_idx}\npred: {pred}\nargs: {args}\nnode_to_label: {node_to_label}\n")
     return args, pred, node_to_label
 
 

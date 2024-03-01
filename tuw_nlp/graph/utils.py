@@ -333,7 +333,7 @@ def bolinas_to_graph(bolinas_str, edge_attr="color"):
     example: (n19. :obj (n21. :amod (n20. :ADJ n1020.) :NOUN n1021.) :VERB n1002.)
     """
 
-    pn_str = re.sub(r" (n\d+\.\S*)\)", r" (\1))", bolinas_str)
+    pn_str = re.sub(r" (n\d+\.\S*)([\) ])", r" (\1)\2", bolinas_str)
     g = pn.decode(pn_str)
     G = nx.DiGraph()
     root_id = None

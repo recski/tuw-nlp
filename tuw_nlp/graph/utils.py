@@ -20,6 +20,7 @@ dummy_isi_graph = "(dummy_0 / dummy_0)"
 dummy_tree = "dummy(dummy)"
 
 
+
 class GraphFormulaPatternMatcher:
 
     """
@@ -61,11 +62,23 @@ class GraphFormulaPatternMatcher:
         if n1["name"] is None or n2["name"] is None:
             return True
 
+        name_check = False
+        if ( re.match(rf"\b({n2['name']})\b", n1["name"], flags)
+                        or n2["name"] == n1["name"] ):
+            name_check = True
+
         return (
             True
             if (
-                re.match(rf"\b({n2['name']})\b", n1["name"], flags)
-                or n2["name"] == n1["name"]
+                    (
+                        re.match(rf"\b({n2['name']})\b", n1["name"], flags)
+                        or n2["name"] == n1["name"]
+                    )
+                    and
+                    (
+                        ("entity" in n2 and "entity" in n1 and n1["entity"] == n2["entity"])
+                        or ("entity" not in n2 and "entity" not in n2)
+                    )
             )
             else False
         )
@@ -152,8 +165,9 @@ class GraphFormulaPatternMatcher:
         if not possible:
             return False
         for n1, n2 in product(node1_matches, node2_matches):
-            n1_root = [n for n, d in n1.in_degree() if d == 0][0]
-            n2_root = [n for n, d in n2.in_degree() if d == 0][0]
+            # This is a temporary fix. Should be d==0 for both.
+            n1_root = [n for n, d in n1.in_degree() if d < 2][0]
+            n2_root = [n for n, d in n2.in_degree() if d < 2][0]
             try:
                 if nx.shortest_path_length(graph, n1_root, n2_root) <= max_dist:
                     subgraphs.append(nx.compose(n1, n2))
@@ -172,8 +186,9 @@ class GraphFormulaPatternMatcher:
         if not possible:
             return False
         for n1, n2 in product(node1_matches, node2_matches):
-            n1_root = [n for n, d in n1.in_degree() if d == 0][0]
-            n2_root = [n for n, d in n2.in_degree() if d == 0][0]
+            # This is a temporary fix. Should be d==0 for both.
+            n1_root = [n for n, d in n1.in_degree() if d < 2][0]
+            n2_root = [n for n, d in n2.in_degree() if d < 2][0]
             try:
                 if nx.has_path(graph, n1_root, n2_root):
                     subgraphs.append(nx.compose(n1, n2))
@@ -280,6 +295,7 @@ def pn_to_graph(raw_dl, edge_attr="color"):
     g = pn.decode(raw_dl)
     G = nx.DiGraph()
     node_to_id = {}
+    node_to_entity = {}
     root_id = None
 
     for i, trip in enumerate(g.instances()):
@@ -301,6 +317,9 @@ def pn_to_graph(raw_dl, edge_attr="color"):
             G.add_node(i, name=name, token_id=ud_id)
         elif indicator == "u":
             G.add_node(i, name=name, token_id=None)
+        elif indicator == "entity":
+            #entities are not added as nodes but as node attributes
+            node_to_entity[node_id] = name
         else:
             raise ValueError("Unknown indicator")
 
@@ -319,16 +338,19 @@ def pn_to_graph(raw_dl, edge_attr="color"):
         tgt_id = node_to_id[tgt]
 
         if edge != "UNKNOWN":
-            G.add_edge(src_id, tgt_id)
-            if edge.isnumeric():
-                edge = int(edge)
-            G[src_id][tgt_id].update({edge_attr: edge})
+            if edge == "entity":
+                G.nodes[src_id]["entity"] = int(node_to_entity[tgt])
+            else:
+                G.add_edge(src_id, tgt_id)
+                if edge.isnumeric():
+                    edge = int(edge)
+                G[src_id][tgt_id].update({edge_attr: edge})
 
     return G, root_id
 
 
 def graph_to_pn(graph):
-    nodes = {}
+    nodes, entity_nodes = {}, {}
     pn_edges, pn_nodes = [], []
 
     for u, v, e in graph.edges(data=True):
@@ -347,6 +369,17 @@ def graph_to_pn(graph):
             pn_id = f"u_{node}"
             nodes[node] = (pn_id, name)
             pn_nodes.append((pn_id, ":instance", name))
+
+    for node in graph.nodes():
+        if "entity" in graph.nodes[node]:
+            entity_num = graph.nodes[node]["entity"]
+            if entity_num not in entity_nodes:
+                node_id = f"entity_{len(entity_nodes)}"
+                pn_id = node_id
+                nodes[node_id] = (pn_id, entity_num)
+                entity_nodes[entity_num] = pn_id
+                pn_nodes.append((pn_id, ":instance", entity_num))
+            pn_edges.append((nodes[node][0], f':entity', entity_nodes[entity_num]))
 
     G = pn.Graph(pn_nodes + pn_edges)
 

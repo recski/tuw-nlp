@@ -146,6 +146,18 @@ class Graph:
                 ).replace(
                     "-", "_"
                 )
+            elif "entity" in show_graph.nodes[node] and show_graph.nodes[node]["entity"] == 1:
+                node_line = '\t{0} [shape = circle, label = "{1}", style=filled, fillcolor=lightblue];'.format(
+                    d_node, printname
+                ).replace(
+                    "-", "_"
+                )
+            elif "entity" in show_graph.nodes[node] and show_graph.nodes[node]["entity"] == 2:
+                node_line = '\t{0} [shape = circle, label = "{1}", style=filled, fillcolor=pink];'.format(
+                    d_node, printname
+                ).replace(
+                    "-", "_"
+                )
             else:
                 node_line = '\t{0} [shape = circle, label = "{1}"];'.format(
                     d_node, printname

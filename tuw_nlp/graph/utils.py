@@ -352,14 +352,52 @@ def pn_to_graph(raw_dl, edge_attr="color", node_attr="name"):
     return G, root_id
 
 
+def bolinas_to_graph(bolinas_str, edge_attr="color"):
+    """Convert bolinas to networkx format
+    bolinas_str: raw string of bolinas format
+    example: (n19. :obj (n21. :amod (n20. :ADJ n1020.) :NOUN n1021.) :VERB n1002.)
+    """
+
+    pn_str = re.sub(r" (n\d+\.\S*)([\) ])", r" (\1)\2", bolinas_str)
+    g = pn.decode(pn_str)
+    G = nx.DiGraph()
+    root_id = None
+
+    for i, trip in enumerate(g.instances()):
+        node_id = trip[0].split(".")[0]
+        name = trip[0].split(".")[1].split("*")[0]
+
+        if i == 0:
+            root_id = node_id
+
+        G.add_node(node_id, name=name)
+
+    for trip in g.edges():
+        edge = trip[1].split(":")[1]
+        src = trip[0].split(".")[0]
+        tgt = trip[2].split(".")[0]
+
+        G.add_edge(src, tgt)
+        G[src][tgt].update({edge_attr: edge})
+
+    return G, root_id
+
+
 def graph_to_bolinas(
-    graph, name_attr="name", return_root=False, ext_node=None, keep_node_labels=True
+        graph,
+        name_attr="name",
+        return_root=False,
+        ext_node=None,
+        keep_node_ids=True,
+        add_names=False,
+        add_n_prefix=True
 ):
     nodes = {}
     pn_edges = []
+    node_prefix = "n" if add_n_prefix else ""
 
     root_nodes, non_root_nodes = set(), set()
-    for u, v, e in graph.edges(data=True):
+    for u, v, e in sorted(graph.edges(data=True), key=lambda x: x[2]["color"]):
 
         if v in root_nodes:
             root_nodes.remove(v)
@@ -369,15 +407,23 @@ def graph_to_bolinas(
 
         for node in u, v:
             if node not in nodes:
-                nodes[node] = f"n{node}." if node != ext_node else f"n{node}.*"
+                label = ""
+                if add_names and name_attr in graph.nodes[node]:
+                    label = graph.nodes[node][name_attr]
+                nodes[node] = f"{node_prefix}{node}.{label}" if node != ext_node else f"{node_prefix}{node}.{label}*"
 
         pn_edges.append((nodes[u], f':{e["color"]}', nodes[v]))
 
-    assert len(root_nodes) == 1, f"graph has no unique root: {root_nodes}"
-    top_node = root_nodes.pop()
-    G = pn.Graph(pn_edges)
-    bolinas_str = pn.encode(G, top=nodes[top_node], indent=0).replace("\n", " ")
-    if not keep_node_labels:
+    if not root_nodes:
+        assert len(graph.nodes()) == 1
+        top_node = next(iter(graph.nodes()))
+        bolinas_str = f"({top_node}.)"
+    else:
+        assert len(root_nodes) == 1, f"graph has no unique root: {root_nodes}"
+        top_node = root_nodes.pop()
+        G = pn.Graph(pn_edges)
+        bolinas_str = pn.encode(G, top=nodes[top_node], indent=0).replace("\n", " ")
+    if not keep_node_ids:
         bolinas_str = re.sub(r"n[0-9]*\.", ".", bolinas_str)
     if return_root:
         return bolinas_str, top_node
@@ -525,7 +571,7 @@ def preprocess_node_alto(edge):
     # sys.stderr.write(f'prepr_node_alto IN: {edge}\t')
     out = edge
     for a, b in chain(
-        CHAR_REPLACEMENTS.items(), PUNCT_REPLACEMENTS.items(), MISC_REPLACEMENTS.items()
+            CHAR_REPLACEMENTS.items(), PUNCT_REPLACEMENTS.items(), MISC_REPLACEMENTS.items()
     ):
         out = out.replace(a, b)
     # sys.stderr.write(f'replace_emojis IN: {out}\t')
@@ -571,7 +617,7 @@ def get_node_attr(graph, i, convert_to_int, ud, preprocess):
 
 
 def graph_to_isi_graph(
-    graph, root_node, convert_to_int=False, ud=True, preprocess=True
+        graph, root_node, convert_to_int=False, ud=True, preprocess=True
 ):
     nodes = {}
     pn_edges, pn_nodes = [], []
@@ -643,10 +689,10 @@ def get_root_id(graph, ud=True):
 
 
 def graph_to_isi(
-    graph, convert_to_int=False, algebra="tree", ud=True, root_id=None, preprocess=True
+        graph, convert_to_int=False, algebra="tree", ud=True, root_id=None, preprocess=True
 ):
     assert (
-        ud is True or algebra == "graph"
+            ud is True or algebra == "graph"
     ), "converting non-UD graph to trees not supported"  # noqa
     if root_id is None:
         root_id = get_root_id(graph, ud)

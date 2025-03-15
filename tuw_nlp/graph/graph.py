@@ -4,7 +4,7 @@ import networkx as nx
 from networkx.readwrite import json_graph
 from networkx.utils import graphs_equal
 
-from tuw_nlp.graph.utils import graph_to_bolinas, graph_to_pn, pn_to_graph
+from tuw_nlp.graph.utils import graph_to_bolinas, graph_to_pn, pn_to_graph, bolinas_to_graph
 
 
 class UnconnectedGraphError(Exception):
@@ -53,14 +53,22 @@ class Graph:
         return s
 
     def to_bolinas(
-        self, name_attr="name", return_root=False, ext_node=None, keep_node_labels=True
+            self,
+            name_attr="name",
+            return_root=False,
+            ext_node=None,
+            keep_node_ids=True,
+            add_names=False,
+            add_n_prefix=True,
     ):
         return graph_to_bolinas(
             self.G,
             name_attr=name_attr,
             return_root=return_root,
             ext_node=ext_node,
-            keep_node_labels=keep_node_labels,
+            keep_node_ids=keep_node_ids,
+            add_names=add_names,
+            add_n_prefix=add_n_prefix,
         )
 
     def to_penman(self, name_attr="name"):
@@ -77,6 +85,12 @@ class Graph:
     @staticmethod
     def from_penman(pn_graph, node_attr="name"):
         G, _ = pn_to_graph(pn_graph, node_attr=node_attr)
+
+        return Graph(G)
+
+    @staticmethod
+    def from_bolinas(bolinas_str):
+        G, _ = bolinas_to_graph(bolinas_str)
 
         return Graph(G)
 
@@ -121,9 +135,9 @@ class Graph:
             else:
                 printname = d_node
             if (
-                "expanded" in n_data
-                and n_data["expanded"]
-                and printname in marked_nodes
+                    "expanded" in n_data
+                    and n_data["expanded"]
+                    and printname in marked_nodes
             ):
                 node_line = '\t{0} [shape = circle, label = "{1}", \
                         style=filled, fillcolor=purple];'.format(
@@ -152,7 +166,7 @@ class Graph:
                 ).replace(
                     "-", "_"
                 )
-            elif printname in marked_nodes:
+            elif printname in marked_nodes or node in marked_nodes:
                 node_line = '\t{0} [shape = circle, label = "{1}", style=filled, fillcolor=lightblue];'.format(
                     d_node, printname
                 ).replace(

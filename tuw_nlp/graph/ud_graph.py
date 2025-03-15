@@ -156,17 +156,15 @@ class UDGraph(Graph):
         new_graph = UDGraph(self.stanza_sen, text=None, tokens=new_tokens, graph=H)
         return new_graph
 
-    def pos_edge_graph(self, vocab):
+    def pos_edge_graph(self):
         H = self.G.copy()
-        words = set()
         for u, v, d in H.edges(data=True):
             d["color"] = d["color"].lower()
         for node, data in self.G.nodes(data=True):
             word = data["name"]
-            if word in words:
-                word = f"{word}_"
-            words.add(word)
-            leaf_node_id = vocab.get_id(word, allow_new=True)
+            leaf_node_id = 1000
+            if "token_id" in data:
+                leaf_node_id += data["token_id"]
             H.add_node(leaf_node_id, name=word)
             H.add_edge(node, leaf_node_id, color=data["upos"])
             nx.set_node_attributes(H, {node: {"name": ""}})
@@ -181,24 +179,26 @@ class UDGraph(Graph):
                 # token representing an mwe, e.g. "vom" ~ "von dem"
                 continue
             name = word.get("lemma", word["text"])
+            node_id = i+1
             G.add_node(
-                i,
+                node_id,
                 name=name,
                 token_id=word["id"],
                 upos=word["upos"],
                 asciiname=anyascii(name),
             )
-            self.tok_ids_to_nodes[word["id"]] = i
+            self.tok_ids_to_nodes[word["id"]] = node_id
             if word["deprel"] == "root":
-                G.add_node(-1, name="root", upos="ROOT")
-                self.tok_ids_to_nodes[0] = -1
+                G.add_node(0, name="root", upos="ROOT")
+                self.tok_ids_to_nodes[0] = 0
 
         for i, word in enumerate(sen.to_dict()):
             if not isinstance(word["id"], int):
                 # multi-word token
                 continue
             head_node = self.tok_ids_to_nodes[word["head"]]
-            G.add_edge(head_node, i)
-            G[head_node][i].update({"color": preprocess_edge_alto(word["deprel"])})
+            node_id = i + 1
+            G.add_edge(head_node, node_id)
+            G[head_node][node_id].update({"color": preprocess_edge_alto(word["deprel"])})
 
         return G
